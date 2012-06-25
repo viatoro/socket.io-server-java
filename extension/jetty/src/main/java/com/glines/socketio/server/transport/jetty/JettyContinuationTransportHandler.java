@@ -36,7 +36,7 @@ import com.glines.socketio.util.URI;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.server.AbstractHttpConnection;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -393,7 +393,7 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
      * This must be called within the context of an active HTTP request.
      */
     private static ConnectionTimeoutPreventer newTimeoutPreventor() {
-        HttpConnection httpConnection = HttpConnection.getCurrentConnection();
+        AbstractHttpConnection httpConnection = AbstractHttpConnection.getCurrentConnection();
         if (httpConnection == null) {
             LOGGER.log(Level.FINE, "No HttpConnection boundto local thread: " + Thread.currentThread().getName());
             return new ConnectionTimeoutPreventer() {

@@ -84,7 +84,7 @@ public final class JettyWebSocketTransport extends AbstractTransport {
 
         String sessionId = Web.extractSessionId(request);
 
-        if ("GET".equals(request.getMethod()) && sessionId == null && "WebSocket".equals(request.getHeader("Upgrade"))) {
+        if ("GET".equals(request.getMethod()) && sessionId == null && "websocket".equals(request.getHeader("Upgrade"))) {
             boolean hixie = request.getHeader("Sec-WebSocket-Key1") != null;
 
             String protocol = request.getHeader(hixie ? "Sec-WebSocket-Protocol" : "WebSocket-Protocol");
