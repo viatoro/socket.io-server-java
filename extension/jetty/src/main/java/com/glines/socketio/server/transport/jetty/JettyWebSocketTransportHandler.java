@@ -51,7 +51,6 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
     private Connection outbound;
-    private boolean initiated;
 
     @Override
     protected void init() {
@@ -76,26 +75,9 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     @Override
     public void onMessage(String message) {
         getSession().startHeartbeatTimer();
-        if (!initiated) {
-            if ("OPEN".equals(message)) {
-                try {
-                    outbound.sendMessage(SocketIOFrame.encode(SocketIOFrame.FrameType.SESSION_ID, 0, getSession().getSessionId()));
-                    outbound.sendMessage(SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT_INTERVAL, 0, "" + getSession().getHeartbeat()));
-                    getSession().onConnect(this);
-                    initiated = true;
-                } catch (IOException e) {
-                    outbound.disconnect();
-                    getSession().onShutdown();
-                }
-            } else {
-                outbound.disconnect();
-                getSession().onShutdown();
-            }
-        } else {
-            List<SocketIOFrame> messages = SocketIOFrame.parse(message);
-            for (SocketIOFrame msg : messages) {
-                getSession().onMessage(msg);
-            }
+        List<SocketIOFrame> messages = SocketIOFrame.parse(message);
+        for (SocketIOFrame msg : messages) {
+            getSession().onMessage(msg);
         }
     }
 
@@ -149,7 +131,11 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     public void sendMessage(int messageType, String message)
             throws SocketIOException {
         if (outbound.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED) {
-            sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.DATA, messageType, message));
+            sendMessage(new SocketIOFrame(
+                        messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
+                                SocketIOFrame.FrameType.MESSAGE :
+                                SocketIOFrame.FrameType.JSON_MESSAGE,
+                        messageType, message));
         } else {
             throw new SocketIOClosedException();
         }
@@ -165,5 +151,10 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
         outbound.disconnect();
         outbound = null;
         getSession().onShutdown();
+    }
+
+    @Override
+    public void onConnect() {
+        getSession().onConnect(this);
     }
 }

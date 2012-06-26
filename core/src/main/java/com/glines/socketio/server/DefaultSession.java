@@ -130,7 +130,7 @@ class DefaultSession implements SocketIOSession {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + sessionId + "]: sendPing " + data);
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.PING, 0, data));
+            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
@@ -196,26 +196,18 @@ class DefaultSession implements SocketIOSession {
     @Override
     public void onMessage(SocketIOFrame message) {
         switch (message.getFrameType()) {
-            case SESSION_ID:
+            case CONNECT:
+                onPing(message.getData());
             case HEARTBEAT_INTERVAL:
-                // Ignore these two messages types as they are only intended to be from server to client.
+                // Ignore this message type as they are only intended to be from server to client.
                 break;
             case CLOSE:
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onClose: " + message.getData());
                 onClose(message.getData());
                 break;
-            case PING:
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onPing: " + message.getData());
-                onPing(message.getData());
-                break;
-            case PONG:
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onPong: " + message.getData());
-                onPong(message.getData());
-                break;
-            case DATA:
+            case MESSAGE:
+            case JSON_MESSAGE:
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage: " + message.getData());
                 onMessage(message.getData());
@@ -229,7 +221,7 @@ class DefaultSession implements SocketIOSession {
     @Override
     public void onPing(String data) {
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.PONG, 0, data));
+            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);

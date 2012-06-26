@@ -46,4 +46,7 @@ public interface TransportHandler extends SocketIOOutbound {
      * The only session method that the handler can legally call after this is onShutdown();
      */
     void abort();
+
+    void onConnect();
+
 }

@@ -31,18 +31,11 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.glines.socketio.server.*;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketFactory;
 import org.eclipse.jetty.websocket.WebSocketFactory.Acceptor;
 
-import com.glines.socketio.server.AbstractTransport;
-import com.glines.socketio.server.SessionManager;
-import com.glines.socketio.server.SocketIOInbound;
-import com.glines.socketio.server.SocketIOSession;
-import com.glines.socketio.server.Transport;
-import com.glines.socketio.server.TransportHandler;
-import com.glines.socketio.server.TransportInitializationException;
-import com.glines.socketio.server.TransportType;
 import com.glines.socketio.util.Web;
 
 public final class JettyWebSocketTransport extends AbstractTransport {
@@ -119,6 +112,8 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                 TransportHandler handler = newHandler(WebSocket.class, session);
                 handler.init(getConfig());
                 wsFactory.upgrade(request, response, WebSocket.class.cast(handler), protocol);
+                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
+                handler.onConnect();
             }
         } else {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, this + " transport error: Invalid request");
