@@ -82,9 +82,20 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                        Transport.InboundFactory inboundFactory,
                        SessionManager sessionFactory) throws IOException {
 
-        String sessionId = Web.extractSessionId(request);
+        String sessionId = null;
+        String transport = null;
 
-        if ("GET".equals(request.getMethod()) && sessionId == null && "websocket".equals(request.getHeader("Upgrade"))) {
+        String path = request.getPathInfo();
+        if (path != null && path.length() > 0 && !"/".equals(path)) {
+            if (path.startsWith("/")) path = path.substring(1);
+            String[] parts = path.split("/");
+            if (parts.length >= 3) {
+                transport = parts[1] == null || parts[1].length() == 0 || parts[1].equals("null") ? null : parts[1];
+                sessionId = parts[2] == null || parts[2].length() == 0 || parts[2].equals("null") ? null : parts[2];
+            }
+        }
+
+        if ("GET".equals(request.getMethod()) && sessionId != null && transport.equals("websocket")) {
             boolean hixie = request.getHeader("Sec-WebSocket-Key1") != null;
 
             String protocol = request.getHeader(hixie ? "Sec-WebSocket-Protocol" : "WebSocket-Protocol");

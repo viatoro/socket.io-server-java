@@ -112,7 +112,22 @@ public abstract class SocketIOServlet extends HttpServlet {
         if (path.startsWith("/")) path = path.substring(1);
         String[] parts = path.split("/");
 
-        Transport transport = config.getTransport(TransportType.from(parts[0]));
+        if (parts.length <= 2) { // handshake
+            OutputStream os = response.getOutputStream();
+            String body = request.getSession().getId().toString() + ":15000:10000:"; // heartbeats : timeout
+
+            String transports = "websocket";
+            /*for (Transport transport : config.getTransports()) {
+                if (!transports.isEmpty())
+                    transports += ",";
+                transports += transport.getType().toString();
+            }*/
+            body += transports;
+
+            os.write(body.getBytes());
+            return;
+        }
+        Transport transport = config.getTransport(TransportType.from(parts[1]));
         if (transport == null) {
             if ("GET".equals(request.getMethod()) && "socket.io.js".equals(parts[0])) {
                 response.setContentType("text/javascript");

@@ -6,7 +6,7 @@
 
     <groupId>com.glines.socketio</groupId>
     <artifactId>socketio</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
 
     <name>Socket.IO Java</name>
