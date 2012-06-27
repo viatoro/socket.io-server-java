@@ -46,6 +46,10 @@ public abstract class SocketIOServlet extends HttpServlet {
 
     private SocketIOConfig config;
 
+    private final static String DEFAULT_HEARTBEAT_TIMEOUT = "15000";
+    private final static String DEFAULT_TIMEOUT = "10000";
+
+
     @Override
     public void init() throws ServletException {
         config = new ServletBasedSocketIOConfig(getServletConfig(), "socketio");
@@ -114,14 +118,17 @@ public abstract class SocketIOServlet extends HttpServlet {
 
         if (parts.length <= 2) { // handshake
             OutputStream os = response.getOutputStream();
-            String body = request.getSession().getId().toString() + ":5000:10000:"; // heartbeats : timeout
 
-            String transports = "websocket"; // xhr-polling
-            /*for (Transport transport : config.getTransports()) {
+            String body = request.getSession().getId().toString() +
+                          ":" + DEFAULT_HEARTBEAT_TIMEOUT +
+                          ":" + DEFAULT_TIMEOUT + ":"; // sessionId : heartbeat : timeout
+
+            String transports = ""; // websocket,flashsocket,xhr-polling,jsonp-polling
+            for (Transport transport : config.getTransports()) {
                 if (!transports.isEmpty())
                     transports += ",";
                 transports += transport.getType().toString();
-            }*/
+            }
             body += transports;
 
             os.write(body.getBytes());
