@@ -66,10 +66,10 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
                 session.onShutdown();
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
-        } else if (sessionId != null && sessionId.length() > 0) {
+        /*} else if (sessionId != null && sessionId.length() > 0) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.fine("got session id " + sessionId + " but no session found");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);*/
         } else {
             if ("GET".equals(request.getMethod())) {
                 session = connect(request, response, inboundFactory, sessionFactory);
@@ -88,7 +88,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
                                     SessionManager sessionFactory) throws IOException {
         SocketIOInbound inbound = inboundFactory.getInbound(request);
         if (inbound != null) {
-            SocketIOSession session = sessionFactory.createSession(inbound);
+            SocketIOSession session = sessionFactory.createSession(inbound, request.getSession().getId().toString());
             // get and init data handler
             DataHandler dataHandler = newDataHandler(session);
             dataHandler.init(getConfig());

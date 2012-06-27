@@ -96,7 +96,7 @@ public class SocketIOFrame {
 		int idx = 0;
 
 		// Parse the data and silently ignore any part that fails to parse properly.
-		while (data.length() > idx) {
+        while (data.length() > idx) {
 			int start = idx;
 			int end = data.indexOf(SEPERATOR_CHAR, start);
 
@@ -105,8 +105,6 @@ public class SocketIOFrame {
 			}
 
 			int ftype = Integer.parseInt(data.substring(start, start + 1));
-            int messageId = 0;
-			String endpoint = "";
 
 			FrameType frameType = FrameType.fromInt(ftype);
 			if (frameType == FrameType.UNKNOWN) {
@@ -116,6 +114,7 @@ public class SocketIOFrame {
             start = end + 1;
             end = data.indexOf(SEPERATOR_CHAR, start);
 
+            int messageId = 0;
             if (end - start > 1) {
 				messageId = Integer.parseInt(data.substring(start + 1, end));
 			}
@@ -123,7 +122,8 @@ public class SocketIOFrame {
 			start = end + 1;
 			end = data.indexOf(SEPERATOR_CHAR, start);
 
-			if (end - start > 1) {
+			String endpoint = "";
+            if (end - start > 1) {
 				endpoint = data.substring(start + 1, end);
 			}
 
@@ -145,7 +145,7 @@ public class SocketIOFrame {
         str.append(SEPERATOR_CHAR);
         //str.append("1"); // message id
 		str.append(SEPERATOR_CHAR);
-		//str.append(Integer.toHexString(data.length())); // endpoint
+		//str.append(""); // endpoint
 		str.append(SEPERATOR_CHAR);
 		str.append(data);
 		return str.toString();

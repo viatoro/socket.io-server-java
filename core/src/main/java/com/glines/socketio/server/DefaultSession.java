@@ -44,7 +44,7 @@ class DefaultSession implements SocketIOSession {
     private static final Logger LOGGER = Logger.getLogger(DefaultSession.class.getName());
 
     private final SocketIOSessionManager socketIOSessionManager;
-    private final String sessionId = Web.generateRandomString(SESSION_ID_LENGTH);
+    private final String sessionId;
     private final AtomicLong messageId = new AtomicLong(0);
     private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
@@ -58,9 +58,10 @@ class DefaultSession implements SocketIOSession {
     private boolean timedout;
     private String closeId;
     
-    DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound) {
+    DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId) {
         this.socketIOSessionManager = socketIOSessionManager;
         this.inbound = inbound;
+        this.sessionId = sessionId;
     }
 
     @Override

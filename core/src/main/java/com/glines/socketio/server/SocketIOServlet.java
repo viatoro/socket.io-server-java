@@ -114,9 +114,9 @@ public abstract class SocketIOServlet extends HttpServlet {
 
         if (parts.length <= 2) { // handshake
             OutputStream os = response.getOutputStream();
-            String body = request.getSession().getId().toString() + ":15000:10000:"; // heartbeats : timeout
+            String body = request.getSession().getId().toString() + ":5000:10000:"; // heartbeats : timeout
 
-            String transports = "websocket";
+            String transports = "websocket"; // xhr-polling
             /*for (Transport transport : config.getTransports()) {
                 if (!transports.isEmpty())
                     transports += ",";

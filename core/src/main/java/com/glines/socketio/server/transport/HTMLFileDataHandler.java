@@ -91,7 +91,7 @@ final class HTMLFileDataHandler extends AbstractDataHandler {
     @Override
     public void onConnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
         onStartSend(response);
-        onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.SESSION_ID, 0, session.getSessionId()));
-        onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT_INTERVAL, 0, "" + hearbeat));
+        onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
+        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT_INTERVAL, "" + hearbeat));
     }
 }

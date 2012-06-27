@@ -184,7 +184,10 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(int, String): [" + messageType + "]: " + message);
         if (is_open && getSession().getConnectionState() == ConnectionState.CONNECTED) {
-            sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.DATA, messageType, message));
+            sendMessage(new SocketIOFrame(messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
+                              SocketIOFrame.FrameType.MESSAGE :
+                              SocketIOFrame.FrameType.JSON_MESSAGE,
+                        messageType, message));
         } else {
             throw new SocketIOClosedException();
         }
@@ -443,5 +446,10 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
                 };
             }
         }
+    }
+
+    @Override
+    public void onConnect() {
+        getSession().onConnect(this);
     }
 }
