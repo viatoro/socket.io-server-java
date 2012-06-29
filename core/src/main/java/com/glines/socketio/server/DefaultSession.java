@@ -199,8 +199,9 @@ class DefaultSession implements SocketIOSession {
         switch (message.getFrameType()) {
             case CONNECT:
                 onPing(message.getData());
-            case HEARTBEAT_INTERVAL:
+            case HEARTBEAT:
                 // Ignore this message type as they are only intended to be from server to client.
+                startHeartbeatTimer();
                 break;
             case CLOSE:
                 if (LOGGER.isLoggable(Level.FINE))

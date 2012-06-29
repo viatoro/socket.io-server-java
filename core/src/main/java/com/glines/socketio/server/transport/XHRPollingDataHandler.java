@@ -85,6 +85,6 @@ final class XHRPollingDataHandler extends AbstractDataHandler {
     public void onConnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
         onStartSend(response);
         onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
-        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT_INTERVAL, "" + timeout));
+        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT, "" + timeout));
     }
 }

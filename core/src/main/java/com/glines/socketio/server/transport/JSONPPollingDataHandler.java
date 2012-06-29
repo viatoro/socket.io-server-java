@@ -94,6 +94,6 @@ final class JSONPPollingDataHandler extends AbstractDataHandler {
         }
         onStartSend(response);
         onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
-        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT_INTERVAL, "" + timeout));
+        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT, "" + timeout));
     }
 }

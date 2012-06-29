@@ -29,11 +29,13 @@ import java.util.List;
 
 public class SocketIOFrame {
 	public static final char SEPERATOR_CHAR = ':';
+    public static final char MESSAGE_SEPARATOR = '�'; // char code 65535
+
 	public enum FrameType {
 		UNKNOWN(-1),
 		CLOSE(0),
 		CONNECT(1),
-		HEARTBEAT_INTERVAL(2),
+		HEARTBEAT(2),
 		MESSAGE(3),
 		JSON_MESSAGE(4),
         EVENT(5),
@@ -58,7 +60,7 @@ public class SocketIOFrame {
 			case 1:
 				return CONNECT;
 			case 2:
-				return HEARTBEAT_INTERVAL;
+				return HEARTBEAT;
 			case 3:
 				return MESSAGE;
 			case 4:
@@ -93,18 +95,30 @@ public class SocketIOFrame {
 	
 	public static List<SocketIOFrame> parse(String data) {
 		List<SocketIOFrame> messages = new ArrayList<SocketIOFrame>();
-		int idx = 0;
 
 		// Parse the data and silently ignore any part that fails to parse properly.
-        while (data.length() > idx) {
-			int start = idx;
-			int end = data.indexOf(SEPERATOR_CHAR, start);
+        int messageEnd;
+        int start = 0;
+        int end = 0;
+        while (data.length() > start) {
+			if (data.charAt(start) == MESSAGE_SEPARATOR) {
+                start += 1;
+                end = data.indexOf(MESSAGE_SEPARATOR, start);
+                messageEnd = Integer.parseInt(data.substring(start, end));
+                start = end + 1;
+                end = start + 1;
+                messageEnd += start;
+            }
+            else {
+                messageEnd = data.length();
+                end = start + 1;
+            }
 
-			if (-1 == end || start == end || !isHexDigit(data, start, end)) {
+            if (!isHexDigit(data, start, end)) {
 				break;
 			}
 
-			int ftype = Integer.parseInt(data.substring(start, start + 1));
+			int ftype = Integer.parseInt(data.substring(start, end));
 
 			FrameType frameType = FrameType.fromInt(ftype);
 			if (frameType == FrameType.UNKNOWN) {
@@ -128,12 +142,12 @@ public class SocketIOFrame {
 			}
 
 			start = end + 1;
-			end = data.length();
+			end = messageEnd;
 
 			messages.add(new SocketIOFrame(frameType,
                     frameType == FrameType.MESSAGE ? TEXT_MESSAGE_TYPE : JSON_MESSAGE_TYPE,
                     data.substring(start, end)));
-			idx = end;
+			start = end;
 		}
 		
 		return messages;
