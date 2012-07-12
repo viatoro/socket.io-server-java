@@ -89,11 +89,10 @@ final class JSONPPollingDataHandler extends AbstractDataHandler {
         String path = request.getPathInfo();
         if (path.startsWith("/")) path = path.substring(1);
         String[] parts = path.split("/");
-        if (parts.length >= 4) {
-            session.setAttribute(FRAME_ID, Integer.parseInt(parts[3]));
+        if (parts.length >= 3) {
+            session.setAttribute(FRAME_ID, Integer.parseInt(parts[2]));
         }
         onStartSend(response);
         onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
-        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT, "" + timeout));
     }
 }

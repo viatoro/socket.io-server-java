@@ -339,7 +339,6 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
 
     @Override
     public void connect(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setAttribute(AbstractHttpTransport.SESSION_KEY, getSession());
         response.setBufferSize(bufferSize);
         continuation = ContinuationSupport.getContinuation(request);
         continuation.addContinuationListener(this);

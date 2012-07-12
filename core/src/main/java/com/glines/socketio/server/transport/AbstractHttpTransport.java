@@ -43,21 +43,15 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
                              HttpServletResponse response,
                              Transport.InboundFactory inboundFactory,
                              SessionManager sessionFactory) throws IOException {
-
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
 
-        Object obj = request.getAttribute(SESSION_KEY);
         SocketIOSession session = null;
-        String sessionId = null;
-        if (obj != null) {
-            session = (SocketIOSession) obj;
-        } else {
-            sessionId = Web.extractSessionId(request);
-            if (sessionId != null && sessionId.length() > 0) {
-                session = sessionFactory.getSession(sessionId);
-            }
+        String sessionId = Web.extractSessionId(request);
+        if (sessionId != null && sessionId.length() > 0) {
+            session = sessionFactory.getSession(sessionId);
         }
+
         if (session != null) {
             TransportHandler handler = session.getTransportHandler();
             if (handler != null) {
@@ -66,13 +60,10 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
                 session.onShutdown();
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
-        /*} else if (sessionId != null && sessionId.length() > 0) {
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.fine("got session id " + sessionId + " but no session found");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);*/
         } else {
             if ("GET".equals(request.getMethod())) {
-                session = connect(request, response, inboundFactory, sessionFactory);
+                session = connect(request, response, inboundFactory,
+                                  sessionFactory, sessionId);
                 if (session == null) {
                     response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                 }
@@ -85,10 +76,13 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
     private SocketIOSession connect(HttpServletRequest request,
                                     HttpServletResponse response,
                                     InboundFactory inboundFactory,
-                                    SessionManager sessionFactory) throws IOException {
+                                    SessionManager sessionFactory,
+                                    String sessionId) throws IOException {
         SocketIOInbound inbound = inboundFactory.getInbound(request);
         if (inbound != null) {
-            SocketIOSession session = sessionFactory.createSession(inbound, request.getSession().getId().toString());
+            if (sessionId == null)
+                sessionId = request.getSession().getId().toString();
+            SocketIOSession session = sessionFactory.createSession(inbound, sessionId);
             // get and init data handler
             DataHandler dataHandler = newDataHandler(session);
             dataHandler.init(getConfig());

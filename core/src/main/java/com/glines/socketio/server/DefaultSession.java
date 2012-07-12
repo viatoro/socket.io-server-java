@@ -27,7 +27,6 @@ package com.glines.socketio.server;
 import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
-import com.glines.socketio.util.Web;
 
 import java.util.Map;
 import java.util.concurrent.*;
