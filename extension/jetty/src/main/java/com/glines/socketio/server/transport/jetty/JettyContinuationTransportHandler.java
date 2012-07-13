@@ -29,7 +29,6 @@ import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 import com.glines.socketio.server.*;
-import com.glines.socketio.server.transport.AbstractHttpTransport;
 import com.glines.socketio.server.transport.DataHandler;
 import com.glines.socketio.util.IO;
 import com.glines.socketio.util.URI;
@@ -229,7 +228,6 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
                         }
                     } else {
                         getSession().clearTimeoutTimer();
-                        request.setAttribute(AbstractHttpTransport.SESSION_KEY, session);
                         response.setBufferSize(bufferSize);
                         continuation = ContinuationSupport.getContinuation(request);
                         continuation.addContinuationListener(this);
@@ -256,6 +254,7 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
                             getSession().onMessage(msg);
                         }
                     }
+
                     // Ensure that the disconnectWhenEmpty flag is obeyed in the case where
                     // it is set during a POST.
                     if (disconnectWhenEmpty && buffer.isEmpty()) {
@@ -274,8 +273,13 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
 
     protected String decodePostData(String contentType, String data) {
         if (contentType.startsWith("application/x-www-form-urlencoded")) {
-            if (data.substring(0, 5).equals("data=")) {
-                return URI.decodePath(data.substring(5));
+            if (data.startsWith("d=")) {
+                data = URI.decodePath(data.substring(2));
+                // replace("\u005c", "") is'not compiled by maven compiler (92)
+                data = data.substring(1, data.length()-1)
+                           .replace(Character.toString((char) 92), "")
+                           .replace("\":+", "\": ").replace("\",+", "\", ");
+                return data;
             } else {
                 return "";
             }

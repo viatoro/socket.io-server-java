@@ -70,7 +70,7 @@ final class JSONPPollingDataHandler extends AbstractDataHandler {
     @Override
     public void onStartSend(HttpServletResponse response) throws IOException {
         response.setContentType("text/javascript; charset=UTF-8");
-        response.getOutputStream().print("io.JSONP[" + session.getAttribute(FRAME_ID) + "]._('");
+        response.getOutputStream().print("io.j[" + session.getAttribute(FRAME_ID) + "]('");
     }
 
     @Override
@@ -86,12 +86,18 @@ final class JSONPPollingDataHandler extends AbstractDataHandler {
 
     @Override
     public void onConnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String path = request.getPathInfo();
-        if (path.startsWith("/")) path = path.substring(1);
-        String[] parts = path.split("/");
-        if (parts.length >= 3) {
-            session.setAttribute(FRAME_ID, Integer.parseInt(parts[2]));
+        String query = request.getQueryString();
+        String[] parts = query.split("&");
+        int frameId = 0;
+        for (String part : parts) {
+            if (part.startsWith("i=")) {
+                try {
+                    frameId = Integer.parseInt(part.substring(2));
+                    break;
+                } catch (NumberFormatException e) { }
+            }
         }
+        session.setAttribute(FRAME_ID, frameId);
         onStartSend(response);
         onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
     }
