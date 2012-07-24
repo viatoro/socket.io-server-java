@@ -104,6 +104,5 @@ final class XHRMultipartDataHandler extends AbstractDataHandler {
     public void onConnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
         onStartSend(response);
         onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
-        //onWriteData(response, SocketIOFrame.encode(SocketIOFrame.FrameType.HEARTBEAT, "" + hearbeatDelay));
     }
 }

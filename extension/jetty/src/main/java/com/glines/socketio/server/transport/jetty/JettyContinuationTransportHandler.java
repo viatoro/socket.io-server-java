@@ -274,11 +274,10 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     protected String decodePostData(String contentType, String data) {
         if (contentType.startsWith("application/x-www-form-urlencoded")) {
             if (data.startsWith("d=")) {
-                data = URI.decodePath(data.substring(2));
+                data = URI.decodePath(data.substring(2).replace("+", " "));
                 // replace("\u005c", "") is'not compiled by maven compiler (92)
                 data = data.substring(1, data.length()-1)
-                           .replace(Character.toString((char) 92), "")
-                           .replace("\":+", "\": ").replace("\",+", "\", ");
+                           .replace(Character.toString((char) 92), "");
                 return data;
             } else {
                 return "";

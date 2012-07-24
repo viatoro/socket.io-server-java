@@ -70,17 +70,17 @@ final class JSONPPollingDataHandler extends AbstractDataHandler {
     @Override
     public void onStartSend(HttpServletResponse response) throws IOException {
         response.setContentType("text/javascript; charset=UTF-8");
-        response.getOutputStream().print("io.j[" + session.getAttribute(FRAME_ID) + "]('");
     }
 
     @Override
     public void onWriteData(ServletResponse response, String data) throws IOException {
+        response.getOutputStream().print("io.j[" + session.getAttribute(FRAME_ID) + "]('");
         response.getOutputStream().print(data);
+        response.getOutputStream().print("');");
     }
 
     @Override
     public void onFinishSend(ServletResponse response) throws IOException {
-        response.getOutputStream().print("');");
         response.flushBuffer();
     }
 
