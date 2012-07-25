@@ -123,12 +123,12 @@ public abstract class SocketIOServlet extends HttpServlet {
                           ":" + DEFAULT_HEARTBEAT_TIMEOUT +
                           ":" + DEFAULT_TIMEOUT + ":"; // sessionId : heartbeat : timeout
 
-            String transports = ""; // websocket,flashsocket,xhr-polling,jsonp-polling,htmlfile,xhr-multipart
-            for (Transport transport : config.getTransports()) {
+            String transports = "flashsocket"; // websocket,flashsocket,xhr-polling,jsonp-polling,htmlfile,xhr-multipart
+            /*for (Transport transport : config.getTransports()) {
                 if (!transports.isEmpty())
                     transports += ",";
                 transports += transport.getType().toString();
-            }
+            }*/
             body += transports;
 
             os.write(body.getBytes());

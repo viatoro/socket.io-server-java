@@ -198,17 +198,6 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
             if (!is_open && buffer.isEmpty()) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             } else {
-                Continuation cont = (Continuation) request.getAttribute(CONTINUATION_KEY);
-                if (continuation != null || cont != null) {
-                    if (continuation == cont) {
-                        continuation = null;
-                        dataHandler.onFinishSend(response);
-                    }
-                    if (cont != null) {
-                        request.removeAttribute(CONTINUATION_KEY);
-                    }
-                    return;
-                }
                 if (!dataHandler.isConnectionPersistent()) {
                     if (!buffer.isEmpty()) {
                         List<String> messages = buffer.drainMessages();
@@ -228,12 +217,13 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
                         }
                     } else {
                         getSession().clearTimeoutTimer();
-                        response.setBufferSize(bufferSize);
+                        if (response.getBufferSize() == 0) {
+                            response.setBufferSize(bufferSize);
+                        }
                         continuation = ContinuationSupport.getContinuation(request);
                         continuation.addContinuationListener(this);
                         continuation.setTimeout(continuationTimeout);
                         continuation.suspend(response);
-                        request.setAttribute(CONTINUATION_KEY, continuation);
                         dataHandler.onStartSend(response);
                     }
                 } else {
@@ -354,7 +344,6 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
         dataHandler.onFinishSend(response);
         if (continuation != null) {
             if (dataHandler.isConnectionPersistent()) {
-                request.setAttribute(CONTINUATION_KEY, continuation);
                 continuation.suspend(response);
             } else {
                 continuation = null;
