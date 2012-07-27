@@ -88,7 +88,8 @@ public final class JettyWebSocketTransport extends AbstractTransport {
             }
         }
 
-        if ("GET".equals(request.getMethod()) && sessionId != null && transport.equals("websocket")) {
+        if ("GET".equals(request.getMethod()) && sessionId != null
+                && (transport.equals("websocket") || transport.equals("flashsocket"))) {
             boolean hixie = request.getHeader("Sec-WebSocket-Key1") != null;
 
             String protocol = request.getHeader(hixie ? "Sec-WebSocket-Protocol" : "WebSocket-Protocol");
@@ -122,6 +123,7 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                 }
 
                 wsFactory.upgrade(request, response, WebSocket.class.cast(handler), protocol);
+
                 handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
             }
         } else {

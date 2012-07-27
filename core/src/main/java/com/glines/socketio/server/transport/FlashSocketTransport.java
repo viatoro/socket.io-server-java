@@ -92,6 +92,7 @@ public class FlashSocketTransport extends AbstractTransport {
             try {
                 startFlashPolicyServer();
             } catch (IOException e) {
+                e.printStackTrace();
                 // Ignore
             }
         }
@@ -115,7 +116,7 @@ public class FlashSocketTransport extends AbstractTransport {
         }
         if (path.startsWith("/")) path = path.substring(1);
         String[] parts = path.split("/");
-        if ("GET".equals(request.getMethod()) && TransportType.FLASH_SOCKET.name().equals(parts[1])) {
+        if ("GET".equals(request.getMethod()) && "flashsocket".equals(parts[1])) {
             if (!FLASHFILE_PATH.equals(path)) {
                 delegate.handle(request, response, inboundFactory, sessionFactory);
             } else {
