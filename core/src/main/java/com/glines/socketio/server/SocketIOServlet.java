@@ -116,53 +116,51 @@ public abstract class SocketIOServlet extends HttpServlet {
         if (path.startsWith("/")) path = path.substring(1);
         String[] parts = path.split("/");
 
-        if (parts.length <= 2) { // handshake
+        if ("GET".equals(request.getMethod()) && "socket.io.js".equals(parts[0])) {
+            response.setContentType("text/javascript");
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/socket.io.js");
+            OutputStream os = response.getOutputStream();
+            IO.copy(is, os);
+            return;
+        } else if ("GET".equals(request.getMethod()) && "WebSocketMain.swf".equals(parts[0])) {
+            response.setContentType("application/x-shockwave-flash");
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/WebSocketMain.swf");
+            OutputStream os = response.getOutputStream();
+            IO.copy(is, os);
+            return;
+        } else if (parts.length <= 2) { // handshake
             OutputStream os = response.getOutputStream();
 
             String body = request.getSession().getId().toString() +
                           ":" + DEFAULT_HEARTBEAT_TIMEOUT +
                           ":" + DEFAULT_TIMEOUT + ":"; // sessionId : heartbeat : timeout
 
-            String transports = ""; // websocket,flashsocket,xhr-polling,jsonp-polling,htmlfile,xhr-multipart
-            for (Transport transport : config.getTransports()) {
+            String transports = "htmlfile"; // websocket,flashsocket,xhr-polling,jsonp-polling,htmlfile,xhr-multipart
+            /*for (Transport transport : config.getTransports()) {
                 if (!transports.isEmpty())
                     transports += ",";
                 transports += transport.getType().toString();
-            }
+            }*/
             body += transports;
 
             os.write(body.getBytes());
             return;
-        }
-        Transport transport = config.getTransport(TransportType.from(parts[1]));
-        if (transport == null) {
-            if ("GET".equals(request.getMethod()) && "socket.io.js".equals(parts[0])) {
-                response.setContentType("text/javascript");
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/socket.io.js");
-                OutputStream os = response.getOutputStream();
-                IO.copy(is, os);
-                return;
-            }else if ("GET".equals(request.getMethod()) && "WebSocketMain.swf".equals(parts[0])) {
-                response.setContentType("application/x-shockwave-flash");
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/WebSocketMain.swf");
-                OutputStream os = response.getOutputStream();
-                IO.copy(is, os);
-                return;
-            } else {
+        } else {
+            Transport transport = config.getTransport(TransportType.from(parts[1]));
+            if (transport == null) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown SocketIO transport: " + parts[0]);
                 return;
             }
-        }
-
-        if (LOGGER.isLoggable(Level.FINE))
+            if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Handling request from " + request.getRemoteHost() + ":" + request.getRemotePort() + " with transport: " + transport.getType());
 
-        transport.handle(request, response, new Transport.InboundFactory() {
-            @Override
-            public SocketIOInbound getInbound(HttpServletRequest request) {
-                return SocketIOServlet.this.doSocketIOConnect(request);
-            }
-        }, sessionManager);
+            transport.handle(request, response, new Transport.InboundFactory() {
+                @Override
+                public SocketIOInbound getInbound(HttpServletRequest request) {
+                    return SocketIOServlet.this.doSocketIOConnect(request);
+                }
+            }, sessionManager);
+        }
     }
 
 }
