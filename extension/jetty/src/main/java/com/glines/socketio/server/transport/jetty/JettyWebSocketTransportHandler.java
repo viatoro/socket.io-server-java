@@ -148,8 +148,10 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
 
     @Override
     public void abort() {
-        outbound.disconnect();
-        outbound = null;
+        if (outbound != null) {
+            outbound.disconnect();
+            outbound = null;
+        }
         getSession().onShutdown();
     }
 
