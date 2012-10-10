@@ -125,12 +125,11 @@ class DefaultSession implements SocketIOSession {
         }
     }
 
-    private void sendPing() {
-        String data = "" + messageId.incrementAndGet();
+    private void sendHeartBeat() {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: sendPing " + data);
+            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: send heartbeat ");
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
+            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.HEARTBEAT, 0, ""));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
@@ -146,7 +145,7 @@ class DefaultSession implements SocketIOSession {
             hbDelayTask = scheduleTask(new Runnable() {
                 @Override
                 public void run() {
-                    sendPing();
+                    sendHeartBeat();
                 }
             }, hbDelay);
         }
@@ -292,6 +291,7 @@ class DefaultSession implements SocketIOSession {
                 try {
                     state = ConnectionState.CONNECTED;
                     inbound.onConnect(handler);
+                    startHeartbeatTimer();
                 } catch (Throwable e) {
                     if (LOGGER.isLoggable(Level.WARNING))
                         LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onConnect()", e);
