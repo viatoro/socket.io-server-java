@@ -180,7 +180,7 @@ public class SocketIOConnectionXHRBase implements SocketIOConnection {
 
 	@Override
 	public void sendMessage(int messageType, String message) throws SocketIOException {
-		sendFrame(new SocketIOFrame(SocketIOFrame.FrameType.DATA, messageType, message));
+		sendFrame(new SocketIOFrame(SocketIOFrame.FrameType.MESSAGE, messageType, message));
 	}
 
 	protected void sendFrame(SocketIOFrame frame) {
@@ -218,27 +218,21 @@ public class SocketIOConnectionXHRBase implements SocketIOConnection {
 	
 	protected void onFrame(SocketIOFrame frame) {
 		switch (frame.getFrameType()) {
-		case SESSION_ID:
+		case CONNECT:
 			if (state == ConnectionState.CONNECTING) {
 				sessionId = frame.getData();
 				state = ConnectionState.CONNECTED;
 				listener.onConnect();
 			}
 			break;
-		case HEARTBEAT_INTERVAL:
+		case HEARTBEAT:
 			timeout = Integer.parseInt(frame.getData());
 			startTimeoutTimer();
 			break;
 		case CLOSE:
 			onClose(frame.getData());
 			break;
-		case PING:
-			onPing(frame.getData());
-			break;
-		case PONG:
-			onPong(frame.getData());
-			break;
-		case DATA:
+		case MESSAGE:
 			onMessageData(frame.getMessageType(), frame.getData());
 			break;
 		default:
@@ -257,14 +251,6 @@ public class SocketIOConnectionXHRBase implements SocketIOConnection {
 			disconnectWhenEmpty = true;
 			sendFrame(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
 		}
-	}
-
-	protected void onPing(String data) {
-		sendFrame(new SocketIOFrame(SocketIOFrame.FrameType.PONG, 0, data));
-	}
-
-	protected void onPong(String data) {
-		// Ignore
 	}
 
 	protected void onMessageData(int messageType, String data) {
