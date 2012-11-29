@@ -49,6 +49,7 @@ public abstract class SocketIOServlet extends HttpServlet {
     public final static String DEFAULT_HEARTBEAT_TIMEOUT = "defaultHeartbeatTimeout";
     public final static String DEFAULT_TIMEOUT = "defaultTimeout";
 
+    public final static String MAX_TEXT_MESSAGE_SIZE = "maxTextMessageSize";
 
     @Override
     public void init() throws ServletException {

@@ -54,6 +54,7 @@ public final class JettyWebSocketTransport extends AbstractTransport {
 
     @Override
     public void init() throws TransportInitializationException {
+        wsFactory.setMaxTextMessageSize(getConfig().getInt(SocketIOServlet.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.setBufferSize(getConfig().getBufferSize());
         wsFactory.setMaxIdleTime(getConfig().getMaxIdle());
 
