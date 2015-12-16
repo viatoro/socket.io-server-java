@@ -58,6 +58,11 @@ public class BroadcastSocketServlet extends SocketIOServlet {
             broadcast(messageType, message);
         }
 
+        @Override
+        public void onEvent(String name, String args) {
+
+        }
+
         private void broadcast(int messageType, String message) {
             for (BroadcastConnection c : connections) {
                 if (c != this) {

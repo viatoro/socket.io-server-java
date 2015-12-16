@@ -169,6 +169,11 @@ public class EventBusServlet extends SocketIOServlet {
             }
         }
 
+        @Override
+        public void onEvent(String name, String args) {
+
+        }
+
         void close() {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, this + " closing.");

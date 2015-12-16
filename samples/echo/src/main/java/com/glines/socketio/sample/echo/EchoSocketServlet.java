@@ -57,6 +57,11 @@ public class EchoSocketServlet extends SocketIOServlet {
 				outbound.disconnect();
 			}
 		}
+
+		@Override
+		public void onEvent(String name, String args) {
+
+		}
 	}
 
 	@Override

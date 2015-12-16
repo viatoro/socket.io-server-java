@@ -117,6 +117,11 @@ public class GWTChatSocketServlet extends SocketIOServlet {
             }
         }
 
+        @Override
+        public void onEvent(String name, String args) {
+
+        }
+
         private void broadcast(int messageType, String message) {
             for (GWTChatConnection c : connections) {
                 if (c != this) {

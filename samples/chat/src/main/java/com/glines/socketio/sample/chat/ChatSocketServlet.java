@@ -140,6 +140,11 @@ public class ChatSocketServlet extends SocketIOServlet {
             }
         }
 
+        @Override
+        public void onEvent(String name, String args) {
+
+        }
+
         private void broadcast(int messageType, String message) {
             for (ChatConnection c : connections) {
                 if (c != this) {

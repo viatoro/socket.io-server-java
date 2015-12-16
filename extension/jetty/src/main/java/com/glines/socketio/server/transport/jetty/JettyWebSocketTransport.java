@@ -32,36 +32,28 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.glines.socketio.server.*;
-import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketFactory;
-import org.eclipse.jetty.websocket.WebSocketFactory.Acceptor;
+
+import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 
 public final class JettyWebSocketTransport extends AbstractTransport {
 
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransport.class.getName());
 
-    private final WebSocketFactory wsFactory = new WebSocketFactory(new Acceptor() {
-      @Override
-      public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public boolean checkOrigin(HttpServletRequest arg0, String arg1) {
-        throw new UnsupportedOperationException();
-      }
-    });
+    private final WebSocketServerFactory wsFactory = new WebSocketServerFactory();
 
     @Override
     public void init() throws TransportInitializationException {
-        wsFactory.setMaxTextMessageSize(getConfig().getInt(SocketIOServlet.MAX_TEXT_MESSAGE_SIZE, 32000));
-        wsFactory.setBufferSize(getConfig().getBufferSize());
-        wsFactory.setMaxIdleTime(getConfig().getMaxIdle());
+        wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(SocketIOServlet.MAX_TEXT_MESSAGE_SIZE, 32000));
+        wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
+        wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());
 
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine(getType() + " configuration:\n" +
-                    " - bufferSize=" + wsFactory.getBufferSize() + "\n" +
-                    " - maxIdle=" + wsFactory.getMaxIdleTime());
+                    " - bufferSize=" + wsFactory.getPolicy().getInputBufferSize() + "\n" +
+                    " - maxIdle=" + wsFactory.getPolicy().getIdleTimeout());
     }
 
     @Override
@@ -89,18 +81,18 @@ public final class JettyWebSocketTransport extends AbstractTransport {
         }
 
         if ("GET".equals(request.getMethod()) && sessionId != null
-                && (transport.equals("websocket") || transport.equals("flashsocket"))) {
+                && ("websocket".equals(transport) || "flashsocket".equals(transport))) {
             boolean hixie = request.getHeader("Sec-WebSocket-Key1") != null;
 
             String protocol = request.getHeader(hixie ? "Sec-WebSocket-Protocol" : "WebSocket-Protocol");
             if (protocol == null)
                 protocol = request.getHeader("Sec-WebSocket-Protocol");
 
-            String host = request.getHeader("Host");
-            String origin = request.getHeader("Origin");
-            if (origin == null) {
-                origin = host;
-            }
+//            String host = request.getHeader("Host");
+//            String origin = request.getHeader("Origin");
+//            if (origin == null) {
+//                origin = host;
+//            }
 
             SocketIOInbound inbound = inboundFactory.getInbound(request);
             if (inbound == null) {
@@ -110,21 +102,27 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             } else {
                 SocketIOSession session;
-                TransportHandler handler;
+                final TransportHandler handler;
                 session = sessionFactory.getSession(sessionId);
 
                 if (session == null) {
                     session = sessionFactory.createSession(inbound, sessionId);
-                    handler = newHandler(WebSocket.class, session);
+                    handler = newHandler(JettyWebSocketTransportHandler.class, session);
                     handler.init(getConfig());
                     //handler.onConnect();
                 } else {
                     handler = session.getTransportHandler();
                 }
 
-                wsFactory.upgrade(request, response, WebSocket.class.cast(handler), protocol);
-                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
-                handler.onConnect();
+                wsFactory.acceptWebSocket(new WebSocketCreator() {
+                        @Override
+                        public Object createWebSocket(ServletUpgradeRequest servletUpgradeRequest, ServletUpgradeResponse servletUpgradeResponse) {
+                            return handler;
+                        }
+                    }, request, response);
+
+//                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
+//                handler.onConnect();
             }
         } else {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, this + " transport error: Invalid request");

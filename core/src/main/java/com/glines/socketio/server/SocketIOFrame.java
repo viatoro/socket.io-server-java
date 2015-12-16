@@ -79,6 +79,8 @@ public class SocketIOFrame {
 		}
 	}
 
+	//TODO: Why we need these if we have FrameType enum? need to refactor
+	//TODO: for now FrameType.EVENT will always be JSON_MESSAGE_TYPE
 	public static final int TEXT_MESSAGE_TYPE = 0;
 	public static final int JSON_MESSAGE_TYPE = 1;
 	

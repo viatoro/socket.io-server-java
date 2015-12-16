@@ -27,6 +27,7 @@ package com.glines.socketio.server;
 import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
+import com.glines.socketio.util.JSON;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -199,6 +200,7 @@ class DefaultSession implements SocketIOSession {
                 onPing(message.getData());
             case HEARTBEAT:
                 // Ignore this message type as they are only intended to be from server to client.
+                //TODO: socket.io client echoes heartbeat message back
                 startHeartbeatTimer();
                 break;
             case CLOSE:
@@ -211,6 +213,23 @@ class DefaultSession implements SocketIOSession {
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage: " + message.getData());
                 onMessage(message.getData());
+                break;
+            case EVENT:
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onEvent: " + message.getData());
+                try {
+                    Map json = (Map)JSON.parse(message.getData());
+                    String name = json.get("name").toString();
+                    Object args = json.get("args");
+                    if(args.getClass().isArray()) {
+                        for(Object o: (Object[])args)
+                            onEvent(name, o.toString());
+                    } else
+                        onEvent(name, JSON.toString(args));
+
+                } catch(ClassCastException | NullPointerException e) {
+                    LOGGER.log(Level.WARNING, "Invalid payload format: ", e);
+                }
                 break;
             default:
                 // Ignore unknown message types
@@ -229,6 +248,7 @@ class DefaultSession implements SocketIOSession {
         }
     }
 
+    //TODO: this is never called. need to inverstigate
     @Override
     public void onPong(String data) {
         clearTimeoutTimer();
@@ -315,6 +335,19 @@ class DefaultSession implements SocketIOSession {
             }
         }
     }
+
+    @Override
+    public void onEvent(String name, String args) {
+        if (inbound != null) {
+            try {
+                inbound.onEvent(name, args);
+            } catch (Throwable e) {
+                if (LOGGER.isLoggable(Level.WARNING))
+                    LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onEvent()", e);
+            }
+        }
+    }
+
 
     @Override
     public void onDisconnect(DisconnectReason reason) {

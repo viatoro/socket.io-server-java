@@ -31,11 +31,12 @@ import com.glines.socketio.common.SocketIOException;
 import com.glines.socketio.server.*;
 import com.glines.socketio.server.transport.DataHandler;
 import com.glines.socketio.util.IO;
+import com.glines.socketio.util.JSON;
 import com.glines.socketio.util.URI;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.eclipse.jetty.server.AbstractHttpConnection;
+import org.eclipse.jetty.server.HttpConnection;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -190,6 +192,22 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
         } else {
             throw new SocketIOClosedException();
         }
+    }
+
+    @Override
+    public void emitEvent(String name, String args) throws SocketIOException {
+        //TODO: code duplication
+        if (is_open && getSession().getConnectionState() == ConnectionState.CONNECTED) {
+            HashMap<String, Object> map = new HashMap<String, Object>();
+            map.put("name", name);
+            map.put("args", new Object[] { args });
+            sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.EVENT,
+                    SocketIOFrame.JSON_MESSAGE_TYPE,
+                    JSON.toString(map)));
+        } else {
+            throw new SocketIOClosedException();
+        }
+
     }
 
     @Override
@@ -387,7 +405,7 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
      * This must be called within the context of an active HTTP request.
      */
     private static ConnectionTimeoutPreventer newTimeoutPreventor() {
-        AbstractHttpConnection httpConnection = AbstractHttpConnection.getCurrentConnection();
+        HttpConnection httpConnection = HttpConnection.getCurrentConnection();
         if (httpConnection == null) {
             LOGGER.log(Level.FINE, "No HttpConnection boundto local thread: " + Thread.currentThread().getName());
             return new ConnectionTimeoutPreventer() {

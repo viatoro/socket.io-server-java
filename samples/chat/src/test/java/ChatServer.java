@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.glines.socketio.sample.chat.ChatSocketServlet;
 import com.glines.socketio.server.SocketIOConfig;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -49,7 +49,7 @@ public class ChatServer {
 			path = path.substring(req.getContextPath().length());
 			if ("/json.js".equals(path)) {
 				resp.setContentType("text/javascript");
-				InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/examples/chat/json.js");
+				InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/sample/chat/json.js");
 				OutputStream os = resp.getOutputStream();
 				byte[] data = new byte[8192];
 				int nread = 0;
@@ -61,7 +61,7 @@ public class ChatServer {
 				}
 			} else if ("/chat.html".equals(path)) {
 				resp.setContentType("text/html");
-				InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/examples/chat/chat.html");
+				InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/sample/chat/chat.html");
 				OutputStream os = resp.getOutputStream();
 				byte[] data = new byte[8192];
 				int nread = 0;
@@ -94,7 +94,7 @@ public class ChatServer {
 		}
 		
 		Server server = new Server();
-	    SelectChannelConnector connector = new SelectChannelConnector();
+		ServerConnector connector = new ServerConnector(server);
 	    connector.setHost(host);
 	    connector.setPort(port);
 

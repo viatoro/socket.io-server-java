@@ -66,6 +66,7 @@ public interface SocketIOSession {
 	void onPing(String data);
 	void onPong(String data);
 	void onClose(String data);
+	void onEvent(String name, String args);
 
 	/**
 	 * Schedule a task (e.g. timeout timer)

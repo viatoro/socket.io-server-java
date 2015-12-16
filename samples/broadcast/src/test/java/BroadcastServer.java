@@ -25,7 +25,7 @@
 import com.glines.socketio.sample.broadcast.BroadcastSocketServlet;
 import com.glines.socketio.server.SocketIOConfig;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -49,7 +49,7 @@ public class BroadcastServer {
 		}
 		
 		Server server = new Server();
-	    SelectChannelConnector connector = new SelectChannelConnector();
+		ServerConnector connector = new ServerConnector(server);
 	    connector.setHost(host);
 	    connector.setPort(port);
 

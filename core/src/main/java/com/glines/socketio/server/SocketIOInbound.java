@@ -52,4 +52,12 @@ public interface SocketIOInbound {
      * @param message
      */
     void onMessage(int messageType, String message);
+
+    /**
+     * Called one per arriving event.
+     *
+     * @param name event name
+     * @param args event payload
+     */
+    void onEvent(String name, String args);
 }
