@@ -54,8 +54,8 @@ import java.util.logging.Logger;
 @WebSocket
 public final class JettyWebSocketTransportHandler extends AbstractTransportHandler  {
 
-    private static final long DEFAULT_HEARTBEAT_DELAY = SocketIOConfig.DEFAULT_MAX_IDLE / 2;
-    private static final long DEFAULT_HEARTBEAT_TIMEOUT = 10 * 1000;
+//    private static final long DEFAULT_HEARTBEAT_DELAY = SocketIOConfig.DEFAULT_MAX_IDLE / 2;
+//    private static final long DEFAULT_HEARTBEAT_TIMEOUT = 10 * 1000;
 
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
@@ -63,8 +63,8 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
 
     @Override
     protected void init() {
-        getSession().setHeartbeat(getConfig().getHeartbeatDelay(DEFAULT_HEARTBEAT_DELAY));
-        getSession().setTimeout(getConfig().getHeartbeatTimeout(DEFAULT_HEARTBEAT_TIMEOUT));
+        getSession().setHeartbeat(getConfig().getHeartbeatDelay(SocketIOConfig.DEFAULT_HEARTBEAT_INTERVAL));
+        getSession().setTimeout(getConfig().getHeartbeatTimeout(SocketIOConfig.DEFAULT_HEARTBEAT_TIMEOUT));
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine(getConfig().getNamespace() + " transport handler configuration:\n" +
                     " - heartbeatDelay=" + getSession().getHeartbeat() + "\n" +

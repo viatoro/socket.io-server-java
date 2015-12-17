@@ -41,6 +41,9 @@ public interface SocketIOConfig {
     int DEFAULT_BUFFER_SIZE = 8192;
     int DEFAULT_MAX_IDLE = 300 * 1000;
 
+    int DEFAULT_HEARTBEAT_INTERVAL = 25 * 1000; // 25s
+    int DEFAULT_HEARTBEAT_TIMEOUT  = 60 * 1000; // 60s
+
     long getHeartbeatDelay(long def);
     long getHeartbeatTimeout(long def);
     long getTimeout(long def);
