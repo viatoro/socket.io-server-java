@@ -63,7 +63,7 @@
     <!-- CATEGORIES -->
     <!-- ========== -->
 
-    <category name="com.glines">
+    <category name="com.codeminders">
         <priority value="TRACE"/>
     </category>
 

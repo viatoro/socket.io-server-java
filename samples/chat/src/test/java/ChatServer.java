@@ -31,16 +31,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.glines.socketio.sample.chat.ChatSocketServlet;
-import com.glines.socketio.server.SocketIOConfig;
+import com.codeminders.socketio.sample.chat.ChatSocketServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import com.glines.socketio.server.transport.FlashSocketTransport;
-
 public class ChatServer {
+
+	//TODO: use Jetty DefaultServlet
 	private static class StaticServlet extends HttpServlet {
 		@Override
 		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -49,7 +48,7 @@ public class ChatServer {
 			path = path.substring(req.getContextPath().length());
 			if ("/json.js".equals(path)) {
 				resp.setContentType("text/javascript");
-				InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/sample/chat/json.js");
+				InputStream is = this.getClass().getClassLoader().getResourceAsStream("webapp/json.js");
 				OutputStream os = resp.getOutputStream();
 				byte[] data = new byte[8192];
 				int nread = 0;
@@ -61,7 +60,7 @@ public class ChatServer {
 				}
 			} else if ("/chat.html".equals(path)) {
 				resp.setContentType("text/html");
-				InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/sample/chat/chat.html");
+				InputStream is = this.getClass().getClassLoader().getResourceAsStream("webapp/chat.html");
 				OutputStream os = resp.getOutputStream();
 				byte[] data = new byte[8192];
 				int nread = 0;
@@ -102,11 +101,10 @@ public class ChatServer {
 
 	    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 	    ServletHolder holder = new ServletHolder(new ChatSocketServlet());
-	    holder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_SERVER_HOST, host);
-	    holder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_DOMAIN, host);
-	    holder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_PORTS, ""+ port);
 	    context.addServlet(holder, "/socket.io/*");
-	    context.addServlet(new ServletHolder(new StaticServlet()), "/*");
+
+        //TODO: use Jetty DefaultServlet
+        context.addServlet(new ServletHolder(new StaticServlet()), "/*");
 
 	    server.setHandler(context);
 	    server.start();

@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.glines.socketio</groupId>
+        <groupId>com.codeminders.socketio</groupId>
         <artifactId>socketio</artifactId>
-        <version>0.2.2</version>
+        <version>0.3</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <groupId>com.glines.socketio.extension</groupId>
+    <groupId>com.codeminders.socketio.extension</groupId>
     <artifactId>socketio-extension</artifactId>
     <packaging>pom</packaging>
 
@@ -20,8 +20,6 @@
 
     <modules>
         <module>jetty</module>
-        <!--<module>jre</module>-->
-        <module>gwt</module>
     </modules>
 
 </project>

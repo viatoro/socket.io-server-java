@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.glines.socketio.sample</groupId>
+        <groupId>com.codeminders.socketio.sample</groupId>
         <artifactId>socketio-sample</artifactId>
-        <version>0.2.2</version>
+        <version>0.3</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -19,11 +19,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.glines.socketio</groupId>
+            <groupId>com.codeminders.socketio</groupId>
             <artifactId>socketio-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.glines.socketio.extension</groupId>
+            <groupId>com.codeminders.socketio.extension</groupId>
             <artifactId>socketio-jetty</artifactId>
         </dependency>
         <dependency>
@@ -50,6 +50,7 @@
             <artifactId>servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
 </project>

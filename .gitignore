@@ -20,5 +20,5 @@ dist
 war
 build.properties
 target
-com.glines.socketio.sample.gwtchat.GWTChat
+com.codeminders.socketio.sample.gwtchat.GWTChat
 samples/chat-gwt/src/main/gwt-unitCache/

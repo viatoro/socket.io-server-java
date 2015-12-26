@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.glines.socketio</groupId>
+        <groupId>com.codeminders.socketio</groupId>
         <artifactId>socketio</artifactId>
-        <version>0.2.2</version>
+        <version>0.3</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <groupId>com.glines.socketio.sample</groupId>
+    <groupId>com.codeminders.socketio.sample</groupId>
     <artifactId>socketio-sample</artifactId>
     <packaging>pom</packaging>
 
@@ -19,11 +19,7 @@
     <description>Socket.IO Java Samples</description>
 
     <modules>
-        <module>echo</module>
-        <module>broadcast</module>
-        <module>eventbus</module>
         <module>chat</module>
-        <module>chat-gwt</module>
     </modules>
 
     <profiles>

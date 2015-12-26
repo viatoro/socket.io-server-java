@@ -1,0 +1,2 @@
+com.codeminders.socketio.server.transport.jetty.JettyWebSocketTransportConnection
+com.codeminders.socketio.server.transport.jetty.JettyContinuationTransportConnection
