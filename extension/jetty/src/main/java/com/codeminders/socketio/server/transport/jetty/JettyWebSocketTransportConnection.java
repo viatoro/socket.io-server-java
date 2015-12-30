@@ -1,19 +1,19 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
- *
+ * <p/>
  * Contributors: Ovea.com, Mycila.com
- *
+ * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p/>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,15 +47,14 @@ import java.util.logging.Logger;
 
 /**
  * @author Alexander Sova <bird@codeminders.com>
- * @author Mathieu Carbou
  */
+
 @WebSocket
 public final class JettyWebSocketTransportConnection extends AbstractTransportConnection
 {
-
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportConnection.class.getName());
 
-    private Session outbound;
+    private Session   remote_endpoint;
     private Transport transport;
 
     public JettyWebSocketTransportConnection(Transport transport)
@@ -64,121 +63,156 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
-    protected void init() {
-        getSession().setHeartbeat(getConfig().getHeartbeatDelay(SocketIOConfig.DEFAULT_HEARTBEAT_INTERVAL));
+    protected void init()
+    {
         getSession().setTimeout(getConfig().getHeartbeatTimeout(SocketIOConfig.DEFAULT_HEARTBEAT_TIMEOUT));
+
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine(getConfig().getNamespace() + " transport handler configuration:\n" +
-                    " - heartbeatDelay=" + getSession().getHeartbeat() + "\n" +
-                    " - heartbeatTimeout=" + getSession().getTimeout());
+            LOGGER.fine(getConfig().getNamespace() + " WebSocket Connection configuration:\n" +
+                    " - timeout=" + getSession().getTimeout());
     }
 
     @OnWebSocketConnect
-    public void onWebSocketConnect(Session session) {
-        outbound = session;
-        try {
-            sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
-        } catch (SocketIOException e) {
-            LOGGER.log(Level.SEVERE, "Cannot connect", e);
-        }
-        onConnect();
+    public void onWebSocketConnect(Session session)
+    {
+        remote_endpoint = session;
+        try
+        {
+            send(EngineIOProtocol.createHandshakePacket(getSession().getSessionId(),
+                    new String[] {},
+                    getConfig().getPingInterval(SocketIOConfig.DEFAULT_PING_INTERVAL),
+                    getConfig().getTimeout(SocketIOConfig.DEFAULT_PING_TIMEOUT)));
 
+            send(new SocketIOPacket(SocketIOPacket.Type.CONNECT));
+
+        }
+        catch (SocketIOException e)
+        {
+            LOGGER.log(Level.SEVERE, "Cannot onConnect", e);
+            getSession().onConnect(null); //TODO: use different callback if connection failed
+        }
+        getSession().onConnect(this);
     }
 
     @OnWebSocketClose
-    public void onWebSocketClose(int closeCode, String message) {
+    public void onWebSocketClose(int closeCode, String message)
+    {
         getSession().onShutdown();
     }
 
     @OnWebSocketMessage
-    public void onWebSocketText(String message) {
-        getSession().startHeartbeatTimer();
-        List<SocketIOFrame> messages = SocketIOFrame.parse(message);
-        for (SocketIOFrame msg : messages) {
-            getSession().onMessage(msg);
+    public void onWebSocketText(String text)
+    {
+        if(LOGGER.isLoggable(Level.FINE))
+            LOGGER.fine("Packet received: " + text);
+
+        //TODO: check if it is possible to get multiple packets in one transmission
+        //TODO: for now we expect single packet per call
+        getSession().startTimeoutTimer();
+
+        try
+        {
+            getSession().onPacket(EngineIOProtocol.decode(text));
+        }
+        catch (SocketIOProtocolException e)
+        {
+            LOGGER.log(Level.WARNING, "Invalid EIO packet received", e);
         }
     }
 
     @OnWebSocketMessage
-    public void onWebSocketBinary(byte[] data, int offset, int length) {
-        try {
+    public void onWebSocketBinary(byte[] data, int offset, int length)
+    {
+        //TODO: use proper binary encoding/decoding defined in EIO
+        try
+        {
             onWebSocketText(new String(data, offset, length, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
+        }
+        catch (UnsupportedEncodingException e)
+        {
             // Do nothing for now.
         }
     }
 
     @Override
-    public void disconnect() {
+    public void disconnect()
+    {
         getSession().onDisconnect(DisconnectReason.DISCONNECT);
-        try {
-            outbound.disconnect();
-        } catch (IOException e) {
-            //TODO: report?
-        }
+        disconnectEndpoint();
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         getSession().startClose();
     }
 
     @Override
-    public ConnectionState getConnectionState() {
+    public ConnectionState getConnectionState()
+    {
         return getSession().getConnectionState();
     }
 
     @Override
-    public void sendMessage(SocketIOFrame frame) throws SocketIOException {
-        if (outbound.isOpen()) {
+    public void sendMessage(SocketIOFrame frame) throws SocketIOException
+    {
+        if (remote_endpoint.isOpen())
+        {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: sendMessage: [" + frame.getFrameType() + "]: " + frame.getData());
-            try {
-                outbound.getRemote().sendString(frame.encode());
-            } catch (IOException e) {
-                try {
-                    outbound.disconnect();
-                } catch(IOException ex) {
-                 //TODO: report?
-                }
+            try
+            {
+                remote_endpoint.getRemote().sendString(frame.encode());
+            }
+            catch (IOException e)
+            {
+                disconnectEndpoint();
                 throw new SocketIOException(e);
             }
-        } else {
-            throw new SocketIOClosedException();
         }
+        else
+            throw new SocketIOClosedException();
     }
 
     @Override
-    public void sendMessage(String message) throws SocketIOException {
+    public void sendMessage(String message) throws SocketIOException
+    {
         sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
     }
 
     @Override
     public void sendMessage(int messageType, String message)
-            throws SocketIOException {
-        if (outbound.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED) {
+            throws SocketIOException
+    {
+        if (remote_endpoint.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED)
+        {
             sendMessage(new SocketIOFrame(
-                        messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
-                                SocketIOFrame.FrameType.MESSAGE :
-                                SocketIOFrame.FrameType.JSON_MESSAGE,
-                        messageType, message));
-        } else {
+                    messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
+                            SocketIOFrame.FrameType.MESSAGE :
+                            SocketIOFrame.FrameType.JSON_MESSAGE,
+                    messageType, message));
+        }
+        else
+        {
             throw new SocketIOClosedException();
         }
     }
 
     @Override
     public void emitEvent(String name, String args)
-            throws SocketIOException {
-
-        if (outbound.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED) {
+            throws SocketIOException
+    {
+        if (remote_endpoint.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED)
+        {
             HashMap<String, Object> map = new HashMap<String, Object>();
             map.put("name", name);
-            map.put("args", new Object[] { args });
+            map.put("args", new Object[]{args});
             sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.EVENT,
-                            SocketIOFrame.JSON_MESSAGE_TYPE,
-                            JSON.toString(map)));
-        } else {
+                    SocketIOFrame.JSON_MESSAGE_TYPE,
+                    JSON.toString(map)));
+        }
+        else
+        {
             throw new SocketIOClosedException();
         }
 
@@ -197,30 +231,55 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException
+    {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unexpected request on upgraded WebSocket connection");
     }
 
     @Override
     public void abort()
     {
-        if (outbound != null)
+        if (remote_endpoint != null)
         {
-            try
-            {
-                outbound.disconnect();
-            }
-            catch (IOException e)
-            {
-                //ignore
-            }
-            outbound = null;
+            disconnectEndpoint();
+            remote_endpoint = null;
         }
         getSession().onShutdown();
     }
 
     @Override
-    public void onConnect() {
-        getSession().onConnect(this);
+    public void send(EngineIOPacket packet) throws SocketIOException
+    {
+        sendString(EngineIOProtocol.encode(packet));
+    }
+
+    private void sendString(String data) throws SocketIOException
+    {
+        if (!remote_endpoint.isOpen())
+            throw new SocketIOClosedException();
+
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE,
+                    "Session[" + getSession().getSessionId() + "]: sendPacket: " + data);
+        try
+        {
+            remote_endpoint.getRemote().sendString(data);
+        }
+        catch (IOException e)
+        {
+            disconnectEndpoint();
+            throw new SocketIOException(e);
+        }
+    }
+
+    private void disconnectEndpoint()
+    {
+        try
+        {
+            remote_endpoint.disconnect();
+        }
+        catch (IOException ex) {
+            // ignore
+        }
     }
 }

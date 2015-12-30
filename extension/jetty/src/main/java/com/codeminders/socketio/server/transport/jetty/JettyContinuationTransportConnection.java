@@ -344,8 +344,8 @@ public final class JettyContinuationTransportConnection
         continuation = ContinuationSupport.getContinuation(request);
         continuation.addContinuationListener(this);
 
-        // do transport-specific actions on connect
-        transport.connect(getSession(), request, response);
+        // do transport-specific actions on onConnect
+        transport.onConnect(getSession(), request, response);
 
         is_open = true;
         getSession().onConnect(this);
@@ -385,6 +385,12 @@ public final class JettyContinuationTransportConnection
         });
         buffer.clear();
         getSession().onShutdown();
+    }
+
+    @Override
+    public void send(EngineIOPacket packet) throws SocketIOException
+    {
+        //TODO: implement
     }
 
     /**
@@ -444,8 +450,8 @@ public final class JettyContinuationTransportConnection
     }
 
     @Override
-    public void onConnect()
+    public void send(SocketIOPacket packet) throws SocketIOException
     {
-        getSession().onConnect(this);
+        //TODO: implement
     }
 }

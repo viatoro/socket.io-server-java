@@ -27,6 +27,7 @@ package com.codeminders.socketio.server;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO: retire
 public class SocketIOFrame {
 	public static final char SEPERATOR_CHAR = ':';
     public static final char MESSAGE_SEPARATOR = '�'; // char code 65535
@@ -96,12 +97,12 @@ public class SocketIOFrame {
 	}
 	
 	public static List<SocketIOFrame> parse(String data) {
-		List<SocketIOFrame> messages = new ArrayList<SocketIOFrame>();
+		List<SocketIOFrame> messages = new ArrayList<>();
 
 		// Parse the data and silently ignore any part that fails to parse properly.
         int messageEnd;
         int start = 0;
-        int end = 0;
+        int end;
         while (data.length() > start) {
 			if (data.charAt(start) == MESSAGE_SEPARATOR) {
                 start += 1;
@@ -180,11 +181,11 @@ public class SocketIOFrame {
 	public FrameType getFrameType() {
 		return frameType;
 	}
-	
+
 	public int getMessageType() {
 		return messageType;
 	}
-	
+
 	public String getData() {
 		return data;
 	}

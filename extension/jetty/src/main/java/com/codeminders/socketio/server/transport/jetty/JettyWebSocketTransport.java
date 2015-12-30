@@ -67,63 +67,49 @@ public final class JettyWebSocketTransport extends AbstractTransport
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        Transport.InboundFactory inboundFactory,
-                       SessionManager sessionFactory) throws IOException {
+                       SessionManager sessionFactory) throws IOException
+    {
 
-        String sessionId = null;
-        String transport = null;
-
-        String path = request.getPathInfo();
-        if (path != null && path.length() > 0 && !"/".equals(path)) {
-            if (path.startsWith("/")) path = path.substring(1);
-            String[] parts = path.split("/");
-            if (parts.length >= 3) {
-                transport = parts[1] == null || parts[1].length() == 0 || parts[1].equals("null") ? null : parts[1];
-                sessionId = parts[2] == null || parts[2].length() == 0 || parts[2].equals("null") ? null : parts[2];
-            }
+        if(!"GET".equals(request.getMethod()))
+        {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                    "Only GET method is allowed for websocket transport");
+            return;
         }
 
-        if ("GET".equals(request.getMethod()) && sessionId != null
-                && ("websocket".equals(transport) || "flashsocket".equals(transport))) {
-            boolean hixie = request.getHeader("Sec-WebSocket-Key1") != null;
+        SocketIOInbound inbound = inboundFactory.getInbound(request);
+        if (inbound == null)
+        {
+            //TODO: research this
+            if (request.getHeader("Sec-WebSocket-Key1") != null)
+                response.setHeader("Connection", "close");
 
-            SocketIOInbound inbound = inboundFactory.getInbound(request);
-            if (inbound == null)
-            {
-                if (hixie)
-                    response.setHeader("Connection", "close");
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            return;
+        }
 
-                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            }
-            else
-            {
-                SocketIOSession session;
-                final TransportConnection connection;
-                session = sessionFactory.getSession(sessionId);
+        final TransportConnection connection;
+        String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
+        SocketIOSession session = null;
+        if(sessionId != null)
+            session = sessionFactory.getSession(sessionId);
 
-                if (session == null)
-                {
-                    session = sessionFactory.createSession(inbound, sessionId);
-                    connection = createConnection(session);
-                }
-                else
-                {
-                    connection = session.getTransportHandler();
-                }
-
-                wsFactory.acceptWebSocket(new WebSocketCreator() {
-                        @Override
-                        public Object createWebSocket(ServletUpgradeRequest servletUpgradeRequest,
-                                                      ServletUpgradeResponse servletUpgradeResponse)
-                        {
-                            return connection;
-                        }
-                    }, request, response);
-            }
+        if(session == null)
+        {
+            session = sessionFactory.createSession(inbound);
+            connection = createConnection(session);
         }
         else
-        {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, this + " transport error: Invalid request");
-        }
+            connection = session.getConnection();
+
+        wsFactory.acceptWebSocket(new WebSocketCreator() {
+                @Override
+                public Object createWebSocket(ServletUpgradeRequest servletUpgradeRequest,
+                                              ServletUpgradeResponse servletUpgradeResponse)
+                {
+                    return connection;
+                }
+            }, request, response);
     }
 
     @Override
@@ -131,5 +117,4 @@ public final class JettyWebSocketTransport extends AbstractTransport
     {
         return new JettyWebSocketTransportConnection(this);
     }
-
 }

@@ -31,8 +31,7 @@ import java.util.Collection;
  */
 public interface SocketIOConfig {
 
-    String PARAM_HEARTBEAT_DELAY = "heartbeat-delay";
-    String PARAM_HEARTBEAT_TIMEOUT = "heartbeat-timeout";
+    String PARAM_PING_INTERVAL = "pingInterval";
     String PARAM_TIMEOUT = "timeout";
 
     String PARAM_BUFFER_SIZE = "bufferSize";
@@ -41,11 +40,18 @@ public interface SocketIOConfig {
     int DEFAULT_BUFFER_SIZE = 8192;
     int DEFAULT_MAX_IDLE = 300 * 1000;
 
+    //TODO: retire heartbeat
+    String PARAM_HEARTBEAT_DELAY = "heartbeat-delay";
+    String PARAM_HEARTBEAT_TIMEOUT = "heartbeat-timeout";
     int DEFAULT_HEARTBEAT_INTERVAL = 25 * 1000; // 25s
     int DEFAULT_HEARTBEAT_TIMEOUT  = 60 * 1000; // 60s
-
     long getHeartbeatDelay(long def);
     long getHeartbeatTimeout(long def);
+
+    int DEFAULT_PING_INTERVAL = 25 * 1000; // 25s
+    int DEFAULT_PING_TIMEOUT  = 60 * 1000; // 60s
+
+    long getPingInterval(long def);
     long getTimeout(long def);
     int getBufferSize();
     int getMaxIdle();

@@ -44,6 +44,7 @@ public interface TransportConnection extends SocketIOOutbound
     void connect(HttpServletRequest request, HttpServletResponse response) throws IOException, SocketIOProtocolException;
 
     void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException;
+
     void sendMessage(SocketIOFrame message) throws SocketIOException;
     void disconnectWhenEmpty();
     /**
@@ -53,7 +54,6 @@ public interface TransportConnection extends SocketIOOutbound
      */
     void abort();
 
-    //TODO: do we need two 'connect' callbacks?
-    void onConnect();
+    void send(EngineIOPacket packet) throws SocketIOException;
 
 }

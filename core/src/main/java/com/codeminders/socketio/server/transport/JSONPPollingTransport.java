@@ -71,7 +71,7 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
     }
 
     @Override
-    public void connect(SocketIOSession session, ServletRequest request, ServletResponse response)
+    public void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response)
             throws IOException, SocketIOProtocolException
     {
         try {

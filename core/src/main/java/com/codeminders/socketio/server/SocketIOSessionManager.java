@@ -24,25 +24,52 @@
  */
 package com.codeminders.socketio.server;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
-public final class SocketIOSessionManager implements SessionManager {
+public final class SocketIOSessionManager implements SessionManager
+{
+    private static final int SESSION_ID_LEN = 20;
+    private static final char[] symbols;
 
-    final ConcurrentMap<String, SocketIOSession> socketIOSessions = new ConcurrentHashMap<String, SocketIOSession>();
-    final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    static
+    {
+        StringBuilder sb = new StringBuilder();
+        for (char ch = 'A'; ch <= 'Z'; ch++)
+            sb.append(ch);
+        for (char ch = 'a'; ch <= 'z'; ch++)
+            sb.append(ch);
+        symbols = sb.toString().toCharArray();
+    }
+
+    final ConcurrentMap<String, SocketIOSession> socketIOSessions = new ConcurrentHashMap<>();
+    final ScheduledExecutorService               executor         = Executors.newScheduledThreadPool(1);
+
+    private String gennerateSessionId()
+    {
+        while(true)
+        {
+            StringBuilder sb = new StringBuilder(SESSION_ID_LEN);
+            for (int i = 0; i < SESSION_ID_LEN; i++)
+                sb.append(symbols[ThreadLocalRandom.current().nextInt(symbols.length)]);
+
+            String id = sb.toString();
+            if(socketIOSessions.get(id) == null)
+                return id;
+        }
+
+    }
 
     @Override
-    public SocketIOSession createSession(SocketIOInbound inbound, String sessionId) {
-        DefaultSession impl = new DefaultSession(this, inbound, sessionId);
+    public SocketIOSession createSession(SocketIOInbound inbound)
+    {
+        DefaultSession impl = new DefaultSession(this, inbound, gennerateSessionId());
         socketIOSessions.put(impl.getSessionId(), impl);
         return impl;
     }
 
     @Override
-    public SocketIOSession getSession(String sessionId) {
+    public SocketIOSession getSession(String sessionId)
+    {
         return socketIOSessions.get(sessionId);
     }
 }

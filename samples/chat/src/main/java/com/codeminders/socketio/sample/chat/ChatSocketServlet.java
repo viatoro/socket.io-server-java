@@ -42,9 +42,13 @@ import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ChatSocketServlet extends JettySocketIOServlet
 {
+    private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
+
     private static final long serialVersionUID = 1L;
     private AtomicInteger ids = new AtomicInteger(1);
     private Queue<ChatConnection> connections = new ConcurrentLinkedQueue<ChatConnection>();
@@ -60,17 +64,24 @@ public class ChatSocketServlet extends JettySocketIOServlet
         private Integer sessionId = ids.getAndIncrement();
 
         @Override
-        public void onConnect(SocketIOOutbound outbound) {
+        public void onConnect(SocketIOOutbound outbound)
+        {
+            LOGGER.fine("Client connected");
             this.outbound = outbound;
             connections.offer(this);
-            try {
-                outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                        Collections.singletonMap("welcome", "Welcome to Socket.IO Chat!")));
-            } catch (SocketIOException e) {
-                outbound.disconnect();
-            }
-            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                    Collections.singletonMap("announcement", sessionId + " connected")));
+//            try
+//            {
+//                outbound.s
+////                outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
+////                        Collections.singletonMap("welcome", "Welcome to Socket.IO Chat!")));
+//            }
+//            catch (SocketIOException e)
+//            {
+//                LOGGER.log(Level.SEVERE, "Cannot send a chat message", e);
+//                outbound.disconnect();
+//            }
+//            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
+//                    Collections.singletonMap("announcement", sessionId + " connected")));
         }
 
         @Override
@@ -80,6 +91,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
             broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
                     Collections.singletonMap("announcement", sessionId + " disconnected")));
         }
+
 
         @Override
         public void onMessage(int messageType, String message) {
@@ -143,9 +155,12 @@ public class ChatSocketServlet extends JettySocketIOServlet
         }
 
         @Override
-        public void onEvent(String name, String args) {
-
+        public void onEvent(String name, Object[] args)
+        {
+            //TODO: log arguments?
+            LOGGER.fine("Got event: " + name);
         }
+
 
         private void broadcast(int messageType, String message) {
             for (ChatConnection c : connections) {

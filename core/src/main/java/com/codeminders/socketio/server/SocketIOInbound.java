@@ -45,19 +45,12 @@ public interface SocketIOInbound {
      */
     void onDisconnect(DisconnectReason reason, String errorMessage);
 
-    /**
-     * Called one per arriving message.
-     *
-     * @param messageType
-     * @param message
-     */
     void onMessage(int messageType, String message);
 
     /**
      * Called one per arriving event.
-     *
-     * @param name event name
+     *  @param name event name
      * @param args event payload
      */
-    void onEvent(String name, String args);
+    void onEvent(String name, Object[] args);
 }

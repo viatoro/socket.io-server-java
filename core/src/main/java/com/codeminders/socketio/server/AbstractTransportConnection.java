@@ -24,6 +24,8 @@
  */
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.common.SocketIOException;
+
 /**
  * @author Mathieu Carbou
  */
@@ -58,4 +60,10 @@ public abstract class AbstractTransportConnection implements TransportConnection
     @Override
     public void disconnectWhenEmpty() {
     }
+
+    public void send(SocketIOPacket packet) throws SocketIOException
+    {
+        send(EngineIOProtocol.createMessagePacket(SocketIOProtocol.encode(packet)));
+    }
+
 }

@@ -53,7 +53,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
             throws UnsupportedTransportException, SocketIOProtocolException
     {
         //TODO: check EIO version? I do not see it in the spec but it is in actual requests. Ignoring it for now.
-        String transportName = request.getParameter("transport");
+        String transportName = request.getParameter(EngineIOProtocol.TRANSPORT);
         if(transportName == null)
             throw new SocketIOProtocolException("Missing transport parameter");
 
@@ -63,7 +63,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
             type = TransportType.from(transportName);
 
         if("polling".equals(transportName)) {
-            if(request.getParameter("j") != null)
+            if(request.getParameter(EngineIOProtocol.JSONP_INDEX) != null)
                 type = TransportType.JSONP_POLLING;
             else
                 type = TransportType.XHR_POLLING;

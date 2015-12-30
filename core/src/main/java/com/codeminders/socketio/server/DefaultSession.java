@@ -29,9 +29,9 @@ import com.codeminders.socketio.util.JSON;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,11 +45,13 @@ class DefaultSession implements SocketIOSession {
 
     private final SocketIOSessionManager socketIOSessionManager;
     private final String sessionId;
-    private final AtomicLong messageId = new AtomicLong(0);
-    private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
-    private SocketIOInbound inbound;
-    private TransportConnection handler;
+    //TODO: rename to something more telling
+    //This is callback/listener interface set by library user
+    private SocketIOInbound     inbound;
+
+    private TransportConnection connection;
     private ConnectionState state = ConnectionState.CONNECTING;
     private long hbDelay;
     private SessionTask hbDelayTask;
@@ -57,8 +59,9 @@ class DefaultSession implements SocketIOSession {
     private SessionTask timeoutTask;
     private boolean timedout;
     private String closeId;
-    
-    DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId) {
+
+    DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId)
+    {
         this.socketIOSessionManager = socketIOSessionManager;
         this.inbound = inbound;
         this.sessionId = sessionId;
@@ -90,8 +93,8 @@ class DefaultSession implements SocketIOSession {
     }
 
     @Override
-    public TransportConnection getTransportHandler() {
-        return handler;
+    public TransportConnection getConnection() {
+        return connection;
     }
 
     private void onTimeout() {
@@ -101,7 +104,7 @@ class DefaultSession implements SocketIOSession {
             timedout = true;
             state = ConnectionState.CLOSED;
             onDisconnect(DisconnectReason.TIMEOUT);
-            handler.abort();
+            connection.abort();
         }
     }
 
@@ -126,15 +129,16 @@ class DefaultSession implements SocketIOSession {
         }
     }
 
+    //TODO: remove heartbeat from server. in SocketI.IO client is sending periodic pings
     private void sendHeartBeat() {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + sessionId + "]: send heartbeat ");
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.HEARTBEAT, 0, ""));
+            connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.HEARTBEAT, 0, ""));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
-            handler.abort();
+                LOGGER.log(Level.FINE, "connection.sendMessage failed: ", e);
+            connection.abort();
         }
         startTimeoutTimer();
     }
@@ -185,14 +189,86 @@ class DefaultSession implements SocketIOSession {
         state = ConnectionState.CLOSING;
         closeId = "server";
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, closeId));
+            connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, closeId));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
-            handler.abort();
+                LOGGER.log(Level.FINE, "connection.sendMessage failed: ", e);
+            connection.abort();
         }
     }
 
+    @Override
+    public void onPacket(EngineIOPacket packet)
+    {
+        switch (packet.getType())
+        {
+            case OPEN:
+            case PONG:
+                // ignore. OPEN and PONG are server -> client
+                return;
+            case MESSAGE:
+                startTimeoutTimer();
+                try
+                {
+                    onPacket(SocketIOProtocol.decode(packet.getData()));
+                }
+                catch (SocketIOProtocolException e)
+                {
+                    if(LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.WARNING, "Invalid SIO packet: " + packet.getData(), e);
+                }
+                return;
+
+            case PING:
+                startTimeoutTimer();
+                onPing(packet.getData());
+                return;
+
+            case CLOSE:
+                startClose();
+                return;
+
+            default:
+                throw new UnsupportedOperationException("EIO Packet " + packet + " is not implemented yet");
+
+        }
+    }
+
+    @Override
+    public void onPacket(SocketIOPacket packet)
+    {
+        switch (packet.getType())
+        {
+            case CONNECT:
+                // ignore. server -> client
+                return;
+            case EVENT:
+                Object json = JSON.parse(packet.getData());
+                if(!(json instanceof Object[]) || ((Object[])json).length == 0)
+                {
+                    if (LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.WARNING, "Invalid JSON in EVENT message packet: " + packet.getData());
+                    return;
+                }
+
+                Object[] args = (Object[])json;
+                if(!(args[0] instanceof String))
+                {
+                    if (LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.WARNING, "Invalid JSON in EVENT message packet. First argument must be string: " + packet.getData());
+                    return;
+                }
+                onEvent(args[0].toString(), Arrays.copyOfRange(args, 1, args.length-1));
+
+                return;
+
+            default:
+                throw new UnsupportedOperationException("SocketIO packet " + packet.getType() + " is not implemented yet");
+
+        }
+    }
+
+    //TODO: remove. old method
     @Override
     public void onMessage(SocketIOFrame message) {
         switch (message.getFrameType()) {
@@ -223,9 +299,9 @@ class DefaultSession implements SocketIOSession {
                     Object args = json.get("args");
                     if(args.getClass().isArray()) {
                         for(Object o: (Object[])args)
-                            onEvent(name, o.toString());
+                            onEvent(name, new String[] { o.toString() });
                     } else
-                        onEvent(name, JSON.toString(args));
+                        onEvent(name, new String[] { JSON.toString(args) });
 
                 } catch(ClassCastException | NullPointerException e) {
                     LOGGER.log(Level.WARNING, "Invalid payload format: ", e);
@@ -238,20 +314,19 @@ class DefaultSession implements SocketIOSession {
     }
 
     @Override
-    public void onPing(String data) {
-        try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
-        } catch (SocketIOException e) {
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
-            handler.abort();
+    public void onPing(String data)
+    {
+        try
+        {
+            connection.send(EngineIOProtocol.createPongPacket(data));
         }
-    }
+        catch (SocketIOException e)
+        {
+            if (LOGGER.isLoggable(Level.FINE))
+                LOGGER.log(Level.FINE, "connection.send failed: ", e);
 
-    //TODO: this is never called. need to inverstigate
-    @Override
-    public void onPong(String data) {
-        clearTimeoutTimer();
+            connection.abort();
+        }
     }
 
     @Override
@@ -260,27 +335,27 @@ class DefaultSession implements SocketIOSession {
             if (closeId != null && closeId.equals(data)) {
                 state = ConnectionState.CLOSED;
                 onDisconnect(DisconnectReason.CLOSED);
-                handler.abort();
+                connection.abort();
             } else {
                 try {
-                    handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
+                    connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
                 } catch (SocketIOException e) {
                     if (LOGGER.isLoggable(Level.FINE))
-                        LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
-                    handler.abort();
+                        LOGGER.log(Level.FINE, "connection.sendMessage failed: ", e);
+                    connection.abort();
                 }
             }
         } else {
             state = ConnectionState.CLOSING;
             try {
-                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
-                handler.disconnectWhenEmpty();
+                connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
+                connection.disconnectWhenEmpty();
                 if ("client".equals(data))
                     onDisconnect(DisconnectReason.CLOSED_REMOTELY);
             } catch (SocketIOException e) {
                 if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
-                handler.abort();
+                    LOGGER.log(Level.FINE, "connection.sendMessage failed: ", e);
+                connection.abort();
             }
         }
     }
@@ -302,8 +377,8 @@ class DefaultSession implements SocketIOSession {
             state = ConnectionState.CLOSED;
             inbound = null;
             socketIOSessionManager.socketIOSessions.remove(sessionId);
-        } else if (this.handler == null) {
-            this.handler = connection;
+        } else if (this.connection == null) {
+            this.connection = connection;
             if (inbound == null) {
                 state = ConnectionState.CLOSED;
                 connection.abort();
@@ -337,7 +412,7 @@ class DefaultSession implements SocketIOSession {
     }
 
     @Override
-    public void onEvent(String name, String args) {
+    public void onEvent(String name, Object[] args) {
         if (inbound != null) {
             try {
                 inbound.onEvent(name, args);
@@ -368,19 +443,22 @@ class DefaultSession implements SocketIOSession {
     }
 
     @Override
-    public void onShutdown() {
+    public void onShutdown()
+    {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onShutdown");
-        if (inbound != null) {
-            if (state == ConnectionState.CLOSING) {
-                if (closeId != null) {
+
+        if (inbound != null)
+        {
+            if (state == ConnectionState.CLOSING)
+            {
+                if (closeId != null)
                     onDisconnect(DisconnectReason.CLOSE_FAILED);
-                } else {
+                else
                     onDisconnect(DisconnectReason.CLOSED_REMOTELY);
-                }
-            } else {
-                onDisconnect(DisconnectReason.ERROR);
             }
+            else
+                onDisconnect(DisconnectReason.ERROR);
         }
         socketIOSessionManager.socketIOSessions.remove(sessionId);
     }

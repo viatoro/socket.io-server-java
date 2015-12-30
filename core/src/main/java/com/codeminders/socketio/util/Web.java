@@ -31,6 +31,8 @@ import java.util.Random;
 /**
  * @author Mathieu Carbou
  */
+
+//TODO: remove this.
 public final class Web {
 
     private static final char[] BASE64_ALPHABET ="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".toCharArray();

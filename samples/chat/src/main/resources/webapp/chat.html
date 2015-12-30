@@ -48,12 +48,15 @@
         else addLine('<b>Server:</b> ' + '<em>' + JSON.stringify(obj) + '</em>');
       }
       
-      function send(){
+      function send()
+      {
         var val = document.getElementById('text').value;
         if (val == '/lclose') {
 	      	addLine('<em>closing...</em>');
         	socket.close();
-        } else if (val == '/ldisconnect') {
+        }
+        else
+        if (val == '/ldisconnect') {
     	      	addLine('<em>disconnecting...</em>');
             	socket.disconnect();
         } else {
@@ -63,7 +66,8 @@
         document.getElementById('text').value = '';
       }
       
-      function esc(msg){
+      function esc(msg)
+      {
         return msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
       
@@ -87,8 +91,7 @@
     	  }
       }
 
-      //TODO: use origin host name
-      var socket = io('http://127.0.0.1:8080', {
+      var socket = io({
        transports: ['websocket']
        });
       
@@ -113,7 +116,7 @@
       <input type="text" autocomplete="off" id="text"><input type="submit" value="Send">
     </form>
     
-    <style>
+    <style scoped>
       #chat { height: 300px; overflow: auto; width: 800px; border: 1px solid #eee; font: 13px Helvetica, Arial; }
       #chat p { padding: 8px; margin: 0; }
       #chat p:nth-child(odd) { background: #F6F6F6; }

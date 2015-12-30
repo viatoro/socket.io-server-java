@@ -1,0 +1,9 @@
+* binary data in EngineIO
+* CORS support for XHR Polling
+* upgrade transport
+* payload (multi-packets messages)
+* use Guava instead of util.IO
+* use com.fasterxml.jackson instead of util.JSON
+* Socket.IO Multiplexing (subscription to namespace)
+* Implement broadcasting
+* handle b64 flag

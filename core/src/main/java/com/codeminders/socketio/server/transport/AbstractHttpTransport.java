@@ -1,19 +1,19 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
- *
+ * <p/>
  * Contributors: Ovea.com, Mycila.com
- *
+ * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p/>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,6 @@
 package com.codeminders.socketio.server.transport;
 
 import com.codeminders.socketio.server.*;
-import com.codeminders.socketio.util.Web;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -35,10 +34,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class AbstractHttpTransport extends AbstractTransport {
+public abstract class AbstractHttpTransport extends AbstractTransport
+{
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractHttpTransport.class.getName());
-    public static final String SESSION_KEY = AbstractHttpTransport.class.getName() + ".Session";
+    private static final Logger LOGGER      = Logger.getLogger(AbstractHttpTransport.class.getName());
+    public static final  String SESSION_KEY = AbstractHttpTransport.class.getName() + ".Session";
 
     @Override
     public final void handle(HttpServletRequest request,
@@ -49,19 +49,18 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
 
+        //TODO: redo session id handling.
         SocketIOSession session = null;
-        String sessionId = Web.extractSessionId(request);
+        String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
         if (sessionId != null && sessionId.length() > 0)
-        {
             session = sessionFactory.getSession(sessionId);
-        }
 
         if (session != null)
         {
-            TransportConnection handler = session.getTransportHandler();
-            if (handler != null)
+            TransportConnection connection = session.getConnection();
+            if (connection != null)
             {
-                handler.handle(request, response, session);
+                connection.handle(request, response, session);
             }
             else
             {
@@ -71,47 +70,35 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
         }
         else
         {
-            if ("GET".equals(request.getMethod()))
+            if (!"GET".equals(request.getMethod()))
             {
-                try
-                {
-                    session = connect(request, response, inboundFactory,
-                                      sessionFactory, sessionId);
-                } catch (SocketIOProtocolException e)
-                {
-                    if(LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.WARNING, "Cannot initialize connection", e);
-                }
-                if (session == null)
-                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
             }
-            else
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+
+
+            try
+            {
+                SocketIOInbound inbound = inboundFactory.getInbound(request);
+                if (inbound == null)
+                {
+                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                    return;
+                }
+
+                session = sessionFactory.createSession(inbound);
+                //TODO: wierd sequence. need to refactor
+                createConnection(session).connect(request, response);
+                onConnect(session, request, response);
+            }
+            catch (SocketIOProtocolException e)
+            {
+                if (LOGGER.isLoggable(Level.WARNING))
+                    LOGGER.log(Level.WARNING, "Cannot initialize connection", e);
+            }
+            if (session == null)
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         }
-    }
-
-    private SocketIOSession connect(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    InboundFactory inboundFactory,
-                                    SessionManager sessionFactory,
-                                    String sessionId) throws IOException, SocketIOProtocolException
-    {
-        SocketIOInbound inbound = inboundFactory.getInbound(request);
-        if (inbound != null)
-        {
-            if (sessionId == null)
-                sessionId = request.getSession().getId();
-
-            SocketIOSession session = sessionFactory.createSession(inbound, sessionId);
-
-            //TODO: this is wierd. need to refactor connection sequence
-            createConnection(session).connect(request, response);
-            connect(session, request, response);
-
-            return session;
-        }
-
-        return null;
     }
 
     public abstract void startSend(SocketIOSession session, ServletResponse response) throws IOException;
@@ -120,6 +107,6 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
 
     public abstract void finishSend(SocketIOSession session, ServletResponse response) throws IOException;
 
-    public abstract void connect(SocketIOSession session, ServletRequest request, ServletResponse response)
-                throws IOException, SocketIOProtocolException;
+    public abstract void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response)
+            throws IOException, SocketIOProtocolException;
 }

@@ -115,29 +115,38 @@ public class FlashSocketTransport extends AbstractTransport {
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        Transport.InboundFactory inboundFactory,
-                       SessionManager sessionFactory) throws IOException {
-
+                       SessionManager sessionFactory) throws IOException
+    {
         String path = request.getPathInfo();
-        if (path == null || path.length() == 0 || "/".equals(path)) {
+        if (path == null || path.length() == 0 || "/".equals(path))
+        {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid " + TransportType.FLASH_SOCKET + " transport request");
             return;
         }
         if (path.startsWith("/")) path = path.substring(1);
         String[] parts = path.split("/");
-        if ("GET".equals(request.getMethod()) && "flashsocket".equals(parts[1])) {
-            if (!FLASHFILE_PATH.equals(path)) {
+        if ("GET".equals(request.getMethod()) && "flashsocket".equals(parts[1]))
+        {
+            if (!FLASHFILE_PATH.equals(path))
+            {
                 delegate.handle(request, response, inboundFactory, sessionFactory);
-            } else {
+            }
+            else
+            {
                 response.setContentType("application/x-shockwave-flash");
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/glines/socketio/" + FLASHFILE_NAME);
+                InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/codeminders/socketio/" + FLASHFILE_NAME);
                 OutputStream os = response.getOutputStream();
-                try {
+                try
+                {
                     IO.copy(is, os);
-                } catch (IOException e) {
+                } catch (IOException e)
+                {
                     LOGGER.log(Level.WARNING, "Error writing " + FLASHFILE_NAME + ": " + e.getMessage(), e);
                 }
             }
-        } else {
+        }
+        else
+        {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid " + TransportType.FLASH_SOCKET + " transport request");
         }
     }
@@ -204,23 +213,32 @@ public class FlashSocketTransport extends AbstractTransport {
 
     private void stopFlashPolicyServer()
     {
-        if (flashPolicyServer != null) {
-            try {
+        if (flashPolicyServer != null)
+        {
+            try
+            {
                 flashPolicyServer.close();
-            } catch (IOException e) {
+            } catch (IOException e)
+            {
                 // Ignore
             }
         }
-        if (policyAcceptorThread != null) {
-            try {
+        if (policyAcceptorThread != null)
+        {
+            try
+            {
                 policyAcceptorThread.get();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException e)
+            {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException();
-            } catch (ExecutionException e) {
+            } catch (ExecutionException e)
+            {
                 throw new IllegalStateException("Server thread threw an exception", e.getCause());
             }
-            if (!policyAcceptorThread.isDone()) {
+
+            if (!policyAcceptorThread.isDone())
+            {
                 throw new IllegalStateException("Server acceptor thread has not stopped.");
             }
         }

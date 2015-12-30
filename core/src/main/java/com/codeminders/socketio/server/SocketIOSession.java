@@ -44,8 +44,11 @@ public interface SocketIOSession {
 	
 	SocketIOInbound getInbound();
 
-	TransportConnection getTransportHandler();
-	
+	TransportConnection getConnection();
+
+	//TODO: EngineIO docs says that server is suppose to send PING and
+    //TODO: client to respond with PONG but I'm seeing that client is sending PINGs,
+    //TODO: at least for websocket transport. Rigth now I will relay on a client sending pings
 	void setHeartbeat(long delay);
 	long getHeartbeat();
 	void setTimeout(long timeout);
@@ -62,18 +65,15 @@ public interface SocketIOSession {
 	 */
 	void startClose();
 
+    void onPacket(EngineIOPacket packet);
+    void onPacket(SocketIOPacket packet);
+
 	void onMessage(SocketIOFrame message);
 	void onPing(String data);
-	void onPong(String data);
-	void onClose(String data);
-	void onEvent(String name, String args);
 
-	/**
-	 * Schedule a task (e.g. timeout timer)
-	 * @param task The task to execute after specified delay.
-	 * @param delay Delay in milliseconds.
-	 * @return
-	 */
+    void onClose(String data);
+	void onEvent(String name, Object[] args);
+
 	SessionTask scheduleTask(Runnable task, long delay);
 	
 	/**
@@ -88,10 +88,6 @@ public interface SocketIOSession {
 	 */
 	void onMessage(String message);
 	
-	/**
-	 * Pass disconnect through to contained SocketIOInbound and update any internal state.
-	 * @param reason
-	 */
 	void onDisconnect(DisconnectReason reason);
 
 	/**

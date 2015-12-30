@@ -37,13 +37,6 @@ import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-/**
- * @author Mathieu Carbou
- */
-
-/**
- * @author Mathieu Carbou
- */
 public final class JdkOverLog4j extends Handler {
 
     private static final Map<java.util.logging.Level, Level> LEVELS_JDK_TO_LOG4J = new HashMap<java.util.logging.Level, Level>() {

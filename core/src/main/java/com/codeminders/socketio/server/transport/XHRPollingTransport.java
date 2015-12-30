@@ -33,6 +33,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
 
+//TODO: implement CORS
 public abstract class XHRPollingTransport extends AbstractHttpTransport
 {
     @Override
@@ -61,12 +62,12 @@ public abstract class XHRPollingTransport extends AbstractHttpTransport
     }
 
     @Override
-    public void connect(SocketIOSession session, ServletRequest request, ServletResponse response) throws IOException, SocketIOProtocolException
+    public void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response) throws IOException, SocketIOProtocolException
     {
         startSend(session, response);
 
         //TODO: check!!!
-        writeData(session, response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
+//        writeData(session, response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
 
     }
 }

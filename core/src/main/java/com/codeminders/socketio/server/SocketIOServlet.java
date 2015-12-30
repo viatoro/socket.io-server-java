@@ -1,19 +1,19 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
- *
+ * <p/>
  * Contributors: Ovea.com, Mycila.com
- *
+ * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p/>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,18 +37,20 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class SocketIOServlet extends HttpServlet {
+public abstract class SocketIOServlet extends HttpServlet
+{
 
-    private static final Logger LOGGER = Logger.getLogger(SocketIOServlet.class.getName());
-    private static final long serialVersionUID = 2L;
+    private static final Logger LOGGER           = Logger.getLogger(SocketIOServlet.class.getName());
+    private static final long   serialVersionUID = 2L;
 
     private final SocketIOSessionManager sessionManager = new SocketIOSessionManager();
 
     private TransportProvider transportProvider;
 
-    public final static String MAX_TEXT_MESSAGE_SIZE     = "maxTextMessageSize";
+    public final static String MAX_TEXT_MESSAGE_SIZE = "maxTextMessageSize";
 
-    public void setTransportProvider(TransportProvider transportProvider) {
+    public void setTransportProvider(TransportProvider transportProvider)
+    {
         assert (transportProvider != null);
         this.transportProvider = transportProvider;
     }
@@ -57,7 +59,14 @@ public abstract class SocketIOServlet extends HttpServlet {
     public void init() throws ServletException
     {
         if (LOGGER.isLoggable(Level.INFO))
-            LOGGER.log(Level.INFO, "Transports: " + transportProvider.getTransports());
+            if (transportProvider != null)
+            {
+                LOGGER.log(Level.INFO, "Transports: " + transportProvider.getTransports());
+                if(transportProvider.getTransports().size() == 0)
+                    LOGGER.log(Level.INFO, "No transport defined. TransportProvider.init() should be called.");
+            }
+            else
+                LOGGER.log(Level.INFO, "No Transport Provider is set");
     }
 
     @Override
@@ -92,21 +101,20 @@ public abstract class SocketIOServlet extends HttpServlet {
     {
         //TODO: Need to remove this check. Transport is not defined in path anymore
         String path = request.getPathInfo();
-        if (path == null || path.length() == 0 || "/".equals(path)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing SocketIO transport");
-            return;
-        }
+
         if (path.startsWith("/")) path = path.substring(1);
         String[] parts = path.split("/");
 
-        if ("GET".equals(request.getMethod()) && "socket.io.js".equals(parts[0])) {
+        if ("GET".equals(request.getMethod()) && "socket.io.js".equals(parts[0]))
+        {
             response.setContentType("text/javascript");
             InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/codeminders/socketio/socket.io.js");
             OutputStream os = response.getOutputStream();
             IO.copy(is, os);
         }
         else
-        if ("GET".equals(request.getMethod()) && "WebSocketMain.swf".equals(parts[0])) {
+        if ("GET".equals(request.getMethod()) && "WebSocketMain.swf".equals(parts[0]))
+        {
             response.setContentType("application/x-shockwave-flash");
             InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/codeminders/socketio/WebSocketMain.swf");
             OutputStream os = response.getOutputStream();
@@ -116,30 +124,31 @@ public abstract class SocketIOServlet extends HttpServlet {
         {
             assert (transportProvider != null);
 
-            Transport transport = null;
             try
             {
-                transport = transportProvider.getTransport(request);
-            } catch (UnsupportedTransportException | SocketIOProtocolException e)
+                Transport transport = transportProvider.getTransport(request);
+
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Handling request from " +
+                            request.getRemoteHost() + ":" + request.getRemotePort() +
+                            " with transport: " + transport.getType());
+
+                transport.handle(request, response, new Transport.InboundFactory()
+                {
+                    @Override
+                    public SocketIOInbound getInbound(HttpServletRequest request)
+                    {
+                        return SocketIOServlet.this.doSocketIOConnect(request);
+                    }
+                }, sessionManager);
+            }
+            catch (UnsupportedTransportException | SocketIOProtocolException e)
             {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Cannot find appropriate transport");
 
-                if(LOGGER.isLoggable(Level.WARNING))
+                if (LOGGER.isLoggable(Level.WARNING))
                     LOGGER.log(Level.WARNING, "Cannot find appropriate transport", e);
-                return;
             }
-
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "Handling request from " +
-                        request.getRemoteHost() + ":" + request.getRemotePort() +
-                        " with transport: " + transport.getType());
-
-            transport.handle(request, response, new Transport.InboundFactory() {
-                @Override
-                public SocketIOInbound getInbound(HttpServletRequest request) {
-                    return SocketIOServlet.this.doSocketIOConnect(request);
-                }
-            }, sessionManager);
         }
     }
 
