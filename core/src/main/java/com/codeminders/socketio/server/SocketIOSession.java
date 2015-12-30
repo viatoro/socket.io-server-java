@@ -27,38 +27,34 @@ package com.codeminders.socketio.server;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 
-public interface SocketIOSession {
+public interface SocketIOSession
+{
     void setAttribute(String key, Object val);
     Object getAttribute(String key);
 
-    interface SessionTask {
+    //TODO: do we need it in Session interface
+    interface SessionTask
+    {
 		/**
 		 * @return True if task was or was already canceled, false if the task is executing or has executed.
 		 */
 		boolean cancel();
 	}
+    SessionTask scheduleTask(Runnable task, long delay);
+
 
 	String getSessionId();
 
 	ConnectionState getConnectionState();
 	
 	SocketIOInbound getInbound();
+    TransportConnection getConnection(); //Outbound connection
 
-	TransportConnection getConnection();
-
-	//TODO: EngineIO docs says that server is suppose to send PING and
-    //TODO: client to respond with PONG but I'm seeing that client is sending PINGs,
-    //TODO: at least for websocket transport. Rigth now I will relay on a client sending pings
-	void setHeartbeat(long delay);
-	long getHeartbeat();
 	void setTimeout(long timeout);
 	long getTimeout();
 
 	void startTimeoutTimer();
 	void clearTimeoutTimer();
-
-	void startHeartbeatTimer();
-	void clearHeartbeatTimer();
 
 	/**
 	 * Initiate close.
@@ -68,26 +64,15 @@ public interface SocketIOSession {
     void onPacket(EngineIOPacket packet);
     void onPacket(SocketIOPacket packet);
 
-	void onMessage(SocketIOFrame message);
 	void onPing(String data);
 
     void onClose(String data);
 	void onEvent(String name, Object[] args);
 
-	SessionTask scheduleTask(Runnable task, long delay);
-	
 	/**
 	 * @param connection The connection or null if the connection failed.
 	 */
 	void onConnect(TransportConnection connection);
-	
-	/**
-	 * Pass message through to contained SocketIOInbound
-	 * If a timeout timer is set, then it will be reset.
-	 * @param message
-	 */
-	void onMessage(String message);
-	
 	void onDisconnect(DisconnectReason reason);
 
 	/**

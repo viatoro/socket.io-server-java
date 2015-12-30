@@ -27,7 +27,8 @@ package com.codeminders.socketio.server;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.SocketIOException;
 
-public interface SocketIOOutbound {
+public interface SocketIOOutbound
+{
     /**
      * Terminate the connection. This method may return before the connection disconnect
      * completes. The onDisconnect() method of the associated SocketInbound will be called
@@ -46,34 +47,15 @@ public interface SocketIOOutbound {
     ConnectionState getConnectionState();
 
     /**
-     * Send a message to the client. This method will block if the message will not fit in the
-     * outbound buffer.
-     * If the socket is closed, becomes closed, or times out, while trying to send the message,
-     * the SocketClosedException will be thrown.
+     * Emits an event to the socket identified by the string name.
      *
-     * @param message The message to send
-     * @throws SocketIOException
-     */
-    void sendMessage(String message) throws SocketIOException;
-
-    /**
-     * Send a message.
-     *
-     * @param messageType
-     * @param message
+     * @param name event name
+     * @param args list of arguments. Arguments can contain any type of field that can result of JSON decoding,
+     *             including objects and arrays of arbitrary size.
      * @throws IllegalStateException if the socket is not CONNECTED.
      * @throws SocketIOException
      */
-    void sendMessage(int messageType, String message) throws SocketIOException;
 
-    /**
-     * Send a named event.
-     *
-     * @param name
-     * @param args
-     * @throws IllegalStateException if the socket is not CONNECTED.
-     * @throws SocketIOException
-     */
-    void emitEvent(String name, String args) throws SocketIOException;
+    void emit(String name, Object... args) throws SocketIOException;
 
 }

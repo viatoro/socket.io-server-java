@@ -45,7 +45,6 @@ public interface TransportConnection extends SocketIOOutbound
 
     void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException;
 
-    void sendMessage(SocketIOFrame message) throws SocketIOException;
     void disconnectWhenEmpty();
     /**
      * Cause connection and all activity to be aborted and all resources to be released.

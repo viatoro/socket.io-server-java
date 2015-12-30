@@ -1,5 +1,10 @@
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.util.JSON;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
  * @author Alexander Sova <bird@codeminders.com>
  */
@@ -32,5 +37,14 @@ public final class SocketIOProtocol
         {
             throw new SocketIOProtocolException("Invalid EIO packet type: " + raw);
         }
+    }
+
+    public static SocketIOPacket createEventPacket(String name, Object... args)
+    {
+        ArrayList data = new ArrayList();
+        data.add(name);
+        data.addAll(Arrays.asList(args));
+
+        return new SocketIOPacket(SocketIOPacket.Type.EVENT, JSON.toString(data.toArray()));
     }
 }

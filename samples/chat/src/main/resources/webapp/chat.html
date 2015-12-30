@@ -35,34 +35,48 @@
   <body>
     
     <script>
-      function addLine(txt) {
+      function addLine(txt)
+      {
           var el = document.createElement('p');
           el.innerHTML = txt;
           document.getElementById('chat').appendChild(el);
           document.getElementById('chat').scrollTop = 1000000;
       }
-      function message(obj){
-        if ('welcome' in obj) addLine('<em>' + esc(obj.welcome) + '</em>');
-        else if ('announcement' in obj) addLine('<em>' + esc(obj.announcement) + '</em>');
-        else if ('message' in obj) addLine('<b>' + esc(obj.message[0]) + ':</b> ' + esc(obj.message[1]))
-        else addLine('<b>Server:</b> ' + '<em>' + JSON.stringify(obj) + '</em>');
+
+      function message(obj)
+      {
+        if ('welcome' in obj)
+            addLine('<em>' + esc(obj.welcome) + '</em>');
+        else
+        if ('announcement' in obj)
+            addLine('<em>' + esc(obj.announcement) + '</em>');
+        else
+        if ('message' in obj)
+            addLine('<b>' + esc(obj.message[0]) + ':</b> ' + esc(obj.message[1]));
+        else
+            addLine('<b>Server:</b> ' + '<em>' + JSON.stringify(obj) + '</em>');
       }
       
       function send()
       {
         var val = document.getElementById('text').value;
-        if (val == '/lclose') {
+        if (val == '/lclose')
+        {
 	      	addLine('<em>closing...</em>');
         	socket.close();
         }
         else
-        if (val == '/ldisconnect') {
+        if (val == '/ldisconnect')
+        {
     	      	addLine('<em>disconnecting...</em>');
             	socket.disconnect();
-        } else {
-            socket.send(val);
         }
-        message({ message: ['you', val] });
+        else
+        {
+            socket.emit('chat message', val);
+        }
+
+        addLine('<b>You:</b> ' + esc(val));
         document.getElementById('text').value = '';
       }
       
@@ -99,15 +113,26 @@
   		document.getElementById('form').style.display='block';
         document.getElementById('chat').innerHTML = '';
 	  });
+
 	  socket.on('open', function () {
   		document.getElementById('chat').innerHTML = 'Open!';
 	  });
+
 	  socket.on('disconnect', function (reason) {
   	 	addLine('<b>Disconnected['+drname(reason)+']</b>');
 	  });
-	  socket.on('message', function (data) {
-    	message(data);
+
+	  socket.on('chat message', function (from, message) {
+    	addLine('<b>' + esc(from) + ':</b> ' + esc(message));
   	  });
+
+	  socket.on('welcome', function (data) {
+    	addLine('<em>' + esc(data) + '</em>');
+  	  });
+
+	  //socket.on('message', function (data) {
+      //message(data);
+  	  //});
     </script>
     
     <h1>Sample chat client</h1>

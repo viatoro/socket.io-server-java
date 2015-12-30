@@ -124,7 +124,6 @@ public final class JettyContinuationTransportConnection
         return getSession().getConnectionState();
     }
 
-    @Override
     public void sendMessage(SocketIOFrame frame) throws SocketIOException {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(frame): [" + frame.getFrameType() + "]: " + frame.getData());
@@ -146,7 +145,7 @@ public final class JettyContinuationTransportConnection
                     continuation = null;
                     cont.complete();
                 } else {
-                    getSession().startHeartbeatTimer();
+//                   ; getSession().startHeartbeatTimer();
                 }
             } else {
                 String data = frame.encode();
@@ -162,40 +161,9 @@ public final class JettyContinuationTransportConnection
     }
 
     @Override
-    public void sendMessage(String message) throws SocketIOException {
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(String): " + message);
-        sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
-    }
-
-    @Override
-    public void sendMessage(int messageType, String message) throws SocketIOException {
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(int, String): [" + messageType + "]: " + message);
-        if (is_open && getSession().getConnectionState() == ConnectionState.CONNECTED) {
-            sendMessage(new SocketIOFrame(messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
-                              SocketIOFrame.FrameType.MESSAGE :
-                              SocketIOFrame.FrameType.JSON_MESSAGE,
-                        messageType, message));
-        } else {
-            throw new SocketIOClosedException();
-        }
-    }
-
-    @Override
-    public void emitEvent(String name, String args) throws SocketIOException {
-        //TODO: code duplication
-        if (is_open && getSession().getConnectionState() == ConnectionState.CONNECTED) {
-            HashMap<String, Object> map = new HashMap<String, Object>();
-            map.put("name", name);
-            map.put("args", new Object[] { args });
-            sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.EVENT,
-                    SocketIOFrame.JSON_MESSAGE_TYPE,
-                    JSON.toString(map)));
-        } else {
-            throw new SocketIOClosedException();
-        }
-
+    public void emit(String name, Object... args) throws SocketIOException
+    {
+        //TODO: implement
     }
 
     @Override
@@ -250,7 +218,8 @@ public final class JettyContinuationTransportConnection
                     if (data != null && data.length() > 0) {
                         List<SocketIOFrame> list = SocketIOFrame.parse(data);
                         for (SocketIOFrame msg : list) {
-                            getSession().onMessage(msg);
+//                            getSession().onPacket();
+//                            getSession().onMessage(msg);
                         }
                     }
 
@@ -362,7 +331,6 @@ public final class JettyContinuationTransportConnection
 
     @Override
     public void abort() {
-        getSession().clearHeartbeatTimer();
         getSession().clearTimeoutTimer();
         is_open = false;
         if (continuation != null) {
@@ -389,6 +357,13 @@ public final class JettyContinuationTransportConnection
 
     @Override
     public void send(EngineIOPacket packet) throws SocketIOException
+    {
+        //TODO: implement
+    }
+
+
+    @Override
+    public void send(SocketIOPacket packet) throws SocketIOException
     {
         //TODO: implement
     }
@@ -449,9 +424,4 @@ public final class JettyContinuationTransportConnection
         }
     }
 
-    @Override
-    public void send(SocketIOPacket packet) throws SocketIOException
-    {
-        //TODO: implement
-    }
 }

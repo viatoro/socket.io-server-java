@@ -45,8 +45,6 @@ public interface SocketIOInbound {
      */
     void onDisconnect(DisconnectReason reason, String errorMessage);
 
-    void onMessage(int messageType, String message);
-
     /**
      * Called one per arriving event.
      *  @param name event name

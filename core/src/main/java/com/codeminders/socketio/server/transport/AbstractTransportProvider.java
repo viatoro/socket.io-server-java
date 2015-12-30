@@ -15,7 +15,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractTransportProvider.class.getName());
 
-    protected Map<TransportType, Transport> transports = new HashMap<>();
+    protected Map<TransportType, Transport> transports = new EnumMap<>(TransportType.class);
 
     /**
      *   Creates and initializes all available transports
@@ -23,22 +23,27 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     @Override
     public void init(ServletConfig config)
     {
-        transports.put(TransportType.XHR_POLLING,   createXHTPollingTransport());
-        transports.put(TransportType.JSONP_POLLING, createJSONPPollingTransport());
+        addIfNotNull(TransportType.XHR_POLLING,   createXHTPollingTransport());
+        addIfNotNull(TransportType.JSONP_POLLING, createJSONPPollingTransport());
 
         //TODO: should we allow server to work whithout websocket support?
         //TODO: websocket is one of the "must support" transports for socket.io 1.0 servers
+        //TODO: do we need a flashsocket transport?
         Transport transport = createWebSocketTransport();
         if(transport != null)
         {
             transports.put(TransportType.WEB_SOCKET, transport);
-            transport = createFlashSocketTransport(transport);
-            if(transport != null)
-                transports.put(TransportType.FLASH_SOCKET, transport);
+            addIfNotNull(TransportType.FLASH_SOCKET, createFlashSocketTransport(transport));
         }
 
         for(Transport t : transports.values())
             t.init(config);
+    }
+
+    private void addIfNotNull(TransportType type, Transport transport)
+    {
+        if(transport != null)
+            transports.put(type, transport);
     }
 
     @Override

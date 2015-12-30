@@ -79,7 +79,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         try
         {
             send(EngineIOProtocol.createHandshakePacket(getSession().getSessionId(),
-                    new String[] {},
+                    new String[]{},
                     getConfig().getPingInterval(SocketIOConfig.DEFAULT_PING_INTERVAL),
                     getConfig().getTimeout(SocketIOConfig.DEFAULT_PING_TIMEOUT)));
 
@@ -103,7 +103,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     @OnWebSocketMessage
     public void onWebSocketText(String text)
     {
-        if(LOGGER.isLoggable(Level.FINE))
+        if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Packet received: " + text);
 
         //TODO: check if it is possible to get multiple packets in one transmission
@@ -154,68 +154,19 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
-    public void sendMessage(SocketIOFrame frame) throws SocketIOException
+    public void send(EngineIOPacket packet) throws SocketIOException
     {
-        if (remote_endpoint.isOpen())
-        {
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: sendMessage: [" + frame.getFrameType() + "]: " + frame.getData());
-            try
-            {
-                remote_endpoint.getRemote().sendString(frame.encode());
-            }
-            catch (IOException e)
-            {
-                disconnectEndpoint();
-                throw new SocketIOException(e);
-            }
-        }
-        else
-            throw new SocketIOClosedException();
+        sendString(EngineIOProtocol.encode(packet));
     }
 
     @Override
-    public void sendMessage(String message) throws SocketIOException
-    {
-        sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
-    }
-
-    @Override
-    public void sendMessage(int messageType, String message)
+    public void emit(String name, Object... args)
             throws SocketIOException
     {
-        if (remote_endpoint.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED)
-        {
-            sendMessage(new SocketIOFrame(
-                    messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
-                            SocketIOFrame.FrameType.MESSAGE :
-                            SocketIOFrame.FrameType.JSON_MESSAGE,
-                    messageType, message));
-        }
-        else
-        {
+        if (!remote_endpoint.isOpen() || getSession().getConnectionState() != ConnectionState.CONNECTED)
             throw new SocketIOClosedException();
-        }
-    }
 
-    @Override
-    public void emitEvent(String name, String args)
-            throws SocketIOException
-    {
-        if (remote_endpoint.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED)
-        {
-            HashMap<String, Object> map = new HashMap<String, Object>();
-            map.put("name", name);
-            map.put("args", new Object[]{args});
-            sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.EVENT,
-                    SocketIOFrame.JSON_MESSAGE_TYPE,
-                    JSON.toString(map)));
-        }
-        else
-        {
-            throw new SocketIOClosedException();
-        }
-
+        send(SocketIOProtocol.createEventPacket(name, args));
     }
 
     @Override
@@ -247,12 +198,6 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         getSession().onShutdown();
     }
 
-    @Override
-    public void send(EngineIOPacket packet) throws SocketIOException
-    {
-        sendString(EngineIOProtocol.encode(packet));
-    }
-
     private void sendString(String data) throws SocketIOException
     {
         if (!remote_endpoint.isOpen())
@@ -278,7 +223,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         {
             remote_endpoint.disconnect();
         }
-        catch (IOException ex) {
+        catch (IOException ex)
+        {
             // ignore
         }
     }
