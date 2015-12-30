@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -53,7 +54,8 @@ public class ChatSocketServlet extends JettySocketIOServlet
     private Queue<ChatConnection> connections = new ConcurrentLinkedQueue<ChatConnection>();
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void init(ServletConfig config) throws ServletException
+    {
         JdkOverLog4j.install();
         super.init(config);
     }

@@ -68,9 +68,9 @@ public final class SocketIOSessionManager implements SessionManager
     @Override
     public SocketIOSession createSession(SocketIOInbound inbound)
     {
-        DefaultSession impl = new DefaultSession(this, inbound, generateSessionId());
-        socketIOSessions.put(impl.getSessionId(), impl);
-        return impl;
+        SocketIOSession session = new SocketIOSession(this, inbound, generateSessionId());
+        socketIOSessions.put(session.getSessionId(), session);
+        return session;
     }
 
     /**

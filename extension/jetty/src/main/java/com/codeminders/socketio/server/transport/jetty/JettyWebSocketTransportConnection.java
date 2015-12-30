@@ -112,11 +112,11 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
         try
         {
-            getSession().onPacket(EngineIOProtocol.decode(text));
+            getSession().onPacket(text);
         }
         catch (SocketIOProtocolException e)
         {
-            LOGGER.log(Level.WARNING, "Invalid EIO packet received", e);
+            LOGGER.log(Level.WARNING, "Invalid packet received", e);
         }
     }
 
