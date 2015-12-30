@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Implementation of Engine.IO Protocol version 3
  *
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public final class EngineIOProtocol
 {

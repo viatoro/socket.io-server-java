@@ -24,7 +24,6 @@
  */
 package com.codeminders.socketio.server.transport;
 
-import com.codeminders.socketio.server.SocketIOFrame;
 import com.codeminders.socketio.server.SocketIOProtocolException;
 import com.codeminders.socketio.server.SocketIOSession;
 import com.codeminders.socketio.server.TransportType;

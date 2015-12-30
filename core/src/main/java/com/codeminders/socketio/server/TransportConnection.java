@@ -36,7 +36,6 @@ import java.io.IOException;
 */
 public interface TransportConnection extends SocketIOOutbound
 {
-
     void init(SocketIOConfig config);
     void setSession(SocketIOSession session);
     Transport getTransport();
@@ -54,5 +53,4 @@ public interface TransportConnection extends SocketIOOutbound
     void abort();
 
     void send(EngineIOPacket packet) throws SocketIOException;
-
 }

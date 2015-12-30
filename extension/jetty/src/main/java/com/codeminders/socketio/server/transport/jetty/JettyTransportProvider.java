@@ -8,7 +8,7 @@ import com.codeminders.socketio.server.transport.JSONPPollingTransport;
 import com.codeminders.socketio.server.transport.XHRPollingTransport;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public class JettyTransportProvider extends AbstractTransportProvider
 {

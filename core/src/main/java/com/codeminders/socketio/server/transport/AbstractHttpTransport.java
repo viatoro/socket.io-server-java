@@ -2,7 +2,7 @@
  * The MIT License
  * Copyright (c) 2010 Tad Glines
  * <p/>
- * Contributors: Ovea.com, Mycila.com
+ * Contributors: Tad Glines, Ovea.com, Mycila.com, Alexander Sova (bird@codeminders.com)
  * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,20 +36,18 @@ import java.util.logging.Logger;
 
 public abstract class AbstractHttpTransport extends AbstractTransport
 {
-
-    private static final Logger LOGGER      = Logger.getLogger(AbstractHttpTransport.class.getName());
-    public static final  String SESSION_KEY = AbstractHttpTransport.class.getName() + ".Session";
+    private static final Logger LOGGER  = Logger.getLogger(AbstractHttpTransport.class.getName());
 
     @Override
     public final void handle(HttpServletRequest request,
                              HttpServletResponse response,
                              InboundFactory inboundFactory,
-                             SessionManager sessionFactory) throws IOException
+                             SessionManager sessionFactory)
+            throws IOException
     {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
 
-        //TODO: redo session id handling.
         SocketIOSession session = null;
         String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
         if (sessionId != null && sessionId.length() > 0)

@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public abstract class AbstractTransportProvider implements TransportProvider {
 
@@ -26,9 +26,6 @@ public abstract class AbstractTransportProvider implements TransportProvider {
         addIfNotNull(TransportType.XHR_POLLING,   createXHTPollingTransport());
         addIfNotNull(TransportType.JSONP_POLLING, createJSONPPollingTransport());
 
-        //TODO: should we allow server to work whithout websocket support?
-        //TODO: websocket is one of the "must support" transports for socket.io 1.0 servers
-        //TODO: do we need a flashsocket transport?
         Transport transport = createWebSocketTransport();
         if(transport != null)
         {
@@ -40,17 +37,11 @@ public abstract class AbstractTransportProvider implements TransportProvider {
             t.init(config);
     }
 
-    private void addIfNotNull(TransportType type, Transport transport)
-    {
-        if(transport != null)
-            transports.put(type, transport);
-    }
-
     @Override
-    public void destroy() {
-        for (Transport t : getTransports()) {
+    public void destroy()
+    {
+        for (Transport t : getTransports())
             t.destroy();
-        }
     }
 
     @Override
@@ -113,4 +104,9 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     }
 
 
+    private void addIfNotNull(TransportType type, Transport transport)
+    {
+        if(transport != null)
+            transports.put(type, transport);
+    }
 }

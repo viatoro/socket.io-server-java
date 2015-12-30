@@ -2,7 +2,7 @@
  * The MIT License
  * Copyright (c) 2015
  *
- * Contributors: Tad Glines, Ovea.com, Mycila.com
+ * Contributors: Tad Glines, Ovea.com, Mycila.com, Alexander Sova (bird@codeminders.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * @author Alexander Sova <bird@codeminders.com>
  */
 package com.codeminders.socketio.server.transport;
 
-import com.codeminders.socketio.server.SocketIOFrame;
 import com.codeminders.socketio.server.SocketIOProtocolException;
 import com.codeminders.socketio.server.SocketIOSession;
 import com.codeminders.socketio.server.TransportType;
@@ -57,10 +55,9 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
     @Override
     public void writeData(SocketIOSession session, ServletResponse response, String data) throws IOException
     {
-        //TODO: encode data?
         response.getOutputStream().print(EIO_PREFIX);
         response.getOutputStream().print("[" + session.getAttribute(FRAME_ID) + "]('");
-        response.getOutputStream().print(data);
+        response.getOutputStream().print(data); //TODO: encode data?
         response.getOutputStream().print("');");
     }
 
@@ -85,7 +82,7 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
         startSend(session, response);
 
         //TODO: check it!
-        writeData(session, response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
+//        writeData(session, response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
 
     }
 }

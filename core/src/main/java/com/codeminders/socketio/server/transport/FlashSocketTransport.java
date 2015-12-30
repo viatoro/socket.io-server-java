@@ -43,8 +43,8 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class FlashSocketTransport extends AbstractTransport {
-
+public class FlashSocketTransport extends AbstractTransport
+{
     public static final String PARAM_FLASHPOLICY_DOMAIN      = "flashPolicyDomain";
     public static final String PARAM_FLASHPOLICY_SERVER_HOST = "flashPolicyServerHost";
     public static final String PARAM_FLASHPOLICY_SERVER_PORT = "flashPolicyServerPort";
@@ -82,8 +82,8 @@ public class FlashSocketTransport extends AbstractTransport {
     {
         assert (delegate != null);
 
-        this.flashPolicyDomain = getConfig().getString(PARAM_FLASHPOLICY_DOMAIN);
-        this.flashPolicyPorts = getConfig().getString(PARAM_FLASHPOLICY_PORTS);
+        this.flashPolicyDomain     = getConfig().getString(PARAM_FLASHPOLICY_DOMAIN);
+        this.flashPolicyPorts      = getConfig().getString(PARAM_FLASHPOLICY_PORTS);
         this.flashPolicyServerHost = getConfig().getString(PARAM_FLASHPOLICY_SERVER_HOST);
         this.flashPolicyServerPort = getConfig().getInt(PARAM_FLASHPOLICY_SERVER_PORT, 843);
 
@@ -95,10 +95,14 @@ public class FlashSocketTransport extends AbstractTransport {
                     " - flashPolicyServerPort=" + flashPolicyServerPort + "\n" +
                     " - websocket delegate=" + (delegate == null ? "<none>" : delegate.getClass().getName()));
 
-        if (flashPolicyServerHost != null && flashPolicyDomain != null && flashPolicyPorts != null) {
-            try {
+        if (flashPolicyServerHost != null && flashPolicyDomain != null && flashPolicyPorts != null)
+        {
+            try
+            {
                 startFlashPolicyServer();
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 LOGGER.log(Level.SEVERE, "Cannot start a policy server", e);
                 // Ignore
             }
@@ -123,9 +127,10 @@ public class FlashSocketTransport extends AbstractTransport {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid " + TransportType.FLASH_SOCKET + " transport request");
             return;
         }
+
         if (path.startsWith("/")) path = path.substring(1);
-        String[] parts = path.split("/");
-        if ("GET".equals(request.getMethod()) && "flashsocket".equals(parts[1]))
+
+        if ("GET".equals(request.getMethod()))
         {
             if (!FLASHFILE_PATH.equals(path))
             {
@@ -154,7 +159,8 @@ public class FlashSocketTransport extends AbstractTransport {
     /**
      * Starts this server, binding to the previously passed SocketAddress.
      */
-    public void startFlashPolicyServer() throws IOException {
+    public void startFlashPolicyServer() throws IOException
+    {
         final String POLICY_FILE_REQUEST = "<policy-file-request/>";
         flashPolicyServer = ServerSocketChannel.open();
         flashPolicyServer.socket().setReuseAddress(true);
@@ -223,6 +229,7 @@ public class FlashSocketTransport extends AbstractTransport {
                 // Ignore
             }
         }
+
         if (policyAcceptorThread != null)
         {
             try

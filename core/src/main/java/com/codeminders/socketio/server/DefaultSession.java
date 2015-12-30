@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  * <p/>
  * Contributors: Ovea.com, Mycila.com
  * <p/>
@@ -22,6 +23,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
@@ -36,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * @author Alexander Sova (bird@codeminders.com)
  * @author Mathieu Carbou (mathieu.carbou@gmail.com)
  */
 class DefaultSession implements SocketIOSession
@@ -44,7 +47,7 @@ class DefaultSession implements SocketIOSession
 
     private final SocketIOSessionManager socketIOSessionManager;
     private final String                 sessionId;
-    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
+    private final Map<String, Object>    attributes = new ConcurrentHashMap<>();
 
     //TODO: rename to something more telling
     //This is callback/listener interface set by library user
@@ -55,7 +58,7 @@ class DefaultSession implements SocketIOSession
 
     private long        timeout;
     private SessionTask timeoutTask;
-    private boolean     timedout;
+    private boolean     timedOut;
     private String      closeId;
 
     DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId)
@@ -106,9 +109,9 @@ class DefaultSession implements SocketIOSession
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onTimeout");
 
-        if (!timedout)
+        if (!timedOut)
         {
-            timedout = true;
+            timedOut = true;
             state = ConnectionState.CLOSED;
             onDisconnect(DisconnectReason.TIMEOUT);
             connection.abort();
@@ -119,7 +122,7 @@ class DefaultSession implements SocketIOSession
     public void startTimeoutTimer()
     {
         clearTimeoutTimer();
-        if (timedout || timeout == 0)
+        if (timedOut || timeout == 0)
             return;
 
         timeoutTask = scheduleTask(new Runnable()
@@ -202,6 +205,7 @@ class DefaultSession implements SocketIOSession
                 return;
 
             case CLOSE:
+                //TODO: never tested. the client sends SIO DISCONNECT packet on socket.close()
                 startClose();
                 return;
 
@@ -218,6 +222,9 @@ class DefaultSession implements SocketIOSession
         {
             case CONNECT:
                 // ignore. server -> client
+                return;
+            case DISCONNECT:
+                startClose();
                 return;
             case EVENT:
                 Object json = JSON.parse(packet.getData());
@@ -258,51 +265,6 @@ class DefaultSession implements SocketIOSession
                 LOGGER.log(Level.FINE, "connection.send failed: ", e);
 
             connection.abort();
-        }
-    }
-
-    @Override
-    public void onClose(String data)
-    {
-        if (state == ConnectionState.CLOSING)
-        {
-            if (closeId != null && closeId.equals(data))
-            {
-                state = ConnectionState.CLOSED;
-                onDisconnect(DisconnectReason.CLOSED);
-                connection.abort();
-            }
-//            else
-//            {
-//                try
-//                {
-//                    //TODO: implement new protocol
-//                    connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
-//                }
-//                catch (SocketIOException e)
-//                {
-//                    if (LOGGER.isLoggable(Level.FINE))
-//                        LOGGER.log(Level.FINE, "connection.sendMessage failed: ", e);
-//                    connection.abort();
-//                }
-//            }
-        }
-        else
-        {
-            state = ConnectionState.CLOSING;
-//            try
-//            {
-//                connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, data));
-//                connection.disconnectWhenEmpty();
-//                if ("client".equals(data))
-//                    onDisconnect(DisconnectReason.CLOSED_REMOTELY);
-//            }
-//            catch (SocketIOException e)
-//            {
-//                if (LOGGER.isLoggable(Level.FINE))
-//                    LOGGER.log(Level.FINE, "connection.sendMessage failed: ", e);
-//                connection.abort();
-//            }
         }
     }
 
@@ -355,9 +317,7 @@ class DefaultSession implements SocketIOSession
             }
         }
         else
-        {
             connection.abort();
-        }
     }
 
     @Override

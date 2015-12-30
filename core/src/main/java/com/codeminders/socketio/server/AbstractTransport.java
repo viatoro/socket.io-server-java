@@ -24,8 +24,6 @@
  */
 package com.codeminders.socketio.server;
 
-import com.codeminders.socketio.common.SocketIOException;
-
 import javax.servlet.ServletConfig;
 
 /**

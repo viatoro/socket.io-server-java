@@ -44,7 +44,7 @@ public final class SocketIOSessionManager implements SessionManager
     final ConcurrentMap<String, SocketIOSession> socketIOSessions = new ConcurrentHashMap<>();
     final ScheduledExecutorService               executor         = Executors.newScheduledThreadPool(1);
 
-    private String gennerateSessionId()
+    private String generateSessionId()
     {
         while(true)
         {
@@ -59,14 +59,26 @@ public final class SocketIOSessionManager implements SessionManager
 
     }
 
+    /**
+     * Creates new session
+     *
+     * @param inbound inbound connection
+     * @return new session
+     */
     @Override
     public SocketIOSession createSession(SocketIOInbound inbound)
     {
-        DefaultSession impl = new DefaultSession(this, inbound, gennerateSessionId());
+        DefaultSession impl = new DefaultSession(this, inbound, generateSessionId());
         socketIOSessions.put(impl.getSessionId(), impl);
         return impl;
     }
 
+    /**
+     * Finds existing session
+     *
+     * @param sessionId session id
+     * @return session object or null if not found
+     */
     @Override
     public SocketIOSession getSession(String sessionId)
     {

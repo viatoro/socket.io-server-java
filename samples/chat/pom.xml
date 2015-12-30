@@ -26,10 +26,6 @@
             <groupId>com.codeminders.socketio.extension</groupId>
             <artifactId>socketio-jetty</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
 
         <!-- logging -->
         <dependency>

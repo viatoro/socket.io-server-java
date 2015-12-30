@@ -42,6 +42,7 @@ public interface SocketIOOutbound
      * new messages can be sent, but messages may still arrive until the distant end has
      * acknowledged the close.
      */
+    //TODO: remove
     void close();
 
     ConnectionState getConnectionState();

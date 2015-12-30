@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * Implementation of Socket.IO Protocol version 4
+ *
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public final class SocketIOProtocol
 {
@@ -41,7 +43,7 @@ public final class SocketIOProtocol
 
     public static SocketIOPacket createEventPacket(String name, Object... args)
     {
-        ArrayList data = new ArrayList();
+        ArrayList<Object> data = new ArrayList<>();
         data.add(name);
         data.addAll(Arrays.asList(args));
 

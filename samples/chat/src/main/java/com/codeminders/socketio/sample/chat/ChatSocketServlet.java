@@ -24,7 +24,6 @@
  */
 package com.codeminders.socketio.sample.chat;
 
-import com.codeminders.socketio.server.SocketIOFrame;
 import com.codeminders.socketio.server.SocketIOInbound;
 import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
 import com.codeminders.socketio.util.JdkOverLog4j;
@@ -32,13 +31,10 @@ import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.server.SocketIOOutbound;
 
-import com.google.gson.Gson;
-
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -1,7 +1,7 @@
 package com.codeminders.socketio.server;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public class UnsupportedTransportException extends Exception {
 

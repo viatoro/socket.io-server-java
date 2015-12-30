@@ -32,7 +32,6 @@ public enum TransportType {
     WEB_SOCKET("websocket"),
     FLASH_SOCKET("flashsocket"),
     JSONP_POLLING("jsonp-polling"),
-    XHR_MULTIPART("xhr-multipart"),
     XHR_POLLING("xhr-polling"),
     UNKNOWN("");
 
