@@ -82,7 +82,7 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
         startSend(session, response);
 
         //TODO: check it!
-//        writeData(session, response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
+        //TODO: send CONNECT packet?
 
     }
 }

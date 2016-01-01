@@ -38,6 +38,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * SocketIO session.
+ *
+ * This implementation is not thread-safe.
+ *
  * @author Alexander Sova (bird@codeminders.com)
  * @author Mathieu Carbou (mathieu.carbou@gmail.com)
  */
@@ -45,7 +49,7 @@ public class SocketIOSession
 {
     private static final Logger LOGGER = Logger.getLogger(SocketIOSession.class.getName());
 
-    private final SocketIOSessionManager socketIOSessionManager;
+    private final SocketIOSessionManager sessionManager;
     private final String                 sessionId;
     private final Map<String, Object>    attributes = new ConcurrentHashMap<>();
 
@@ -54,18 +58,21 @@ public class SocketIOSession
     private SocketIOInbound inbound;
 
     private TransportConnection connection;
-    private ConnectionState state = ConnectionState.CONNECTING;
+    private ConnectionState  state = ConnectionState.CONNECTING;
+    private DisconnectReason disconnectReason = DisconnectReason.UNKNOWN;
+    private String           disconnectMessage;
 
     private long        timeout;
     private Future<?>   timeoutTask;
     private boolean     timedOut;
-    private String      closeId;
 
-    SocketIOSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId)
+    SocketIOSession(SocketIOSessionManager sessionManager, SocketIOInbound inbound, String sessionId)
     {
-        this.socketIOSessionManager = socketIOSessionManager;
-        this.inbound = inbound;
-        this.sessionId = sessionId;
+        assert (sessionManager != null);
+
+        this.sessionManager = sessionManager;
+        this.inbound        = inbound;
+        this.sessionId      = sessionId;
     }
 
     public void setAttribute(String key, Object val)
@@ -88,37 +95,19 @@ public class SocketIOSession
         return state;
     }
 
-    public SocketIOInbound getInbound()
-    {
-        return inbound;
-    }
-
     public TransportConnection getConnection()
     {
         return connection;
     }
 
-    private void onTimeout()
+    public void resetTimeout()
     {
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onTimeout");
-
-        if (!timedOut)
-        {
-            timedOut = true;
-            state = ConnectionState.CLOSED;
-            onDisconnect(DisconnectReason.TIMEOUT);
-            connection.abort();
-        }
-    }
-
-    public void startTimeoutTimer()
-    {
-        clearTimeoutTimer();
+        //TODO: synchronize
+        clearTimeout();
         if (timedOut || timeout == 0)
             return;
 
-        timeoutTask = socketIOSessionManager.executor.schedule(new Runnable()
+        timeoutTask = sessionManager.executor.schedule(new Runnable()
         {
             @Override
             public void run()
@@ -128,7 +117,7 @@ public class SocketIOSession
         }, timeout, TimeUnit.MILLISECONDS);
     }
 
-    public void clearTimeoutTimer()
+    public void clearTimeout()
     {
         if (timeoutTask != null)
         {
@@ -147,25 +136,6 @@ public class SocketIOSession
         return timeout;
     }
 
-    //TODO: remove or rename to disconnect()
-    public void startClose()
-    {
-        state = ConnectionState.CLOSING;
-        closeId = "server";
-//        try
-//        {
-//            //TODO: use new protocol
-//            connection.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CLOSE, 0, closeId));
-//        }
-//        catch (SocketIOException e)
-//        {
-//            if (LOGGER.isLoggable(Level.FINE))
-//                LOGGER.log(Level.FINE, "connection.send failed: ", e);
-//
-//            connection.abort();
-//        }
-    }
-
     public void onPacket(String data)
             throws SocketIOProtocolException
     {
@@ -174,53 +144,87 @@ public class SocketIOSession
 
     public void onConnect(TransportConnection connection)
     {
-        if (connection == null)
+        assert (connection != null);
+        assert (this.connection == null); //TODO: may not be the case for upgrade.
+
+        this.connection = connection;
+
+        if (inbound == null)
         {
-            state = ConnectionState.CLOSED;
-            inbound = null;
-            socketIOSessionManager.socketIOSessions.remove(sessionId);
+            //TODO: this could happen only if onDisconnect was called already
+            closeConnection(DisconnectReason.CONNECT_FAILED);
+            return;
         }
-        else
-        if(this.connection == null)
+
+        try
         {
-            this.connection = connection;
-            if (inbound == null)
-            {
-                state = ConnectionState.CLOSED;
-                connection.abort();
-            }
-            else
-            {
-                try
-                {
-                    state = ConnectionState.CONNECTED;
-                    inbound.onConnect(connection);
-                }
-                catch (Throwable e)
-                {
-                    if (LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onConnect()", e);
-                    state = ConnectionState.CLOSED;
-                    connection.abort();
-                }
-            }
+            state = ConnectionState.CONNECTED;
+            inbound.onConnect(connection);
         }
-        else
-            connection.abort();
+        catch (Throwable e)
+        {
+            if (LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onConnect()", e);
+
+            closeConnection(DisconnectReason.CONNECT_FAILED);
+        }
     }
 
+    /**
+     * Optional. if transport know detailed error message it could be set before calling onShutdown()
+     */
+    public void setDisconnectMessage(String message)
+    {
+        this.disconnectMessage = message;
+    }
+
+    /**
+     * Calling this method will change connection status to CLOSING!
+     */
+    public void setDisconnectReason(DisconnectReason reason)
+    {
+        this.state = ConnectionState.CLOSING;
+        this.disconnectReason = reason;
+    }
+
+    /**
+     * callback to be called by transport connection socket is closed.
+     *
+     */
+    public void onShutdown()
+    {
+        if(state == ConnectionState.CLOSING)
+            onDisconnect(disconnectReason);
+        else
+            onDisconnect(DisconnectReason.ERROR);
+    }
+
+    /**
+     * Disconnect callback. to be called by session itself. Transport connection should always call onShutdown()
+     */
+    //TODO: race condition on disconnect from remote endpoint
     public void onDisconnect(DisconnectReason reason)
     {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onDisconnect: " + reason);
+            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onDisconnect: " + reason +
+                    " message: [" + disconnectMessage + "]");
 
-        clearTimeoutTimer();
+        //TODO: this is not enough. inbound is not protected
+        synchronized(this)
+        {
+            if (state == ConnectionState.CLOSED)
+                return; // to prevent calling it twice
+
+            state = ConnectionState.CLOSED;
+        }
+
+        clearTimeout();
+
         if (inbound != null)
         {
-            state = ConnectionState.CLOSED;
             try
             {
-                inbound.onDisconnect(reason, null);
+                inbound.onDisconnect(reason, disconnectMessage);
             }
             catch (Throwable e)
             {
@@ -229,29 +233,20 @@ public class SocketIOSession
             }
             inbound = null;
         }
+        sessionManager.deleteSession(sessionId);
     }
 
-    public void onShutdown()
+    private void onTimeout()
     {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onShutdown");
+            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onTimeout");
 
-        if (inbound != null)
+        if (!timedOut)
         {
-            if (state == ConnectionState.CLOSING)
-            {
-                if (closeId != null)
-                    onDisconnect(DisconnectReason.CLOSE_FAILED);
-                else
-                    onDisconnect(DisconnectReason.CLOSED_REMOTELY);
-            }
-            else
-                onDisconnect(DisconnectReason.ERROR);
+            timedOut = true;
+            closeConnection(DisconnectReason.TIMEOUT);
         }
-        socketIOSessionManager.socketIOSessions.remove(sessionId);
     }
-
-
 
     private void onPacket(EngineIOPacket packet)
     {
@@ -259,10 +254,11 @@ public class SocketIOSession
         {
             case OPEN:
             case PONG:
-                // ignore. OPEN and PONG are server -> client
+                // ignore. OPEN and PONG are server -> client only
                 return;
+
             case MESSAGE:
-                startTimeoutTimer();
+                resetTimeout();
                 try
                 {
                     onPacket(SocketIOProtocol.decode(packet.getData()));
@@ -275,13 +271,13 @@ public class SocketIOSession
                 return;
 
             case PING:
-                startTimeoutTimer();
+                resetTimeout();
                 onPing(packet.getData());
                 return;
 
             case CLOSE:
                 //TODO: never tested. the client sends SIO DISCONNECT packet on socket.close()
-                startClose();
+                closeConnection(DisconnectReason.CLOSED_REMOTELY);
                 return;
 
             default:
@@ -295,11 +291,15 @@ public class SocketIOSession
         switch (packet.getType())
         {
             case CONNECT:
-                // ignore. server -> client
+                // ignore. server -> client only
                 return;
+
             case DISCONNECT:
-                startClose();
+                // Session.onDisconnect() is being called twice.
+                // this happens because the client sends DISCONNECT packet and immediately drops the connection.
+                closeConnection(DisconnectReason.CLOSED_REMOTELY);
                 return;
+
             case EVENT:
                 Object json = JSON.parse(packet.getData());
                 if (!(json instanceof Object[]) || ((Object[]) json).length == 0)
@@ -317,7 +317,6 @@ public class SocketIOSession
                     return;
                 }
                 onEvent(args[0].toString(), Arrays.copyOfRange(args, 1, args.length));
-
                 return;
 
             default:
@@ -337,13 +336,14 @@ public class SocketIOSession
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "connection.send failed: ", e);
 
-            connection.abort();
+            closeConnection(DisconnectReason.ERROR);
         }
     }
 
     private void onEvent(String name, Object[] args)
     {
-        if(inbound == null)
+        //TODO: not thread-safe. synchronize
+        if(inbound == null || state != ConnectionState.CONNECTED)
             return;
 
         try
@@ -355,5 +355,14 @@ public class SocketIOSession
             if (LOGGER.isLoggable(Level.WARNING))
                 LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onEvent()", e);
         }
+    }
+
+    /**
+     * remembers the disconnect reason and closes underlying transport connection
+     */
+    private void closeConnection(DisconnectReason reason)
+    {
+        setDisconnectReason(reason);
+        connection.abort(); //this call should trigger onShutdown() eventually
     }
 }

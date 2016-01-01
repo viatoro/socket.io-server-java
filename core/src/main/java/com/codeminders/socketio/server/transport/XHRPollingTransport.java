@@ -63,10 +63,11 @@ public abstract class XHRPollingTransport extends AbstractHttpTransport
     @Override
     public void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response) throws IOException, SocketIOProtocolException
     {
+        //TODO: it may be called twice? one from here and another one by transport connection implementation
         startSend(session, response);
 
-        //TODO: check!!!
-//        writeData(session, response, SocketIOFrame.encode(SocketIOFrame.FrameType.CONNECT, session.getSessionId()));
+        //TODO: check it!
+        //TODO: send CONNECT packet?
 
     }
 }

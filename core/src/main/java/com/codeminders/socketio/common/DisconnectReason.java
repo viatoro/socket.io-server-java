@@ -32,11 +32,14 @@ public enum DisconnectReason {
 	CLOSE_FAILED(4),	// The connection dropped before an orderly close could complete.
 	ERROR(5),			// A GET or POST returned an error, or an internal error occurred.
 	CLOSED_REMOTELY(6),	// Remote end point initiated a close.
-	CLOSED(7);			// Locally initiated close succeeded.
+	CLIENT_GONE(7),     // Remote end point gone away (browser closed or navigated away)
+	CLOSED(8);			// Locally initiated close succeeded.
 
 	private int value;
-	private DisconnectReason(int v) { this.value = v; }
-	public int value() { return value; }
+
+    DisconnectReason(int v) { this.value = v; }
+
+    public int value() { return value; }
 	
 	public static DisconnectReason fromInt(int val) {
 		switch (val) {

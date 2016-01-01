@@ -24,14 +24,15 @@
  */
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
 /**
  * @author Mathieu Carbou
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public abstract class AbstractTransportConnection implements TransportConnection
 {
-
     private SocketIOConfig config;
     private SocketIOSession session;
 
@@ -54,11 +55,8 @@ public abstract class AbstractTransportConnection implements TransportConnection
         return session;
     }
 
-    protected void init() {
-    }
-
-    @Override
-    public void disconnectWhenEmpty() {
+    protected void init()
+    {
     }
 
     public void send(SocketIOPacket packet) throws SocketIOException
@@ -66,4 +64,19 @@ public abstract class AbstractTransportConnection implements TransportConnection
         send(EngineIOProtocol.createMessagePacket(SocketIOProtocol.encode(packet)));
     }
 
+    @Override
+    public void disconnect()
+    {
+        try
+        {
+            send(SocketIOProtocol.createDisconnectPacket());
+            getSession().setDisconnectReason(DisconnectReason.DISCONNECT);
+        }
+        catch (SocketIOException e)
+        {
+            getSession().setDisconnectReason(DisconnectReason.CLOSE_FAILED);
+        }
+
+        abort();
+    }
 }

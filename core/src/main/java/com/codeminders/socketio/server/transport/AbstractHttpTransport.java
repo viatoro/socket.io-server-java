@@ -24,6 +24,7 @@
  */
 package com.codeminders.socketio.server.transport;
 
+import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.server.*;
 
 import javax.servlet.ServletRequest;
@@ -62,7 +63,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
             }
             else
             {
-                session.onShutdown();
+//                session.onDisconnect(DisconnectReason.ERROR);
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }

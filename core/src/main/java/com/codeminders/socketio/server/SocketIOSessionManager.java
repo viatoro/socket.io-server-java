@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -29,7 +30,7 @@ import java.util.concurrent.*;
 public final class SocketIOSessionManager implements SessionManager
 {
     private static final int SESSION_ID_LEN = 20;
-    private static final char[] symbols;
+    private static final char[] SYMBOLS;
 
     static
     {
@@ -38,11 +39,11 @@ public final class SocketIOSessionManager implements SessionManager
             sb.append(ch);
         for (char ch = 'a'; ch <= 'z'; ch++)
             sb.append(ch);
-        symbols = sb.toString().toCharArray();
+        SYMBOLS = sb.toString().toCharArray();
     }
 
-    final ConcurrentMap<String, SocketIOSession> socketIOSessions = new ConcurrentHashMap<>();
-    final ScheduledExecutorService               executor         = Executors.newScheduledThreadPool(1);
+    final ConcurrentMap<String, SocketIOSession> sessions = new ConcurrentHashMap<>();
+    final ScheduledExecutorService               executor = Executors.newScheduledThreadPool(1);
 
     private String generateSessionId()
     {
@@ -50,10 +51,10 @@ public final class SocketIOSessionManager implements SessionManager
         {
             StringBuilder sb = new StringBuilder(SESSION_ID_LEN);
             for (int i = 0; i < SESSION_ID_LEN; i++)
-                sb.append(symbols[ThreadLocalRandom.current().nextInt(symbols.length)]);
+                sb.append(SYMBOLS[ThreadLocalRandom.current().nextInt(SYMBOLS.length)]);
 
             String id = sb.toString();
-            if(socketIOSessions.get(id) == null)
+            if(sessions.get(id) == null)
                 return id;
         }
 
@@ -69,7 +70,7 @@ public final class SocketIOSessionManager implements SessionManager
     public SocketIOSession createSession(SocketIOInbound inbound)
     {
         SocketIOSession session = new SocketIOSession(this, inbound, generateSessionId());
-        socketIOSessions.put(session.getSessionId(), session);
+        sessions.put(session.getSessionId(), session);
         return session;
     }
 
@@ -82,6 +83,11 @@ public final class SocketIOSessionManager implements SessionManager
     @Override
     public SocketIOSession getSession(String sessionId)
     {
-        return socketIOSessions.get(sessionId);
+        return sessions.get(sessionId);
+    }
+
+    public void deleteSession(String sessionId)
+    {
+        sessions.remove(sessionId);
     }
 }

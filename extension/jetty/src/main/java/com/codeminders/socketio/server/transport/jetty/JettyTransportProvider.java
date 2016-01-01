@@ -19,32 +19,33 @@ public class JettyTransportProvider extends AbstractTransportProvider
         return new JettyWebSocketTransport();
     }
 
-    protected Transport createFlashSocketTransport(Transport delegate)
-    {
-        return new FlashSocketTransport(delegate);
-    }
-
-    protected Transport createXHTPollingTransport()
-    {
-        return new XHRPollingTransport()
-        {
-            @Override
-            public TransportConnection createConnection()
-            {
-                return new JettyContinuationTransportConnection(this);
-            }
-        };
-    }
-
-    protected Transport createJSONPPollingTransport()
-    {
-        return new JSONPPollingTransport()
-        {
-            @Override
-            public TransportConnection createConnection()
-            {
-                return new JettyContinuationTransportConnection(this);
-            }
-        };
-    }
+//TODO: disabling all the transports except Websocket for now
+//    protected Transport createFlashSocketTransport(Transport delegate)
+//    {
+//        return new FlashSocketTransport(delegate);
+//    }
+//
+//    protected Transport createXHTPollingTransport()
+//    {
+//        return new XHRPollingTransport()
+//        {
+//            @Override
+//            public TransportConnection createConnection()
+//            {
+//                return new JettyContinuationTransportConnection(this);
+//            }
+//        };
+//    }
+//
+//    protected Transport createJSONPPollingTransport()
+//    {
+//        return new JSONPPollingTransport()
+//        {
+//            @Override
+//            public TransportConnection createConnection()
+//            {
+//                return new JettyContinuationTransportConnection(this);
+//            }
+//        };
+//    }
 }

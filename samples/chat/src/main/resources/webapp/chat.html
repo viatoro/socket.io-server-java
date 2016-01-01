@@ -42,41 +42,28 @@
           document.getElementById('chat').appendChild(el);
           document.getElementById('chat').scrollTop = 1000000;
       }
-
-      function message(obj)
-      {
-        if ('welcome' in obj)
-            addLine('<em>' + esc(obj.welcome) + '</em>');
-        else
-        if ('announcement' in obj)
-            addLine('<em>' + esc(obj.announcement) + '</em>');
-        else
-        if ('message' in obj)
-            addLine('<b>' + esc(obj.message[0]) + ':</b> ' + esc(obj.message[1]));
-        else
-            addLine('<b>Server:</b> ' + '<em>' + JSON.stringify(obj) + '</em>');
-      }
       
       function send()
       {
         var val = document.getElementById('text').value;
+        addLine('<b>You:</b> ' + esc(val));
+
         if (val == '/lclose')
         {
 	      	addLine('<em>closing...</em>');
         	socket.close();
         }
         else
-        if (val == '/ldisconnect')
+        if (val == '/rclose')
         {
-    	      	addLine('<em>disconnecting...</em>');
-            	socket.disconnect();
+	      	addLine('<em>asking server to close...</em>');
+        	socket.emit('force disconnect');
         }
         else
         {
             socket.emit('chat message', val);
         }
 
-        addLine('<b>You:</b> ' + esc(val));
         document.getElementById('text').value = '';
       }
       
@@ -84,26 +71,7 @@
       {
         return msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
-      
-      function drname(dr) {
-    	  if (dr == 1) {
-    		  return 'CONNECT_FAILED';
-    	  } else if (dr == 2) {
-    		  return 'DISCONNECT';
-    	  } else if (dr == 3) {
-    		  return 'TIMEOUT';
-    	  } else if (dr == 4) {
-    		  return 'CLOSE_FAILED';
-    	  } else if (dr == 5) {
-    		  return 'ERROR';
-    	  } else if (dr == 6) {
-    		  return 'CLOSED_REMOTELY';
-    	  } else if (dr == 7) {
-    		  return 'CLOSED';
-    	  } else {
-    		  return 'UNKNOWN['+dr+']';
-    	  }
-      }
+
 
       var socket = io({
        transports: ['websocket']
@@ -119,7 +87,7 @@
 	  });
 
 	  socket.on('disconnect', function (reason) {
-  	 	addLine('<b>Disconnected['+drname(reason)+']</b>');
+  	 	addLine('<b>Disconnected['+reason+']</b>');
 	  });
 
 	  socket.on('chat message', function (from, message) {

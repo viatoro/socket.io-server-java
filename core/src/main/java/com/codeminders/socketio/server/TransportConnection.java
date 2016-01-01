@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -40,15 +41,15 @@ public interface TransportConnection extends SocketIOOutbound
     void setSession(SocketIOSession session);
     Transport getTransport();
 
-    void connect(HttpServletRequest request, HttpServletResponse response) throws IOException, SocketIOProtocolException;
+    void connect(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, SocketIOProtocolException;
 
-    void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException;
+    void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session)
+            throws IOException;
 
-    void disconnectWhenEmpty();
     /**
-     * Cause connection and all activity to be aborted and all resources to be released.
-     * The handler is expected to call the session's onShutdown() when it is finished.
-     * The only session method that the handler can legally call after this is onShutdown();
+     * Closes underlying transport connection.
+     * TODO: consider exposing it in the parent interface
      */
     void abort();
 

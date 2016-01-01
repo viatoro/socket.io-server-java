@@ -48,18 +48,6 @@ public final class ServletBasedSocketIOConfig implements SocketIOConfig
     }
 
     @Override
-    public long getHeartbeatDelay(long def)
-    {
-        return getLong(PARAM_HEARTBEAT_DELAY, def);
-    }
-
-    @Override
-    public long getHeartbeatTimeout(long def)
-    {
-        return getLong(PARAM_HEARTBEAT_TIMEOUT, def);
-    }
-
-    @Override
     public long getPingInterval(long def)
     {
         return getLong(PARAM_PING_INTERVAL, def);

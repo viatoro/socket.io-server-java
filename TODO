@@ -8,3 +8,4 @@
 * Implement broadcasting
 * handle b64 flag
 * Subscription for individual events. The same as io.on(name, function () {})
+* make SocketIOSession thread-safe

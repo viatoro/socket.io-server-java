@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -26,7 +27,13 @@ package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.DisconnectReason;
 
-public interface SocketIOInbound {
+/**
+ * Interface that represents a listener for inbound connection events
+ * A library user is expected to implement this interface in order to receive these events
+ *
+ */
+public interface SocketIOInbound
+{
 
     /**
      * Called when the connection is established. This will only ever be called once.
@@ -47,7 +54,8 @@ public interface SocketIOInbound {
 
     /**
      * Called one per arriving event.
-     *  @param name event name
+     *
+     * @param name event name
      * @param args event payload
      */
     void onEvent(String name, Object[] args);

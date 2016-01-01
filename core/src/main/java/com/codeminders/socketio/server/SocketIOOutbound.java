@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -24,7 +25,6 @@
  */
 package com.codeminders.socketio.server;
 
-import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.SocketIOException;
 
 public interface SocketIOOutbound
@@ -32,20 +32,14 @@ public interface SocketIOOutbound
     /**
      * Terminate the connection. This method may return before the connection disconnect
      * completes. The onDisconnect() method of the associated SocketInbound will be called
-     * when the disconnect is completed. The onDisconnect() method may be called during the
-     * invocation of this method.
+     * when the disconnect is completed.
+     * This method will try to notify the remote end.
      */
     void disconnect();
 
-    /**
-     * Initiate an orderly close of the connection. The state will be changed to CLOSING so no
-     * new messages can be sent, but messages may still arrive until the distant end has
-     * acknowledged the close.
-     */
-    //TODO: remove
-    void close();
-
-    ConnectionState getConnectionState();
+    //TODO: do we need an abort() or kill() method for user to call in case of IO error?
+    //TODO: should we try to send anything (like DISCONNECT packet) in this case?
+    //TODO: no onDisconnect to be called if such method is used by the user.
 
     /**
      * Emits an event to the socket identified by the string name.

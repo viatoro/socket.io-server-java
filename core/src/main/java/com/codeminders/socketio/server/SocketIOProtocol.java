@@ -49,4 +49,9 @@ public final class SocketIOProtocol
 
         return new SocketIOPacket(SocketIOPacket.Type.EVENT, JSON.toString(data.toArray()));
     }
+
+    public static SocketIOPacket createDisconnectPacket()
+    {
+        return new SocketIOPacket(SocketIOPacket.Type.DISCONNECT);
+    }
 }

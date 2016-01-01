@@ -57,6 +57,7 @@ public final class EngineIOProtocol
         map.put("upgrades", upgrades);
         map.put("pingInterval", ping_interval);
         map.put("pingTimeout", ping_timeout);
+
         return new EngineIOPacket(EngineIOPacket.Type.OPEN, JSON.toString(map));
     }
 

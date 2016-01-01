@@ -44,8 +44,9 @@ import java.util.logging.Logger;
 
 public class ChatSocketServlet extends JettySocketIOServlet
 {
-    private static final String CHAT_MESSAGE_EVENT = "chat message";
+    private static final String CHAT_MESSAGE_EVENT    = "chat message";
     private static final String WELCOME_MESSAGE_EVENT = "welcome";
+    private static final String FORCE_DISCONECT_EVENT = "force disconnect";
 
     private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
 
@@ -81,9 +82,6 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 LOGGER.log(Level.SEVERE, "Cannot send a chat message", e);
                 outbound.disconnect();
             }
-
-//            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-//                    Collections.singletonMap("announcement", sessionId + " connected")));
         }
 
         @Override
@@ -186,8 +184,16 @@ public class ChatSocketServlet extends JettySocketIOServlet
             //TODO: log arguments?
             LOGGER.fine("Got event: " + name);
 
-            if(args.length > 0)
-                broadcast(CHAT_MESSAGE_EVENT, sessionId.toString(), args[0]);
+            if(CHAT_MESSAGE_EVENT.equals(name))
+            {
+                if (args.length > 0)
+                    broadcast(CHAT_MESSAGE_EVENT, sessionId.toString(), args[0]);
+            }
+            else
+            if (FORCE_DISCONECT_EVENT.equals(name))
+            {
+                outbound.disconnect();
+            }
         }
 
         private void broadcast(String name, Object... args)

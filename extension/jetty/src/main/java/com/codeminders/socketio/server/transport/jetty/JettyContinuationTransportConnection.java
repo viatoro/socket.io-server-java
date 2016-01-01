@@ -25,25 +25,18 @@
 package com.codeminders.socketio.server.transport.jetty;
 
 import com.codeminders.socketio.server.*;
-import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.server.transport.AbstractHttpTransport;
-import com.codeminders.socketio.util.IO;
-import com.codeminders.socketio.util.JSON;
 import com.codeminders.socketio.util.URI;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.eclipse.jetty.server.HttpConnection;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +45,7 @@ import java.util.logging.Logger;
  * @author Mathieu Carbou
  */
 
-//TODO: do we even need continuation for polling transports?
+//TODO: This is currently broken. plan to implement it when finished with websocket transport
 public final class JettyContinuationTransportConnection
         extends AbstractTransportConnection
         implements ContinuationListener
@@ -108,23 +101,7 @@ public final class JettyContinuationTransportConnection
                     " - continuationTimeout=" + this.continuationTimeout);
     }
 
-    @Override
-    public void disconnect() {
-        getSession().onDisconnect(DisconnectReason.DISCONNECT);
-        abort();
-    }
-
-    @Override
-    public void close() {
-        getSession().startClose();
-    }
-
-    @Override
-    public ConnectionState getConnectionState() {
-        return getSession().getConnectionState();
-    }
-
-//    public void sendMessage(SocketIOFrame frame) throws SocketIOException {
+    //    public void sendMessage(SocketIOFrame frame) throws SocketIOException {
 //        if (LOGGER.isLoggable(Level.FINE))
 //            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(frame): [" + frame.getFrameType() + "]: " + frame.getData());
 //        if (is_open) {
@@ -150,7 +127,7 @@ public final class JettyContinuationTransportConnection
 //            } else {
 //                String data = frame.encode();
 //                if (!buffer.putMessage(data, maxIdleTime)) {
-//                    getSession().onDisconnect(DisconnectReason.TIMEOUT);
+//                    getSession().setDisconnectReason(DisconnectReason.TIMEOUT);
 //                    abort();
 //                    throw new SocketIOException();
 //                }
@@ -190,13 +167,14 @@ public final class JettyContinuationTransportConnection
                         transport.writeData(getSession(), response, data.toString());
                         transport.finishSend(getSession(), response);
                         if (!disconnectWhenEmpty) {
-                            getSession().startTimeoutTimer();
+                            getSession().resetTimeout();
                         } else {
+                            getSession().setDisconnectReason(DisconnectReason.CLOSED);
                             abort();
                         }
                     }
                 } else {
-                    getSession().clearTimeoutTimer();
+                    getSession().clearTimeout();
                     if (response.getBufferSize() == 0) {
                         response.setBufferSize(bufferSize);
                     }
@@ -226,9 +204,6 @@ public final class JettyContinuationTransportConnection
                     // Ensure that the disconnectWhenEmpty flag is obeyed in the case where
                     // it is set during a POST.
                     if (disconnectWhenEmpty && buffer.isEmpty()) {
-                        if (getSession().getConnectionState() == ConnectionState.CLOSING) {
-                            getSession().onDisconnect(DisconnectReason.CLOSED);
-                        }
                         abort();
                     }
                 }
@@ -266,7 +241,7 @@ public final class JettyContinuationTransportConnection
             continuation = null;
             if (!is_open && buffer.isEmpty() && !disconnectWhenEmpty)
             {
-                getSession().onDisconnect(DisconnectReason.DISCONNECT);
+                getSession().setDisconnectReason(DisconnectReason.DISCONNECT);
                 abort();
             }
             else
@@ -274,7 +249,7 @@ public final class JettyContinuationTransportConnection
                 if (disconnectWhenEmpty)
                     abort();
                 else
-                    getSession().startTimeoutTimer();
+                    getSession().resetTimeout();
             }
         }
     }
@@ -287,7 +262,7 @@ public final class JettyContinuationTransportConnection
             continuation = null;
             if (!is_open && buffer.isEmpty())
             {
-                getSession().onDisconnect(DisconnectReason.DISCONNECT);
+                getSession().setDisconnectReason(DisconnectReason.DISCONNECT);
                 abort();
             }
             else
@@ -297,11 +272,11 @@ public final class JettyContinuationTransportConnection
                     transport.finishSend(getSession(), cont.getServletResponse());
                 } catch (IOException e)
                 {
-                    getSession().onDisconnect(DisconnectReason.DISCONNECT);
+                    getSession().setDisconnectReason(DisconnectReason.DISCONNECT);
                     abort();
                 }
             }
-            getSession().startTimeoutTimer();
+            getSession().resetTimeout(); //TODO: why?
         }
     }
 
@@ -325,13 +300,8 @@ public final class JettyContinuationTransportConnection
     }
 
     @Override
-    public void disconnectWhenEmpty() {
-        disconnectWhenEmpty = true;
-    }
-
-    @Override
     public void abort() {
-        getSession().clearTimeoutTimer();
+        getSession().clearTimeout();
         is_open = false;
         if (continuation != null) {
             Continuation cont = continuation;
@@ -361,11 +331,9 @@ public final class JettyContinuationTransportConnection
         //TODO: implement
     }
 
-
     @Override
     public void send(SocketIOPacket packet) throws SocketIOException
     {
         //TODO: implement
     }
-
 }
