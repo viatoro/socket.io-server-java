@@ -24,6 +24,10 @@
  */
 package com.codeminders.socketio.server.transport.jetty;
 
+import com.codeminders.socketio.protocol.EngineIOPacket;
+import com.codeminders.socketio.protocol.EngineIOProtocol;
+import com.codeminders.socketio.protocol.SocketIOPacket;
+import com.codeminders.socketio.protocol.SocketIOProtocol;
 import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
@@ -81,7 +85,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
                     getConfig().getPingInterval(SocketIOConfig.DEFAULT_PING_INTERVAL),
                     getConfig().getTimeout(SocketIOConfig.DEFAULT_PING_TIMEOUT)));
 
-            send(new SocketIOPacket(SocketIOPacket.Type.CONNECT));
+            send(SocketIOProtocol.createConnectPacket());
 
             getSession().onConnect(this);
         }

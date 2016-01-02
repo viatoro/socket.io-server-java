@@ -1,9 +1,11 @@
-package com.codeminders.socketio.server;
+package com.codeminders.socketio.protocol;
+
+import com.codeminders.socketio.server.SocketIOProtocolException;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOPacket
+public abstract class SocketIOPacket
 {
     public enum Type
     {
@@ -13,8 +15,7 @@ public class SocketIOPacket
         ACK(3),
         ERROR(4),
         BINARY_EVENT(5),
-        BINARY_ACK(6),
-        UNKNOWN(Integer.MAX_VALUE);
+        BINARY_ACK(6);
 
         private int value;
 
@@ -28,7 +29,7 @@ public class SocketIOPacket
             return value;
         }
 
-        public static Type fromInt(int i)
+        public static Type fromInt(int i) throws SocketIOProtocolException
         {
             switch (i)
             {
@@ -40,13 +41,12 @@ public class SocketIOPacket
                 case 5: return BINARY_EVENT;
                 case 6: return BINARY_ACK;
                 default:
-                    return UNKNOWN;
+                    throw new SocketIOProtocolException("Unexpected packet type: " + i);
             }
         }
     }
 
     private Type   type;
-    private String data;
     private String namespace;
 
     public Type getType()
@@ -54,30 +54,27 @@ public class SocketIOPacket
         return type;
     }
 
-    public String getData()
-    {
-        return data;
-    }
+    protected abstract String getData();
 
     public String getNamespace()
     {
         return namespace;
     }
 
-    public SocketIOPacket(Type type)
+    SocketIOPacket(Type type)
     {
-        this(type, "", "/");
+        this(type, "/");
     }
 
-    public SocketIOPacket(Type type, String data)
-    {
-        this(type, data, "/");
-    }
-
-    public SocketIOPacket(Type type, String data, String namespace)
+    SocketIOPacket(Type type, String namespace)
     {
         this.type = type;
-        this.data = data;
         this.namespace = namespace;
     }
+
+    public String encode()
+    {
+        return String.valueOf(getType().value()) + getData();
+    }
+
 }

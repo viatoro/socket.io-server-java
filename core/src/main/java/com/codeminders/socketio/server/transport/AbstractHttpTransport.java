@@ -24,7 +24,7 @@
  */
 package com.codeminders.socketio.server.transport;
 
-import com.codeminders.socketio.common.DisconnectReason;
+import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
 
 import javax.servlet.ServletRequest;

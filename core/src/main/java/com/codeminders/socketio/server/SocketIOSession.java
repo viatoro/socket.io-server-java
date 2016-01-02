@@ -27,6 +27,7 @@
 package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
+import com.codeminders.socketio.protocol.*;
 import com.codeminders.socketio.util.JSON;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
@@ -301,22 +302,7 @@ public class SocketIOSession
                 return;
 
             case EVENT:
-                Object json = JSON.parse(packet.getData());
-                if (!(json instanceof Object[]) || ((Object[]) json).length == 0)
-                {
-                    if (LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.WARNING, "Invalid JSON in EVENT message packet: " + packet.getData());
-                    return;
-                }
-
-                Object[] args = (Object[]) json;
-                if (!(args[0] instanceof String))
-                {
-                    if (LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.WARNING, "Invalid JSON in EVENT message packet. First argument must be string: " + packet.getData());
-                    return;
-                }
-                onEvent(args[0].toString(), Arrays.copyOfRange(args, 1, args.length));
+                onEvent((SocketIOEventPacket)packet);
                 return;
 
             default:
@@ -340,7 +326,7 @@ public class SocketIOSession
         }
     }
 
-    private void onEvent(String name, Object[] args)
+    private void onEvent(SocketIOEventPacket packet)
     {
         //TODO: not thread-safe. synchronize
         if(inbound == null || state != ConnectionState.CONNECTED)
@@ -348,7 +334,15 @@ public class SocketIOSession
 
         try
         {
-            inbound.onEvent(name, args);
+            Object ack = inbound.onEvent(packet.getName(), packet.getArgs());
+
+            if(packet.getId() != -1 && ack != null)
+            {
+                connection.send(EngineIOProtocol.createMessagePacket(
+                        SocketIOProtocol.createACKPacket(packet.getId(), ack).encode()
+                ));
+            }
+
         }
         catch (Throwable e)
         {

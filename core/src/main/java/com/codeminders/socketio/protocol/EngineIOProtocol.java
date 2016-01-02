@@ -1,5 +1,6 @@
-package com.codeminders.socketio.server;
+package com.codeminders.socketio.protocol;
 
+import com.codeminders.socketio.server.SocketIOProtocolException;
 import com.codeminders.socketio.util.JSON;
 
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public final class EngineIOProtocol
         try
         {
             return new EngineIOPacket(
-                    EngineIOPacket.Type.fromInt(Integer.parseUnsignedInt(raw.substring(0, 1))),
+                    EngineIOPacket.Type.fromInt(Integer.parseInt(raw.substring(0, 1))),
                     raw.substring(1));
         }
         catch (NumberFormatException e)

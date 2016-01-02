@@ -1,4 +1,4 @@
-package com.codeminders.socketio.server;
+package com.codeminders.socketio.protocol;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
@@ -14,7 +14,7 @@ public class EngineIOPacket
         MESSAGE(4),
         UPGRADE(5),
         NOOP(6),
-        UNKNOWN(Integer.MAX_VALUE);
+        UNKNOWN(-1);
 
         private int value;
 

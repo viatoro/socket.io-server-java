@@ -24,6 +24,8 @@
  */
 package com.codeminders.socketio.server.transport.jetty;
 
+import com.codeminders.socketio.protocol.EngineIOPacket;
+import com.codeminders.socketio.protocol.SocketIOPacket;
 import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;

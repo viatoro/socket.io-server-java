@@ -28,9 +28,8 @@ package com.codeminders.socketio.server;
 import com.codeminders.socketio.common.DisconnectReason;
 
 /**
- * Interface that represents a listener for inbound connection events
- * A library user is expected to implement this interface in order to receive these events
- *
+ * Interface that represents a listener for inbound events
+ * A library user is expected to implement this interface in order to receive such events
  */
 public interface SocketIOInbound
 {
@@ -52,11 +51,12 @@ public interface SocketIOInbound
      */
     void onDisconnect(DisconnectReason reason, String errorMessage);
 
+    //TODO: add boolean param to indicate that ACK is requested by the client
     /**
      * Called one per arriving event.
      *
      * @param name event name
      * @param args event payload
      */
-    void onEvent(String name, Object[] args);
+    Object onEvent(String name, Object[] args);
 }

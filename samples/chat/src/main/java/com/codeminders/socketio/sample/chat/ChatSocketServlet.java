@@ -179,7 +179,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
 //        }
 
         @Override
-        public void onEvent(String name, Object[] args)
+        public Object onEvent(String name, Object[] args)
         {
             //TODO: log arguments?
             LOGGER.fine("Got event: " + name);
@@ -188,12 +188,16 @@ public class ChatSocketServlet extends JettySocketIOServlet
             {
                 if (args.length > 0)
                     broadcast(CHAT_MESSAGE_EVENT, sessionId.toString(), args[0]);
+
+                return "ACK"; // send this as an acknowledgement if client requested id
             }
             else
             if (FORCE_DISCONECT_EVENT.equals(name))
             {
                 outbound.disconnect();
             }
+
+            return null;
         }
 
         private void broadcast(String name, Object... args)

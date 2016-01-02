@@ -26,6 +26,9 @@ package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
+import com.codeminders.socketio.protocol.EngineIOProtocol;
+import com.codeminders.socketio.protocol.SocketIOPacket;
+import com.codeminders.socketio.protocol.SocketIOProtocol;
 
 /**
  * @author Mathieu Carbou
@@ -61,7 +64,7 @@ public abstract class AbstractTransportConnection implements TransportConnection
 
     public void send(SocketIOPacket packet) throws SocketIOException
     {
-        send(EngineIOProtocol.createMessagePacket(SocketIOProtocol.encode(packet)));
+        send(EngineIOProtocol.createMessagePacket(packet.encode()));
     }
 
     @Override

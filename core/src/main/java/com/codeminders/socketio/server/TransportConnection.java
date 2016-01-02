@@ -26,6 +26,7 @@
 package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
+import com.codeminders.socketio.protocol.EngineIOPacket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

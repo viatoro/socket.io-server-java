@@ -1,11 +1,11 @@
 package com.codeminders.socketio.server.transport;
 
+import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletRequest;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**

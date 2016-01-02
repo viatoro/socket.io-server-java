@@ -61,7 +61,9 @@
         }
         else
         {
-            socket.emit('chat message', val);
+            socket.emit('chat message', val, function(data) {
+                console.log(data);
+            });
         }
 
         document.getElementById('text').value = '';
