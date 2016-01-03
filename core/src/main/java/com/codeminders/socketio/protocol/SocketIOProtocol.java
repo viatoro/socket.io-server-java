@@ -33,12 +33,7 @@ public final class SocketIOProtocol
     private SocketIOProtocol()
     {
     }
-
-    public static String encode(SocketIOPacket packet)
-    {
-        return String.valueOf(packet.getType().value()) + packet.getData();
-    }
-
+ 
     public static SocketIOPacket decode(String raw)
             throws SocketIOProtocolException
     {
@@ -56,25 +51,12 @@ public final class SocketIOProtocol
             {
                 case CONNECT:
                     return createConnectPacket();
+
                 case DISCONNECT:
                     return createDisconnectPacket();
+
                 case EVENT:
-                    //TODO: move this logic to packet.decode()?
-                    ParsePosition pos = new ParsePosition(0);
-                    Number id = extractId(data, pos);
-                    if (id == null)
-                        id = -1;
-                    data = data.substring(pos.getIndex());
-                    Object json = JSON.parse(data);
-                    if (!(json instanceof Object[]) || ((Object[]) json).length == 0)
-                        throw new SocketIOProtocolException("Invalid JSON in EVENT message packet: " + data);
-
-                    Object[] args = (Object[]) json;
-                    if (!(args[0] instanceof String))
-                        throw new SocketIOProtocolException("Invalid JSON in EVENT message packet. First argument must be string: " + data);
-
-                    return new SocketIOEventPacket(id.intValue(),
-                            args[0].toString(), Arrays.copyOfRange(args, 1, args.length));
+                    return SocketIOEventPacket.decode(data);
 
                 default:
                     throw new SocketIOProtocolException("Unsupported packet type");
@@ -104,10 +86,5 @@ public final class SocketIOProtocol
     public static SocketIOPacket createConnectPacket()
     {
         return new EmptyPacket(SocketIOPacket.Type.CONNECT);
-    }
-
-    private static Number extractId(String str, ParsePosition pos)
-    {
-        return new DecimalFormat("#").parse(str, pos);
     }
 }
