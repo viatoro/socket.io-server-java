@@ -3,6 +3,8 @@ package com.codeminders.socketio.protocol;
 import com.codeminders.socketio.server.SocketIOProtocolException;
 import com.codeminders.socketio.util.JSON;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,10 +26,9 @@ public final class EngineIOProtocol
 
     public static String encode(EngineIOPacket packet)
     {
-        return String.valueOf(packet.getType().value()) + packet.getData();
+        return String.valueOf(packet.getType().value()) + packet.getTextData();
     }
 
-    //TODO: do we need separate exception for EIO protocol?
     public static EngineIOPacket decode(String raw)
             throws SocketIOProtocolException
     {
@@ -45,6 +46,26 @@ public final class EngineIOProtocol
         catch (NumberFormatException e)
         {
             throw new SocketIOProtocolException("Invalid EIO packet type: " + raw);
+        }
+    }
+
+
+    public static EngineIOPacket decode(InputStream raw)
+        throws SocketIOProtocolException
+    {
+        assert (raw != null);
+
+        try
+        {
+            int type = raw.read();
+            if(type == -1)
+                throw new SocketIOProtocolException("Empty binary object received");
+
+            return new EngineIOPacket(EngineIOPacket.Type.fromInt(type), raw);
+        }
+        catch (IOException e)
+        {
+            throw new SocketIOProtocolException("Cannot read packet type from binary object");
         }
     }
 

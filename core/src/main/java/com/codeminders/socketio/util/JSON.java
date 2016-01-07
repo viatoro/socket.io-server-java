@@ -271,7 +271,7 @@ public final class JSON {
 
 
     protected static Map<String, Object> newMap() {
-        return new HashMap<String, Object>();
+        return new LinkedHashMap<>();
     }
 
 
@@ -502,7 +502,6 @@ public final class JSON {
         return map;
     }
 
-
     protected static Object parseArray(Source source) {
         if (source.next() != '[')
             throw new IllegalStateException();
@@ -516,6 +515,7 @@ public final class JSON {
             char c = source.peek();
             switch (c) {
                 case ']':
+                    assert (list != null);
                     source.next();
                     switch (size) {
                         case 0:
@@ -543,7 +543,7 @@ public final class JSON {
                         if (size++ == 0)
                             item = parse(source);
                         else if (list == null) {
-                            list = new ArrayList<Object>();
+                            list = new ArrayList<>();
                             list.add(item);
                             item = parse(source);
                             list.add(item);
@@ -907,7 +907,7 @@ public final class JSON {
     }
 
 
-    public static interface Source {
+    public interface Source {
         boolean hasNext();
 
         char next();
@@ -1006,18 +1006,18 @@ public final class JSON {
     /**
      * JSON Output class for use by {@link Convertible}.
      */
-    public static interface Output {
-        public void addClass(Class c);
+    public interface Output {
+        void addClass(Class c);
 
-        public void add(Object obj);
+        void add(Object obj);
 
-        public void add(String name, Object value);
+        void add(String name, Object value);
 
-        public void add(String name, double value);
+        void add(String name, double value);
 
-        public void add(String name, long value);
+        void add(String name, long value);
 
-        public void add(String name, boolean value);
+        void add(String name, boolean value);
     }
 
 
@@ -1032,10 +1032,10 @@ public final class JSON {
      * If the JSON is to be convertible back to an Object, then the method
      * {@link Output#addClass(Class)} must be called from within toJSON()
      */
-    public static interface Convertible {
-        public void toJSON(Output out);
+    public interface Convertible {
+        void toJSON(Output out);
 
-        public void fromJSON(Map object);
+        void fromJSON(Map object);
     }
 
 
@@ -1045,7 +1045,7 @@ public final class JSON {
      * converted and wish to avoid multiple Conversions
      */
     public interface Generator {
-        public void addJSON(Appendable buffer);
+        void addJSON(Appendable buffer);
     }
 
     /**

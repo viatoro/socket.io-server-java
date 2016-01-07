@@ -1,5 +1,7 @@
 package com.codeminders.socketio.protocol;
 
+import java.io.InputStream;
+
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
@@ -45,23 +47,36 @@ public class EngineIOPacket
         }
     }
 
-    private Type   type;
-    private String data;
+    private Type        type;
+    private String      textData = "";
+    private InputStream binaryData;
 
     public Type getType()
     {
         return type;
     }
 
-    public String getData()
+    public String getTextData()
     {
-        return data;
+        return textData;
+    }
+
+    public InputStream getBinaryData()
+    {
+        return binaryData;
     }
 
     public EngineIOPacket(Type type, String data)
     {
         this.type = type;
-        this.data = data;
+        this.textData = data;
+    }
+
+    public EngineIOPacket(Type type, InputStream binaryData)
+    {
+        this.type = type;
+        this.textData = "";
+        this.binaryData = binaryData;
     }
 
     public EngineIOPacket(Type type)

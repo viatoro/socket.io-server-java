@@ -61,12 +61,12 @@ public abstract class SocketIOPacket
         return namespace;
     }
 
-    SocketIOPacket(Type type)
+    protected SocketIOPacket(Type type)
     {
         this(type, "/");
     }
 
-    SocketIOPacket(Type type, String namespace)
+    protected SocketIOPacket(Type type, String namespace)
     {
         this.type = type;
         this.namespace = namespace;
@@ -76,5 +76,4 @@ public abstract class SocketIOPacket
     {
         return String.valueOf(getType().value()) + getData();
     }
-
 }

@@ -62,4 +62,11 @@ public final class IO {
         return toString(reader);
     }
 
+    public static byte[] toBytes(InputStream is) throws IOException
+    {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        copy(is, os);
+
+        return os.toByteArray();
+    }
 }

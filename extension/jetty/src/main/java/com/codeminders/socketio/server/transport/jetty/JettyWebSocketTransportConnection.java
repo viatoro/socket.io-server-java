@@ -24,15 +24,13 @@
  */
 package com.codeminders.socketio.server.transport.jetty;
 
-import com.codeminders.socketio.protocol.EngineIOPacket;
-import com.codeminders.socketio.protocol.EngineIOProtocol;
-import com.codeminders.socketio.protocol.SocketIOPacket;
-import com.codeminders.socketio.protocol.SocketIOProtocol;
+import com.codeminders.socketio.protocol.*;
 import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
+import com.codeminders.socketio.util.IO;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -42,8 +40,12 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -115,14 +117,12 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     public void onWebSocketText(String text)
     {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine("Packet received: " + text);
+            LOGGER.fine("Text received: " + text);
         getSession().resetTimeout();
 
         try
         {
-            //TODO: check if it is possible to get multiple packets in one transmission
-            //TODO: for now we expect single packet per call
-            getSession().onPacket(text);
+            getSession().onText(text);
         }
         catch (SocketIOProtocolException e)
         {
@@ -131,16 +131,19 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @OnWebSocketMessage
-    public void onWebSocketBinary(byte[] data, int offset, int length)
+    public void onWebSocketBinary(InputStream is)
     {
-        //TODO: use proper binary encoding/decoding defined in EIO
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.fine("Binary received");
+        getSession().resetTimeout();
+
         try
         {
-            onWebSocketText(new String(data, offset, length, "UTF-8"));
+            getSession().onBinary(is);
         }
-        catch (UnsupportedEncodingException e)
+        catch (SocketIOProtocolException e)
         {
-            // Do nothing for now.
+            LOGGER.log(Level.WARNING, "Problem processing binary received", e);
         }
     }
 
@@ -157,7 +160,14 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         if (!remote_endpoint.isOpen() || getSession().getConnectionState() != ConnectionState.CONNECTED)
             throw new SocketIOClosedException();
 
-        send(SocketIOProtocol.createEventPacket(name, args));
+        SocketIOPacket packet = SocketIOProtocol.createEventPacket(name, args);
+        send(packet);
+        if(packet.getType() == SocketIOPacket.Type.BINARY_EVENT)
+        {
+            Collection<InputStream> attachments = ((SocketIOBinaryEventPacket) packet).getAttachments();
+            for (InputStream is : attachments)
+                sendBinary(is);
+        }
     }
 
     @Override
@@ -196,10 +206,31 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE,
-                    "Session[" + getSession().getSessionId() + "]: sendPacket: " + data);
+                    "Session[" + getSession().getSessionId() + "]: sendString: " + data);
         try
         {
             remote_endpoint.getRemote().sendString(data);
+        }
+        catch (IOException e)
+        {
+            disconnectEndpoint();
+            throw new SocketIOException(e);
+        }
+    }
+
+    private void sendBinary(InputStream is) throws SocketIOException
+    {
+        if (!remote_endpoint.isOpen())
+            throw new SocketIOClosedException();
+
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE,
+                    "Session[" + getSession().getSessionId() + "]: sendBinary");
+        try
+        {
+            //TODO: streaming! right now it is all in memory. not effective.
+            //TODO: read and send in chunks using sendPartialBytes()
+            remote_endpoint.getRemote().sendBytes(ByteBuffer.wrap(IO.toBytes(is)));
         }
         catch (IOException e)
         {

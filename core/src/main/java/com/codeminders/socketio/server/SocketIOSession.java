@@ -28,11 +28,10 @@ package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.protocol.*;
-import com.codeminders.socketio.util.JSON;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 
-import java.util.Arrays;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.logging.Level;
@@ -66,6 +65,9 @@ public class SocketIOSession
     private long        timeout;
     private Future<?>   timeoutTask;
     private boolean     timedOut;
+
+    //TODO: not thread-safe at all
+    private SocketIOBinaryEventPacket binaryEventPacket;
 
     SocketIOSession(SocketIOSessionManager sessionManager, SocketIOInbound inbound, String sessionId)
     {
@@ -137,10 +139,33 @@ public class SocketIOSession
         return timeout;
     }
 
-    public void onPacket(String data)
+    public void onText(String data)
             throws SocketIOProtocolException
     {
         onPacket(EngineIOProtocol.decode(data));
+    }
+
+    public void onBinary(InputStream is)
+        throws SocketIOProtocolException
+    {
+        EngineIOPacket engineIOPacket = EngineIOProtocol.decode(is);
+
+        if(engineIOPacket.getType() != EngineIOPacket.Type.MESSAGE)
+            throw new SocketIOProtocolException("Unexpected binary packet type. Type: " + engineIOPacket.getType());
+
+        if(binaryEventPacket == null)
+            throw new SocketIOProtocolException("Unexpected binary object");
+
+        SocketIOProtocol.insertBinaryObject(binaryEventPacket, engineIOPacket.getBinaryData());
+        binaryEventPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
+        if(binaryEventPacket.isComplete())
+        {
+            SocketIOEventPacket packet = binaryEventPacket;
+            binaryEventPacket = null; //it's better to reset the state before making potentially long call
+            onEvent(packet);
+        }
+
+        //TODO: process binary ACK
     }
 
     public void onConnect(TransportConnection connection)
@@ -152,7 +177,7 @@ public class SocketIOSession
 
         if (inbound == null)
         {
-            //TODO: this could happen only if onDisconnect was called already
+            //this could happen only if onDisconnect was called already
             closeConnection(DisconnectReason.CONNECT_FAILED);
             return;
         }
@@ -200,10 +225,10 @@ public class SocketIOSession
             onDisconnect(DisconnectReason.ERROR);
     }
 
+    //TODO: race condition on disconnect from remote endpoint
     /**
      * Disconnect callback. to be called by session itself. Transport connection should always call onShutdown()
      */
-    //TODO: race condition on disconnect from remote endpoint
     public void onDisconnect(DisconnectReason reason)
     {
         if (LOGGER.isLoggable(Level.FINE))
@@ -262,18 +287,18 @@ public class SocketIOSession
                 resetTimeout();
                 try
                 {
-                    onPacket(SocketIOProtocol.decode(packet.getData()));
+                    onPacket(SocketIOProtocol.decode(packet.getTextData()));
                 }
                 catch (SocketIOProtocolException e)
                 {
                     if (LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.WARNING, "Invalid SIO packet: " + packet.getData(), e);
+                        LOGGER.log(Level.WARNING, "Invalid SIO packet: " + packet.getTextData(), e);
                 }
                 return;
 
             case PING:
                 resetTimeout();
-                onPing(packet.getData());
+                onPing(packet.getTextData());
                 return;
 
             case CLOSE:
@@ -303,6 +328,15 @@ public class SocketIOSession
 
             case EVENT:
                 onEvent((SocketIOEventPacket)packet);
+                return;
+
+            case BINARY_EVENT:
+                binaryEventPacket = (SocketIOBinaryEventPacket)packet;
+                return;
+
+            case ACK:
+            case BINARY_ACK:
+                //TODO: pass the notification to the user
                 return;
 
             default:
@@ -342,7 +376,6 @@ public class SocketIOSession
                         SocketIOProtocol.createACKPacket(packet.getId(), ack).encode()
                 ));
             }
-
         }
         catch (Throwable e)
         {

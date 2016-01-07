@@ -27,6 +27,7 @@ package com.codeminders.socketio.sample.chat;
 
 import com.codeminders.socketio.server.SocketIOInbound;
 import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
+import com.codeminders.socketio.util.IO;
 import com.codeminders.socketio.util.JdkOverLog4j;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
@@ -35,7 +36,11 @@ import com.codeminders.socketio.server.SocketIOOutbound;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,9 +49,11 @@ import java.util.logging.Logger;
 
 public class ChatSocketServlet extends JettySocketIOServlet
 {
-    private static final String CHAT_MESSAGE_EVENT    = "chat message";
+    private static final String CHAT_MESSAGE_EVENT    = "chat message";       // test message
     private static final String WELCOME_MESSAGE_EVENT = "welcome";
-    private static final String FORCE_DISCONECT_EVENT = "force disconnect";
+    private static final String FORCE_DISCONNECT      = "force disconnect";   // request server to disconnect
+    private static final String SERVER_BINARY         = "server binary";      // request server to send a binary
+    private static final String CLIENT_BINARY         = "client binary";      // client sends binary
 
     private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
 
@@ -93,22 +100,45 @@ public class ChatSocketServlet extends JettySocketIOServlet
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Object onEvent(String name, Object[] args)
         {
             //TODO: log arguments?
             LOGGER.fine("Got event: " + name);
 
+            //TODO: allow user to subsribe to specific events, like .on(CHAT_MESSAGE_EVENT, new SocketIOEventListener() {...})
             if(CHAT_MESSAGE_EVENT.equals(name))
             {
                 if (args.length > 0)
                     broadcast(CHAT_MESSAGE_EVENT, sessionId.toString(), args[0]);
 
-                return "ACK"; // send this as an acknowledgement if client requested id
+                return "ACK"; // send this as an acknowledgement if client requested
             }
             else
-            if (FORCE_DISCONECT_EVENT.equals(name))
+            if (FORCE_DISCONNECT.equals(name))
             {
                 outbound.disconnect();
+            }
+            else
+            if(CLIENT_BINARY.equals(name))
+            {
+                Map map = (Map<Object, Object>)args[0];
+                InputStream is = (InputStream) map.get("buffer");
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                try
+                {
+                    IO.copy(is, os);
+                    byte []array = os.toByteArray();
+                    System.out.print("[");
+                    for (byte b : array)
+                        System.out.print(" " + b);
+                    System.out.println(" ]");
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
             }
 
             return null;

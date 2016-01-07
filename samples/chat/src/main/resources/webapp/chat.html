@@ -60,6 +60,18 @@
         	socket.emit('force disconnect');
         }
         else
+        if(val == '/rbinary')
+        {
+            addLine('<em>asking server to send us binary...</em>');
+            socket.emit('server binary');
+        }
+        else
+        if(val == '/lbinary')
+        {
+            addLine('<em>sending binary...</em>');
+            socket.emit('client binary', {"buffer": new Uint8Array([1,2,3,4]).buffer});
+        }
+        else
         {
             socket.emit('chat message', val, function(data) {
                 console.log(data);
@@ -99,6 +111,8 @@
 	  socket.on('welcome', function (data) {
     	addLine('<em>' + esc(data) + '</em>');
   	  });
+
+
 
 	  //socket.on('message', function (data) {
       //message(data);

@@ -105,7 +105,7 @@ public final class JettyContinuationTransportConnection
 
     //    public void sendMessage(SocketIOFrame frame) throws SocketIOException {
 //        if (LOGGER.isLoggable(Level.FINE))
-//            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(frame): [" + frame.getFrameType() + "]: " + frame.getData());
+//            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(frame): [" + frame.getFrameType() + "]: " + frame.getTextData());
 //        if (is_open) {
 //            if (continuation != null) {
 //                List<String> messages = buffer.drainMessages();
