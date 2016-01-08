@@ -10,11 +10,6 @@ public class SocketIOPlainEventPacket extends SocketIOEventPacket
         super(Type.EVENT, id, name, args);
     }
 
-    public SocketIOPlainEventPacket(String name, Object[] args)
-    {
-        super(Type.EVENT, -1, name, args);
-    }
-
     @Override
     protected String getPrefix()
     {

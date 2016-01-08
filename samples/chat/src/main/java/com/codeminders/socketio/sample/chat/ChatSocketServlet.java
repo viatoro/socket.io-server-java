@@ -25,6 +25,7 @@
  */
 package com.codeminders.socketio.sample.chat;
 
+import com.codeminders.socketio.server.SocketIOACKListener;
 import com.codeminders.socketio.server.SocketIOInbound;
 import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
 import com.codeminders.socketio.util.IO;
@@ -100,16 +101,15 @@ public class ChatSocketServlet extends JettySocketIOServlet
         @SuppressWarnings("unchecked")
         public Object onEvent(String name, Object[] args)
         {
-            //TODO: log arguments?
             LOGGER.fine("Got event: " + name);
 
-            //TODO: allow user to subsribe to specific events, like .on(CHAT_MESSAGE_EVENT, new SocketIOEventListener() {...})
+            //TODO: allow user to subscribe to specific events, like .on(CHAT_MESSAGE_EVENT, new SocketIOEventListener() {...})
             if(CHAT_MESSAGE_EVENT.equals(name))
             {
                 if (args.length > 0)
                     broadcast(CHAT_MESSAGE_EVENT, sessionId.toString(), args[0]);
 
-                return "ACK"; // send this as an acknowledgement if client requested
+                return new ByteArrayInputStream(new byte[] { 1, 2, 3, 4 }); // send this as an acknowledgement if client requested
             }
             else
             if (FORCE_DISCONNECT.equals(name))
@@ -142,7 +142,14 @@ public class ChatSocketServlet extends JettySocketIOServlet
             {
                 try
                 {
-                    outbound.emit(SERVER_BINARY, new ByteArrayInputStream(new byte[] {1, 2,3 ,4 }));
+                    outbound.emit(SERVER_BINARY, new ByteArrayInputStream(new byte[] { 1, 2, 3, 4 }), new SocketIOACKListener()
+                    {
+                        @Override
+                        public void onACK(Object[] args)
+                        {
+                            System.out.println("ACK recieved: " + args[0]);
+                        }
+                    });
                 }
                 catch (SocketIOException e)
                 {

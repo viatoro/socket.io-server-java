@@ -32,10 +32,14 @@ import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+//TODO: this class is not thread-safe at all
 
 /**
  * SocketIO session.
@@ -66,8 +70,9 @@ public class SocketIOSession
     private Future<?>   timeoutTask;
     private boolean     timedOut;
 
-    //TODO: not thread-safe at all
-    private SocketIOBinaryEventPacket binaryEventPacket;
+    private SocketIOBinaryPacket socketIOBinaryPacket;
+    private int packet_id = 0; // packet id. used for requesting ACK
+    private Map<Integer, SocketIOACKListener> ack_listeners = new LinkedHashMap<>();
 
     SocketIOSession(SocketIOSessionManager sessionManager, SocketIOInbound inbound, String sessionId)
     {
@@ -105,7 +110,6 @@ public class SocketIOSession
 
     public void resetTimeout()
     {
-        //TODO: synchronize
         clearTimeout();
         if (timedOut || timeout == 0)
             return;
@@ -153,19 +157,21 @@ public class SocketIOSession
         if(engineIOPacket.getType() != EngineIOPacket.Type.MESSAGE)
             throw new SocketIOProtocolException("Unexpected binary packet type. Type: " + engineIOPacket.getType());
 
-        if(binaryEventPacket == null)
+        if(socketIOBinaryPacket == null)
             throw new SocketIOProtocolException("Unexpected binary object");
 
-        SocketIOProtocol.insertBinaryObject(binaryEventPacket, engineIOPacket.getBinaryData());
-        binaryEventPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
-        if(binaryEventPacket.isComplete())
+        SocketIOProtocol.insertBinaryObject(socketIOBinaryPacket, engineIOPacket.getBinaryData());
+        socketIOBinaryPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
+        if(socketIOBinaryPacket.isComplete())
         {
-            SocketIOEventPacket packet = binaryEventPacket;
-            binaryEventPacket = null; //it's better to reset the state before making potentially long call
-            onEvent(packet);
-        }
+            if(socketIOBinaryPacket.getType() == SocketIOPacket.Type.EVENT)
+                onEvent((SocketIOEventPacket) socketIOBinaryPacket);
+            else
+            if(socketIOBinaryPacket.getType() == SocketIOPacket.Type.BINARY_ACK)
+                onACK((SocketIOACKPacket) socketIOBinaryPacket);
 
-        //TODO: process binary ACK
+            socketIOBinaryPacket = null;
+        }
     }
 
     public void onConnect(TransportConnection connection)
@@ -229,7 +235,7 @@ public class SocketIOSession
     /**
      * Disconnect callback. to be called by session itself. Transport connection should always call onShutdown()
      */
-    public void onDisconnect(DisconnectReason reason)
+    private void onDisconnect(DisconnectReason reason)
     {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onDisconnect: " + reason +
@@ -321,8 +327,6 @@ public class SocketIOSession
                 return;
 
             case DISCONNECT:
-                // Session.onDisconnect() is being called twice.
-                // this happens because the client sends DISCONNECT packet and immediately drops the connection.
                 closeConnection(DisconnectReason.CLOSED_REMOTELY);
                 return;
 
@@ -330,18 +334,17 @@ public class SocketIOSession
                 onEvent((SocketIOEventPacket)packet);
                 return;
 
-            case BINARY_EVENT:
-                binaryEventPacket = (SocketIOBinaryEventPacket)packet;
+            case ACK:
+                onACK((SocketIOACKPacket)packet);
                 return;
 
-            case ACK:
             case BINARY_ACK:
-                //TODO: pass the notification to the user
+            case BINARY_EVENT:
+                socketIOBinaryPacket = (SocketIOBinaryPacket)packet;
                 return;
 
             default:
                 throw new UnsupportedOperationException("SocketIO packet " + packet.getType() + " is not implemented yet");
-
         }
     }
 
@@ -372,10 +375,33 @@ public class SocketIOSession
 
             if(packet.getId() != -1 && ack != null)
             {
-                connection.send(EngineIOProtocol.createMessagePacket(
-                        SocketIOProtocol.createACKPacket(packet.getId(), ack).encode()
-                ));
+                Object[] args;
+                if(ack instanceof Objects[])
+                    args = (Object[])ack;
+                else
+                    args = new Object[] { ack };
+
+                connection.send(SocketIOProtocol.createACKPacket(packet.getId(), args));
             }
+        }
+        catch (Throwable e)
+        {
+            if (LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onEvent()", e);
+        }
+    }
+
+    private void onACK(SocketIOACKPacket packet)
+    {
+        if(inbound == null || state != ConnectionState.CONNECTED)
+            return;
+
+        try
+        {
+            SocketIOACKListener listener = ack_listeners.get(packet.getId());
+            unsubscribeACK(packet.getId());
+            if(listener != null)
+                listener.onACK(packet.getArgs());
         }
         catch (Throwable e)
         {
@@ -391,5 +417,22 @@ public class SocketIOSession
     {
         setDisconnectReason(reason);
         connection.abort(); //this call should trigger onShutdown() eventually
+    }
+
+    public synchronized int getNewPacketId()
+    {
+        return packet_id++;
+    }
+
+    //TODO: what if ACK never comes? We will have a memory leak. Need to cleanup the list or fail on timeout?
+    public void subscribeACK(int packet_id, SocketIOACKListener ack_listener)
+    {
+        ack_listeners.put(packet_id, ack_listener);
+    }
+
+    //TODO: to be called when ACK is received
+    public void unsubscribeACK(int packet_id)
+    {
+        ack_listeners.remove(packet_id);
     }
 }

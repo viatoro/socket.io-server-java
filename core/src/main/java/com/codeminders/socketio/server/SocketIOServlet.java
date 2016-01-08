@@ -113,14 +113,6 @@ public abstract class SocketIOServlet extends HttpServlet
             IO.copy(is, os);
         }
         else
-        if ("GET".equals(request.getMethod()) && "WebSocketMain.swf".equals(parts[0]))
-        {
-            response.setContentType("application/x-shockwave-flash");
-            InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/codeminders/socketio/WebSocketMain.swf");
-            OutputStream os = response.getOutputStream();
-            IO.copy(is, os);
-        }
-        else
         {
             assert (transportProvider != null);
 

@@ -27,6 +27,7 @@ package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.protocol.EngineIOPacket;
+import com.codeminders.socketio.protocol.SocketIOPacket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,4 +56,5 @@ public interface TransportConnection extends SocketIOOutbound
     void abort();
 
     void send(EngineIOPacket packet) throws SocketIOException;
+    void send(SocketIOPacket packet) throws SocketIOException;
 }

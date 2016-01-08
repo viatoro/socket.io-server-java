@@ -15,6 +15,8 @@ import java.util.*;
  */
 public final class SocketIOProtocol
 {
+    static final String ATTACHMENTS_DELIMITER = "-";
+
     private static class EmptyPacket extends SocketIOPacket
     {
         public EmptyPacket(Type type)
@@ -54,9 +56,11 @@ public final class SocketIOProtocol
                 case DISCONNECT:
                     return createDisconnectPacket();
 
+                case ACK:
+                case BINARY_ACK:
                 case EVENT:
                 case BINARY_EVENT:
-                    return decodeEvent(type, data);
+                    return decodeEventOrACK(type, data);
 
                 default:
                     throw new SocketIOProtocolException("Unsupported packet type");
@@ -73,18 +77,20 @@ public final class SocketIOProtocol
      * on the content of args parameter.
      * If args has any InputStream inside then SockeIOBinaryEventPacket will be created
      */
-    public static SocketIOPacket createEventPacket(String name, Object[] args)
+    public static SocketIOPacket createEventPacket(int packet_id, String name, Object[] args)
     {
         if (hasBinary(args))
-            return new SocketIOBinaryEventPacket(name, args);
+            return new SocketIOBinaryEventPacket(packet_id, name, args);
         else
-            return new SocketIOPlainEventPacket(name, args);
+            return new SocketIOPlainEventPacket(packet_id, name, args);
     }
 
-    public static SocketIOPacket createACKPacket(int id, Object args)
+    public static SocketIOPacket createACKPacket(int id, Object[] args)
     {
-        //TODO: check for binary and create BINARY_ACK if needed
-        return new SocketIOACKPacket(id, args);
+        if (hasBinary(args))
+            return new SocketIOBinaryACKPacket(id, args);
+        else
+            return new SocketIOPlainACKPacket(id, args);
     }
 
     public static SocketIOPacket createDisconnectPacket()
@@ -97,16 +103,16 @@ public final class SocketIOProtocol
         return new EmptyPacket(SocketIOPacket.Type.CONNECT);
     }
 
-    static SocketIOEventPacket decodeEvent(SocketIOPacket.Type type, String data)
+    static SocketIOPacket decodeEventOrACK(SocketIOPacket.Type type, String data)
             throws SocketIOProtocolException
     {
         int attachments = 0;
         ParsePosition pos = new ParsePosition(0);
-        if (type == SocketIOPacket.Type.BINARY_EVENT)
+        if (type == SocketIOPacket.Type.BINARY_EVENT || type == SocketIOPacket.Type.BINARY_ACK)
         {
             Number n = new DecimalFormat("#").parse(data, pos);
             if (n == null || n.intValue() == 0)
-                throw new SocketIOProtocolException("No attachments defined in BINARY_EVENT packet: " + data);
+                throw new SocketIOProtocolException("No attachments defined in BINARY packet: " + data);
 
             attachments = n.intValue();
 
@@ -117,20 +123,31 @@ public final class SocketIOProtocol
         if (id == null)
             id = -1;
         data = data.substring(pos.getIndex());
+
         Object json = JSON.parse(data);
+
+        // EVENT or ACK arguments are always passed as array
         if (!(json instanceof Object[]) || ((Object[]) json).length == 0)
-            throw new SocketIOProtocolException("Invalid JSON in EVENT message packet: " + data);
+            throw new SocketIOProtocolException("Invalid JSON in the EVENT or ACK packet: " + data);
 
         Object[] args = (Object[]) json;
+        if(type == SocketIOPacket.Type.ACK)
+            return new SocketIOPlainACKPacket(id.intValue(), args);
+
+        if(type == SocketIOPacket.Type.BINARY_ACK)
+            return new SocketIOBinaryACKPacket(id.intValue(), args, attachments);
+
+        // the first argument for EVENT is always event's name
         if (!(args[0] instanceof String))
-            throw new SocketIOProtocolException("Invalid JSON in EVENT message packet. First argument must be string: " + data);
+            throw new SocketIOProtocolException("Invalid JSON in the EVENT packet. First argument must be string: " + data);
+
+        String name = args[0].toString();
+        args = Arrays.copyOfRange(args, 1, args.length);
 
         if (type == SocketIOPacket.Type.BINARY_EVENT)
-            return new SocketIOBinaryEventPacket(id.intValue(),
-                    args[0].toString(), Arrays.copyOfRange(args, 1, args.length), attachments);
+            return new SocketIOBinaryEventPacket(id.intValue(), name, args, attachments);
         else
-            return new SocketIOPlainEventPacket(id.intValue(),
-                    args[0].toString(), Arrays.copyOfRange(args, 1, args.length));
+            return new SocketIOPlainEventPacket(id.intValue(), name, args);
     }
 
     private static boolean hasBinary(Object args)
@@ -209,7 +226,7 @@ public final class SocketIOProtocol
      * @param packet      packet to add a binary object
      * @param attachment  binary object to insert
      */
-    public static void insertBinaryObject(SocketIOBinaryEventPacket packet, InputStream attachment)
+    public static void insertBinaryObject(SocketIOBinaryPacket packet, InputStream attachment)
         throws IllegalArgumentException
     {
         packet.setArgs((Object[])insertBinaryObject(packet.getArgs(), attachment));

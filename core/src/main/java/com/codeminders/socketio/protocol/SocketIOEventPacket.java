@@ -48,8 +48,8 @@ public abstract class SocketIOEventPacket extends SocketIOPacket
         String str = getPrefix();
 
         // packet id to request ACK
-        if(id > 0)
-            str = String.valueOf(id);
+        if(id >= 0)
+            str += String.valueOf(id);
 
         // adding name of the event as a first argument
         ArrayList<Object> data = new ArrayList<>();

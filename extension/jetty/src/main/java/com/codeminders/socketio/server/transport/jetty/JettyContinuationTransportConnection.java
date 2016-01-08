@@ -139,8 +139,15 @@ public final class JettyContinuationTransportConnection
 //        }
 //    }
 
+
     @Override
-    public void emit(String name, Object... args) throws SocketIOException
+    protected void sendString(String data) throws SocketIOException
+    {
+        //TODO: implement
+    }
+
+    @Override
+    protected void sendBinary(byte[] data) throws SocketIOException
     {
         //TODO: implement
     }
@@ -325,17 +332,5 @@ public final class JettyContinuationTransportConnection
         });
         buffer.clear();
         getSession().onShutdown();
-    }
-
-    @Override
-    public void send(EngineIOPacket packet) throws SocketIOException
-    {
-        //TODO: implement
-    }
-
-    @Override
-    public void send(SocketIOPacket packet) throws SocketIOException
-    {
-        //TODO: implement
     }
 }

@@ -9,10 +9,8 @@ import java.util.List;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOBinaryEventPacket extends SocketIOEventPacket
+public class SocketIOBinaryEventPacket extends SocketIOEventPacket implements SocketIOBinaryPacket
 {
-    static final String DELIMITER = "-";
-
     private List<InputStream> attachments;
     private int               number_attachments_expected;
 
@@ -41,9 +39,9 @@ public class SocketIOBinaryEventPacket extends SocketIOEventPacket
      *             JSON with {@link com.codeminders.socketio.util.JSON }.
      *             {@link java.io.InputStream} to be used for binary objects
      */
-    public SocketIOBinaryEventPacket(String name, Object[] args)
+    public SocketIOBinaryEventPacket(int id, String name, Object[] args)
     {
-        super(Type.BINARY_EVENT, -1, name, null);
+        super(Type.BINARY_EVENT, id, name, null);
 
         attachments = new LinkedList<>();
 
@@ -60,7 +58,7 @@ public class SocketIOBinaryEventPacket extends SocketIOEventPacket
     @Override
     protected String getPrefix()
     {
-        return String.valueOf(attachments.size()) + DELIMITER;
+        return String.valueOf(attachments.size()) + SocketIOProtocol.ATTACHMENTS_DELIMITER;
     }
 
     /**

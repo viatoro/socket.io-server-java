@@ -112,7 +112,9 @@
     	addLine('<em>' + esc(data) + '</em>');
   	  });
 
-      socket.on('server binary', function (data) {
+      socket.on('server binary', function (data, fn) {
+
+        fn(data);
         var arr = new Uint8Array(data);
         var s = '[';
         for(var i = 0; i<arr.length; i++)

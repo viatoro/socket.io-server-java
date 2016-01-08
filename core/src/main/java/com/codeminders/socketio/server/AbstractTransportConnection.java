@@ -24,11 +24,19 @@
  */
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
-import com.codeminders.socketio.protocol.EngineIOProtocol;
-import com.codeminders.socketio.protocol.SocketIOPacket;
-import com.codeminders.socketio.protocol.SocketIOProtocol;
+import com.codeminders.socketio.protocol.*;
+import com.codeminders.socketio.util.IO;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Mathieu Carbou
@@ -36,6 +44,8 @@ import com.codeminders.socketio.protocol.SocketIOProtocol;
  */
 public abstract class AbstractTransportConnection implements TransportConnection
 {
+    private static final Logger LOGGER = Logger.getLogger(AbstractTransportConnection.class.getName());
+
     private SocketIOConfig config;
     private SocketIOSession session;
 
@@ -65,6 +75,25 @@ public abstract class AbstractTransportConnection implements TransportConnection
     public void send(SocketIOPacket packet) throws SocketIOException
     {
         send(EngineIOProtocol.createMessagePacket(packet.encode()));
+        if(packet instanceof SocketIOBinaryPacket)
+        {
+            Collection<InputStream> attachments = ((SocketIOBinaryPacket) packet).getAttachments();
+            for (InputStream is : attachments)
+            {
+                try
+                {
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    os.write(EngineIOPacket.Type.MESSAGE.value());
+                    IO.copy(is, os);
+                    sendBinary(os.toByteArray());
+                }
+                catch (IOException e)
+                {
+                    if(LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.SEVERE, "Cannot load binary object to send it to the socket", e);
+                }
+            }
+        }
     }
 
     @Override
@@ -82,4 +111,39 @@ public abstract class AbstractTransportConnection implements TransportConnection
 
         abort();
     }
+
+    @Override
+    public void send(EngineIOPacket packet) throws SocketIOException
+    {
+        sendString(EngineIOProtocol.encode(packet));
+    }
+
+    @Override
+    public void emit(String name, Object... args)
+            throws SocketIOException
+    {
+        if (getSession().getConnectionState() != ConnectionState.CONNECTED)
+            throw new SocketIOClosedException();
+
+        SocketIOACKListener ack_listener = null;
+        if(args.length > 0 && args[args.length-1] instanceof SocketIOACKListener)
+        {
+            ack_listener = (SocketIOACKListener)args[args.length-1];
+            args = Arrays.copyOfRange(args, 0, args.length-1);
+        }
+
+        int packet_id = -1;
+        if(ack_listener != null)
+            packet_id = getSession().getNewPacketId();
+
+        SocketIOPacket packet = SocketIOProtocol.createEventPacket(packet_id, name, args);
+
+        if(packet_id >= 0)
+            getSession().subscribeACK(packet_id, ack_listener);
+
+        send(packet);
+    }
+
+    protected abstract void sendString(String data) throws SocketIOException;
+    protected abstract void sendBinary(byte[] data) throws SocketIOException;
 }

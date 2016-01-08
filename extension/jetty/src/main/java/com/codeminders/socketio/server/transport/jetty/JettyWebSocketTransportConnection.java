@@ -148,42 +148,6 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
-    public void send(EngineIOPacket packet) throws SocketIOException
-    {
-        sendString(EngineIOProtocol.encode(packet));
-    }
-
-    @Override
-    public void emit(String name, Object... args)
-            throws SocketIOException
-    {
-        if (!remote_endpoint.isOpen() || getSession().getConnectionState() != ConnectionState.CONNECTED)
-            throw new SocketIOClosedException();
-
-        SocketIOPacket packet = SocketIOProtocol.createEventPacket(name, args);
-        send(packet);
-        if(packet.getType() == SocketIOPacket.Type.BINARY_EVENT)
-        {
-            Collection<InputStream> attachments = ((SocketIOBinaryEventPacket) packet).getAttachments();
-            for (InputStream is : attachments)
-            {
-                try
-                {
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    os.write(EngineIOPacket.Type.MESSAGE.value());
-                    IO.copy(is, os);
-                    sendBinary(os.toByteArray());
-                }
-                catch (IOException e)
-                {
-                    if(LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.SEVERE, "Cannot load binary object to send it to the socket", e);
-                }
-            }
-        }
-    }
-
-    @Override
     public Transport getTransport()
     {
         return transport;
@@ -212,7 +176,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
-    private void sendString(String data) throws SocketIOException
+    @Override
+    protected void sendString(String data) throws SocketIOException
     {
         if (!remote_endpoint.isOpen())
             throw new SocketIOClosedException();
@@ -233,7 +198,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
     //TODO: implement streaming. right now it is all in memory.
     //TODO: read and send in chunks using sendPartialBytes()
-    private void sendBinary(byte[] data) throws SocketIOException
+    @Override
+    protected void sendBinary(byte[] data) throws SocketIOException
     {
         if (!remote_endpoint.isOpen())
             throw new SocketIOClosedException();

@@ -2,18 +2,21 @@ package com.codeminders.socketio.protocol;
 
 import com.codeminders.socketio.util.JSON;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOACKPacket extends SocketIOPacket
+public abstract class SocketIOACKPacket extends SocketIOPacket
 {
     private int id;
-    private Object args;
+    private Object[] args;
 
-    public SocketIOACKPacket(int id, Object args)
+    public SocketIOACKPacket(Type type, int id, Object[] args)
     {
-        super(Type.ACK);
+        super(type);
         this.id = id;
         this.args = args;
     }
@@ -21,6 +24,23 @@ public class SocketIOACKPacket extends SocketIOPacket
     @Override
     protected String getData()
     {
-        return String.valueOf(id) + JSON.toString(new Object[] { args });
+        return getPrefix() + String.valueOf(id) + JSON.toString(args);
     }
+
+    public Object[] getArgs()
+    {
+        return args;
+    }
+
+    public int getId()
+    {
+        return id;
+    }
+
+    public void setArgs(Object[] args)
+    {
+        this.args = args;
+    }
+
+    protected abstract String getPrefix();
 }
