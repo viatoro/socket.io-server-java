@@ -166,7 +166,20 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         {
             Collection<InputStream> attachments = ((SocketIOBinaryEventPacket) packet).getAttachments();
             for (InputStream is : attachments)
-                sendBinary(is);
+            {
+                try
+                {
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    os.write(EngineIOPacket.Type.MESSAGE.value());
+                    IO.copy(is, os);
+                    sendBinary(os.toByteArray());
+                }
+                catch (IOException e)
+                {
+                    if(LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.SEVERE, "Cannot load binary object to send it to the socket", e);
+                }
+            }
         }
     }
 
@@ -218,7 +231,9 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
-    private void sendBinary(InputStream is) throws SocketIOException
+    //TODO: implement streaming. right now it is all in memory.
+    //TODO: read and send in chunks using sendPartialBytes()
+    private void sendBinary(byte[] data) throws SocketIOException
     {
         if (!remote_endpoint.isOpen())
             throw new SocketIOClosedException();
@@ -228,9 +243,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
                     "Session[" + getSession().getSessionId() + "]: sendBinary");
         try
         {
-            //TODO: streaming! right now it is all in memory. not effective.
-            //TODO: read and send in chunks using sendPartialBytes()
-            remote_endpoint.getRemote().sendBytes(ByteBuffer.wrap(IO.toBytes(is)));
+            remote_endpoint.getRemote().sendBytes(ByteBuffer.wrap(data));
         }
         catch (IOException e)
         {

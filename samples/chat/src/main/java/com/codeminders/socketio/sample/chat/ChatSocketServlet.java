@@ -36,10 +36,7 @@ import com.codeminders.socketio.server.SocketIOOutbound;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -138,6 +135,18 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 catch (IOException e)
                 {
                     e.printStackTrace();
+                }
+            }
+            else
+            if(SERVER_BINARY.equals(name))
+            {
+                try
+                {
+                    outbound.emit(SERVER_BINARY, new ByteArrayInputStream(new byte[] {1, 2,3 ,4 }));
+                }
+                catch (SocketIOException e)
+                {
+                    outbound.disconnect();
                 }
             }
 

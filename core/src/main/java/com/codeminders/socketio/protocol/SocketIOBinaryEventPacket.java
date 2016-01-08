@@ -11,6 +11,8 @@ import java.util.List;
  */
 public class SocketIOBinaryEventPacket extends SocketIOEventPacket
 {
+    static final String DELIMITER = "-";
+
     private List<InputStream> attachments;
     private int               number_attachments_expected;
 
@@ -56,11 +58,9 @@ public class SocketIOBinaryEventPacket extends SocketIOEventPacket
     }
 
     @Override
-    protected Object[] encodeArgs()
+    protected String getPrefix()
     {
-        // We know that insertBinaryObjects does not change the structure of the object,
-        // so we can safely case it to Object[]
-        return (Object[])SocketIOProtocol.extractBinaryObjects(getArgs(), attachments);
+        return String.valueOf(attachments.size()) + DELIMITER;
     }
 
     /**

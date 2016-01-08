@@ -45,7 +45,7 @@ public abstract class SocketIOEventPacket extends SocketIOPacket
     @Override
     protected String getData()
     {
-        String str = "";
+        String str = getPrefix();
 
         // packet id to request ACK
         if(id > 0)
@@ -54,10 +54,10 @@ public abstract class SocketIOEventPacket extends SocketIOPacket
         // adding name of the event as a first argument
         ArrayList<Object> data = new ArrayList<>();
         data.add(getName());
-        data.addAll(Arrays.asList(encodeArgs()));
+        data.addAll(Arrays.asList(getArgs()));
 
         return str + JSON.toString(data.toArray());
     }
 
-    protected abstract Object[] encodeArgs();
+    protected abstract String getPrefix();
 }

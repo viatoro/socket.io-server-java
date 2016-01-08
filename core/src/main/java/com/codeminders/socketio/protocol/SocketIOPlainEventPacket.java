@@ -15,8 +15,9 @@ public class SocketIOPlainEventPacket extends SocketIOEventPacket
         super(Type.EVENT, -1, name, args);
     }
 
-    protected Object[] encodeArgs()
+    @Override
+    protected String getPrefix()
     {
-        return getArgs(); //do nothing
+        return "";
     }
 }

@@ -112,6 +112,15 @@
     	addLine('<em>' + esc(data) + '</em>');
   	  });
 
+      socket.on('server binary', function (data) {
+        var arr = new Uint8Array(data);
+        var s = '[';
+        for(var i = 0; i<arr.length; i++)
+            s += (' ' + arr[i]);
+        s += ' ]';
+
+    	addLine('<em>Binary received: ' + s + '</em>');
+  	  });
 
 
 	  //socket.on('message', function (data) {
