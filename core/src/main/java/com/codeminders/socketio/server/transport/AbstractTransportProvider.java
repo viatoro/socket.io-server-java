@@ -49,7 +49,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
 
         TransportType type = TransportType.UNKNOWN;
 
-        if("websocket".equals(transportName) || "flashsocket".equals(transportName))
+        if("websocket".equals(transportName))
             type = TransportType.from(transportName);
 
         if("polling".equals(transportName)) {
@@ -62,6 +62,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
         Transport t = transports.get(type);
         if(t == null)
             throw new UnsupportedTransportException(transportName);
+
         return t;
     }
 
@@ -91,7 +92,6 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     {
         return null;
     }
-
 
     private void addIfNotNull(TransportType type, Transport transport)
     {
