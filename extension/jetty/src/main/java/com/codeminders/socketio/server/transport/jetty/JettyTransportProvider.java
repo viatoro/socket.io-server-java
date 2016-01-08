@@ -1,11 +1,7 @@
 package com.codeminders.socketio.server.transport.jetty;
 
 import com.codeminders.socketio.server.Transport;
-import com.codeminders.socketio.server.TransportConnection;
 import com.codeminders.socketio.server.transport.AbstractTransportProvider;
-import com.codeminders.socketio.server.transport.FlashSocketTransport;
-import com.codeminders.socketio.server.transport.JSONPPollingTransport;
-import com.codeminders.socketio.server.transport.XHRPollingTransport;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
@@ -20,11 +16,6 @@ public class JettyTransportProvider extends AbstractTransportProvider
     }
 
 //TODO: disabling all the transports except Websocket for now
-//    protected Transport createFlashSocketTransport(Transport delegate)
-//    {
-//        return new FlashSocketTransport(delegate);
-//    }
-//
 //    protected Transport createXHTPollingTransport()
 //    {
 //        return new XHRPollingTransport()

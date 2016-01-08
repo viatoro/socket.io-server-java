@@ -25,13 +25,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     {
         addIfNotNull(TransportType.XHR_POLLING,   createXHTPollingTransport());
         addIfNotNull(TransportType.JSONP_POLLING, createJSONPPollingTransport());
-
-        Transport transport = createWebSocketTransport();
-        if(transport != null)
-        {
-            transports.put(TransportType.WEB_SOCKET, transport);
-            addIfNotNull(TransportType.FLASH_SOCKET, createFlashSocketTransport(transport));
-        }
+        addIfNotNull(TransportType.XHR_POLLING,   createWebSocketTransport());
 
         for(Transport t : transports.values())
             t.init(config);
@@ -81,11 +75,6 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     public Collection<Transport> getTransports()
     {
         return transports.values();
-    }
-
-    protected Transport createFlashSocketTransport(Transport delegate)
-    {
-        return null;
     }
 
     protected Transport createXHTPollingTransport()
