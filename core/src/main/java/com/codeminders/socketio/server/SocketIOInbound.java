@@ -57,6 +57,8 @@ public interface SocketIOInbound
      *
      * @param name event name
      * @param args event payload
+     * @return JSON object to send as ACK if client requested ACK
      */
     Object onEvent(String name, Object[] args);
+
 }

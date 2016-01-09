@@ -16,6 +16,7 @@ import java.util.*;
 public final class SocketIOProtocol
 {
     static final String ATTACHMENTS_DELIMITER = "-";
+    static final String NAMESPACE_DELIMITER   = ",";
 
     private static class EmptyPacket extends SocketIOPacket
     {

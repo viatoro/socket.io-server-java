@@ -1,12 +1,12 @@
-* binary data in EngineIO
 * namespaces
-* CORS support for XHR Polling
+* rooms
+* implement ERROR packet in SIO
 * upgrade transport
+* CORS support for XHR Polling
 * payload (multi-packets messages)
+* Subscription for individual events. The same as io.on(name, function () {})
 * use Guava instead of util.IO
 * use com.fasterxml.jackson instead of util.JSON
-* Implement broadcasting
+* Implement broadcasting (namespace.emit())
 * handle b64 flag
-* Subscription for individual events. The same as io.on(name, function () {})
 * make SocketIOSession thread-safe
-* implement ERROR packet in SIO
