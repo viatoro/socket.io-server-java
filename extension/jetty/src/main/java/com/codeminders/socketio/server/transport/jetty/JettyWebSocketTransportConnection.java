@@ -30,8 +30,6 @@ import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
-import com.codeminders.socketio.util.IO;
-import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -40,12 +38,9 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,8 +53,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 {
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportConnection.class.getName());
 
-    private Session   remote_endpoint;
-    private Transport transport;
+    private org.eclipse.jetty.websocket.api.Session remote_endpoint;
+    private Transport                               transport;
 
     public JettyWebSocketTransportConnection(Transport transport)
     {
@@ -69,7 +64,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     @Override
     protected void init()
     {
-        getSession().setTimeout(getConfig().getTimeout(SocketIOConfig.DEFAULT_PING_TIMEOUT));
+        getSession().setTimeout(getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT));
 
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine(getConfig().getNamespace() + " WebSocket Connection configuration:\n" +
@@ -77,15 +72,15 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @OnWebSocketConnect
-    public void onWebSocketConnect(Session session)
+    public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session)
     {
         remote_endpoint = session;
         try
         {
             send(EngineIOProtocol.createHandshakePacket(getSession().getSessionId(),
                     new String[]{},
-                    getConfig().getPingInterval(SocketIOConfig.DEFAULT_PING_INTERVAL),
-                    getConfig().getTimeout(SocketIOConfig.DEFAULT_PING_TIMEOUT)));
+                    getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
+                    getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
 
             send(SocketIOProtocol.createConnectPacket());
 
@@ -160,7 +155,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException
+    public void handle(HttpServletRequest request, HttpServletResponse response, Session session) throws IOException
     {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unexpected request on upgraded WebSocket connection");
     }

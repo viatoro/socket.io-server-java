@@ -78,7 +78,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
             return;
         }
 
-        SocketIOInbound inbound = inboundFactory.getInbound(request);
+        Inbound inbound = inboundFactory.getInbound(request);
         if (inbound == null)
         {
             //TODO: research this
@@ -91,7 +91,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
 
         final TransportConnection connection;
         String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
-        SocketIOSession session = null;
+        Session session = null;
         if(sessionId != null)
             session = sessionFactory.getSession(sessionId);
 

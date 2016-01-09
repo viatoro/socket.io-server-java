@@ -8,13 +8,13 @@ import java.util.Arrays;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public abstract class SocketIOEventPacket extends SocketIOPacket
+public abstract class EventPacket extends SocketIOPacket
 {
     private int      id;
     private String   name;
     private Object[] args;
 
-    protected SocketIOEventPacket(Type type, int id, String name, Object[] args)
+    protected EventPacket(Type type, int id, String name, Object[] args)
     {
         super(type);
         this.id = id;

@@ -28,6 +28,6 @@ package com.codeminders.socketio.server;
 * @author Mathieu Carbou (mathieu.carbou@gmail.com)
 */
 public interface SessionManager {
-    SocketIOSession createSession(SocketIOInbound inbound);
-    SocketIOSession getSession(String sessionId);
+    Session createSession(Inbound inbound);
+    Session getSession(String sessionId);
 }

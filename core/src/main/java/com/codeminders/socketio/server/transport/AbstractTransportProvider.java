@@ -25,7 +25,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     {
         addIfNotNull(TransportType.XHR_POLLING,   createXHTPollingTransport());
         addIfNotNull(TransportType.JSONP_POLLING, createJSONPPollingTransport());
-        addIfNotNull(TransportType.XHR_POLLING,   createWebSocketTransport());
+        addIfNotNull(TransportType.WEB_SOCKET,    createWebSocketTransport());
 
         for(Transport t : transports.values())
             t.init(config);

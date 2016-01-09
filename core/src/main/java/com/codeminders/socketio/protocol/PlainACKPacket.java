@@ -3,9 +3,9 @@ package com.codeminders.socketio.protocol;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOPlainACKPacket extends SocketIOACKPacket
+public class PlainACKPacket extends ACKPacket
 {
-    public SocketIOPlainACKPacket(int id, Object[] args)
+    public PlainACKPacket(int id, Object[] args)
     {
         super(Type.ACK, id, args);
     }

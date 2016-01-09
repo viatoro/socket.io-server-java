@@ -25,40 +25,32 @@
  */
 package com.codeminders.socketio.server;
 
-import com.codeminders.socketio.common.DisconnectReason;
+import com.codeminders.socketio.common.SocketIOException;
 
-/**
- * Interface that represents a listener for inbound events
- * A library user is expected to implement this interface in order to receive such events
- */
-public interface SocketIOInbound
+public interface Outbound
 {
-
     /**
-     * Called when the connection is established. This will only ever be called once.
-     *
-     * @param outbound The SocketOutbound associated with the connection
+     * Terminate the connection. This method may return before the connection disconnect
+     * completes. The onDisconnect() method of the associated SocketInbound will be called
+     * when the disconnect is completed.
+     * This method will try to notify the remote end.
      */
-    void onConnect(SocketIOOutbound outbound);
+    void disconnect();
+
+    //TODO: do we need an abort() or kill() method for user to call in case of IO error?
+    //TODO: should we try to send anything (like DISCONNECT packet) in this case?
+    //TODO: no onDisconnect to be called if such method is used by the user.
 
     /**
-     * Called when the socket connection is closed. This will only ever be called once.
-     * This method may be called instead of onConnect() if the connection handshake isn't
-     * completed successfully.
-     *
-     * @param reason       The reason for the disconnect.
-     * @param errorMessage Possibly non null error message associated with the reason for disconnect.
-     */
-    void onDisconnect(DisconnectReason reason, String errorMessage);
-
-    //TODO: add boolean param to indicate that ACK is requested by the client
-    /**
-     * Called one per arriving event.
+     * Emits an event to the socket identified by the string name.
      *
      * @param name event name
-     * @param args event payload
-     * @return JSON object to send as ACK if client requested ACK
+     * @param args list of arguments. Arguments can contain any type of field that can result of JSON decoding,
+     *             including objects and arrays of arbitrary size.
+     * @throws IllegalStateException if the socket is not CONNECTED.
+     * @throws SocketIOException
      */
-    Object onEvent(String name, Object[] args);
+
+    void emit(String name, Object... args) throws SocketIOException;
 
 }

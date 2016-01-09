@@ -42,8 +42,8 @@ public final class SocketIOSessionManager implements SessionManager
         SYMBOLS = sb.toString().toCharArray();
     }
 
-    final ConcurrentMap<String, SocketIOSession> sessions = new ConcurrentHashMap<>();
-    final ScheduledExecutorService               executor = Executors.newScheduledThreadPool(1);
+    final ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
+    final ScheduledExecutorService       executor = Executors.newScheduledThreadPool(1);
 
     private String generateSessionId()
     {
@@ -67,9 +67,9 @@ public final class SocketIOSessionManager implements SessionManager
      * @return new session
      */
     @Override
-    public SocketIOSession createSession(SocketIOInbound inbound)
+    public Session createSession(Inbound inbound)
     {
-        SocketIOSession session = new SocketIOSession(this, inbound, generateSessionId());
+        Session session = new Session(this, inbound, generateSessionId());
         sessions.put(session.getSessionId(), session);
         return session;
     }
@@ -81,7 +81,7 @@ public final class SocketIOSessionManager implements SessionManager
      * @return session object or null if not found
      */
     @Override
-    public SocketIOSession getSession(String sessionId)
+    public Session getSession(String sessionId)
     {
         return sessions.get(sessionId);
     }

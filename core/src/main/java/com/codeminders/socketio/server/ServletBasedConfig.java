@@ -25,23 +25,20 @@
 package com.codeminders.socketio.server;
 
 import javax.servlet.ServletConfig;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author Mathieu Carbou
  */
-public final class ServletBasedSocketIOConfig implements SocketIOConfig
+public final class ServletBasedConfig implements Config
 {
-    private static final Logger LOGGER = Logger.getLogger(ServletBasedSocketIOConfig.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ServletBasedConfig.class.getName());
 
     private final ServletConfig config;
     private final String        namespace;
 
-    public ServletBasedSocketIOConfig(ServletConfig config, String namespace)
+    public ServletBasedConfig(ServletConfig config, String namespace)
     {
         this.namespace = namespace;
         this.config = config;

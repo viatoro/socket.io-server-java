@@ -29,7 +29,8 @@ import java.util.Collection;
 /**
  * @author Mathieu Carbou
  */
-public interface SocketIOConfig {
+public interface Config
+{
 
     String PARAM_PING_INTERVAL = "pingInterval";
     String PARAM_TIMEOUT = "timeout";

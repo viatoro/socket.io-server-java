@@ -37,16 +37,16 @@ import java.io.IOException;
  * @author Mathieu Carbou
  * @author Alexander Sova <bird@codeminders.com>
 */
-public interface TransportConnection extends SocketIOOutbound
+public interface TransportConnection extends Outbound
 {
-    void init(SocketIOConfig config);
-    void setSession(SocketIOSession session);
+    void init(Config config);
+    void setSession(Session session);
     Transport getTransport();
 
     void connect(HttpServletRequest request, HttpServletResponse response)
             throws IOException, SocketIOProtocolException;
 
-    void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session)
+    void handle(HttpServletRequest request, HttpServletResponse response, Session session)
             throws IOException;
 
     /**

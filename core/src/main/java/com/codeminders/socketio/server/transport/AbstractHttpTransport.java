@@ -49,7 +49,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
 
-        SocketIOSession session = null;
+        Session session = null;
         String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
         if (sessionId != null && sessionId.length() > 0)
             session = sessionFactory.getSession(sessionId);
@@ -78,7 +78,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
 
             try
             {
-                SocketIOInbound inbound = inboundFactory.getInbound(request);
+                Inbound inbound = inboundFactory.getInbound(request);
                 if (inbound == null)
                 {
                     response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
@@ -100,12 +100,12 @@ public abstract class AbstractHttpTransport extends AbstractTransport
         }
     }
 
-    public abstract void startSend(SocketIOSession session, ServletResponse response) throws IOException;
+    public abstract void startSend(Session session, ServletResponse response) throws IOException;
 
-    public abstract void writeData(SocketIOSession session, ServletResponse response, String data) throws IOException;
+    public abstract void writeData(Session session, ServletResponse response, String data) throws IOException;
 
-    public abstract void finishSend(SocketIOSession session, ServletResponse response) throws IOException;
+    public abstract void finishSend(Session session, ServletResponse response) throws IOException;
 
-    public abstract void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response)
+    public abstract void onConnect(Session session, ServletRequest request, ServletResponse response)
             throws IOException, SocketIOProtocolException;
 }

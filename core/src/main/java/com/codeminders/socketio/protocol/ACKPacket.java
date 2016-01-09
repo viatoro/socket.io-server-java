@@ -9,12 +9,12 @@ import java.util.Arrays;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public abstract class SocketIOACKPacket extends SocketIOPacket
+public abstract class ACKPacket extends SocketIOPacket
 {
     private int id;
     private Object[] args;
 
-    public SocketIOACKPacket(Type type, int id, Object[] args)
+    public ACKPacket(Type type, int id, Object[] args)
     {
         super(type);
         this.id = id;

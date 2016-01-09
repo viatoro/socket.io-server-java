@@ -9,13 +9,13 @@ import java.util.List;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOBinaryACKPacket extends SocketIOACKPacket implements SocketIOBinaryPacket
+public class BinaryACKPacket extends ACKPacket implements BinaryPacket
 {
     //TODO: refactor to avoid code duplication. use delegate object
     private List<InputStream> attachments;
     private int               number_attachments_expected;
 
-    public SocketIOBinaryACKPacket(int id, Object[] args)
+    public BinaryACKPacket(int id, Object[] args)
     {
         super(Type.BINARY_ACK, id, null);
 
@@ -24,7 +24,7 @@ public class SocketIOBinaryACKPacket extends SocketIOACKPacket implements Socket
         setArgs((Object[])SocketIOProtocol.extractBinaryObjects(args, attachments));
     }
 
-    public SocketIOBinaryACKPacket(int id, Object[] args, int number_attachments_expected)
+    public BinaryACKPacket(int id, Object[] args, int number_attachments_expected)
     {
         super(Type.BINARY_ACK, id, args);
 

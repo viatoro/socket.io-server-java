@@ -46,25 +46,25 @@ public abstract class AbstractTransportConnection implements TransportConnection
 {
     private static final Logger LOGGER = Logger.getLogger(AbstractTransportConnection.class.getName());
 
-    private SocketIOConfig config;
-    private SocketIOSession session;
+    private Config  config;
+    private Session session;
 
     @Override
-    public final void init(SocketIOConfig config) {
+    public final void init(Config config) {
         this.config = config;
         init();
     }
 
     @Override
-    public void setSession(SocketIOSession session) {
+    public void setSession(Session session) {
         this.session = session;
     }
 
-    protected final SocketIOConfig getConfig() {
+    protected final Config getConfig() {
         return config;
     }
 
-    protected final SocketIOSession getSession() {
+    protected final Session getSession() {
         return session;
     }
 
@@ -75,9 +75,9 @@ public abstract class AbstractTransportConnection implements TransportConnection
     public void send(SocketIOPacket packet) throws SocketIOException
     {
         send(EngineIOProtocol.createMessagePacket(packet.encode()));
-        if(packet instanceof SocketIOBinaryPacket)
+        if(packet instanceof BinaryPacket)
         {
-            Collection<InputStream> attachments = ((SocketIOBinaryPacket) packet).getAttachments();
+            Collection<InputStream> attachments = ((BinaryPacket) packet).getAttachments();
             for (InputStream is : attachments)
             {
                 try
@@ -125,10 +125,10 @@ public abstract class AbstractTransportConnection implements TransportConnection
         if (getSession().getConnectionState() != ConnectionState.CONNECTED)
             throw new SocketIOClosedException();
 
-        SocketIOACKListener ack_listener = null;
-        if(args.length > 0 && args[args.length-1] instanceof SocketIOACKListener)
+        ACKListener ack_listener = null;
+        if(args.length > 0 && args[args.length-1] instanceof ACKListener)
         {
-            ack_listener = (SocketIOACKListener)args[args.length-1];
+            ack_listener = (ACKListener)args[args.length-1];
             args = Arrays.copyOfRange(args, 0, args.length-1);
         }
 

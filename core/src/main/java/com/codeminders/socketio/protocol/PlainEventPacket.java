@@ -3,9 +3,9 @@ package com.codeminders.socketio.protocol;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOPlainEventPacket extends SocketIOEventPacket
+public class PlainEventPacket extends EventPacket
 {
-    public SocketIOPlainEventPacket(int id, String name, Object[] args)
+    public PlainEventPacket(int id, String name, Object[] args)
     {
         super(Type.EVENT, id, name, args);
     }

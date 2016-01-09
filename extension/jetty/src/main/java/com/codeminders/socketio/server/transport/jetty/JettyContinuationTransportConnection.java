@@ -24,8 +24,6 @@
  */
 package com.codeminders.socketio.server.transport.jetty;
 
-import com.codeminders.socketio.protocol.EngineIOPacket;
-import com.codeminders.socketio.protocol.SocketIOPacket;
 import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
@@ -153,7 +151,7 @@ public final class JettyContinuationTransportConnection
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, SocketIOSession session) throws IOException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, Session session) throws IOException {
         if ("GET".equals(request.getMethod()))
         {
             if (!is_open && buffer.isEmpty())

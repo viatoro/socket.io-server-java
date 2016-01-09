@@ -25,14 +25,14 @@
  */
 package com.codeminders.socketio.sample.chat;
 
-import com.codeminders.socketio.server.SocketIOACKListener;
-import com.codeminders.socketio.server.SocketIOInbound;
+import com.codeminders.socketio.server.ACKListener;
+import com.codeminders.socketio.server.Inbound;
 import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
 import com.codeminders.socketio.util.IO;
 import com.codeminders.socketio.util.JdkOverLog4j;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
-import com.codeminders.socketio.server.SocketIOOutbound;
+import com.codeminders.socketio.server.Outbound;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -66,13 +66,13 @@ public class ChatSocketServlet extends JettySocketIOServlet
         super.init(config);
     }
 
-    private class ChatConnection implements SocketIOInbound
+    private class ChatConnection implements Inbound
     {
-        private volatile SocketIOOutbound outbound = null;
-        private Integer sessionId = ids.getAndIncrement();
+        private volatile Outbound outbound  = null;
+        private          Integer  sessionId = ids.getAndIncrement();
 
         @Override
-        public void onConnect(SocketIOOutbound outbound)
+        public void onConnect(Outbound outbound)
         {
             LOGGER.fine("Client connected");
             this.outbound = outbound;
@@ -103,7 +103,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
         {
             LOGGER.fine("Got event: " + name);
 
-            //TODO: allow user to subscribe to specific events, like .on(CHAT_MESSAGE_EVENT, new SocketIOEventListener() {...})
+            //TODO: allow user to subscribe to specific events, like .on(CHAT_MESSAGE_EVENT, new EventListener() {...})
             if(CHAT_MESSAGE_EVENT.equals(name))
             {
                 if (args.length > 0)
@@ -142,7 +142,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
             {
                 try
                 {
-                    outbound.emit(SERVER_BINARY, new ByteArrayInputStream(new byte[] { 1, 2, 3, 4 }), new SocketIOACKListener()
+                    outbound.emit(SERVER_BINARY, new ByteArrayInputStream(new byte[] { 1, 2, 3, 4 }), new ACKListener()
                     {
                         @Override
                         public void onACK(Object[] args)
@@ -180,7 +180,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
     }
 
     @Override
-    protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
+    protected Inbound doSocketIOConnect(HttpServletRequest request) {
         return new ChatConnection();
     }
 

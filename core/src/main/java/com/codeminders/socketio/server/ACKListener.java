@@ -3,7 +3,7 @@ package com.codeminders.socketio.server;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public interface SocketIOEventListener
+public interface ACKListener
 {
-    Object onEvent(String name, Object[] args);
+    void onACK(Object[] args);
 }

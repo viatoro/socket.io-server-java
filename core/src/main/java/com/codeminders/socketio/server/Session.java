@@ -49,9 +49,9 @@ import java.util.logging.Logger;
  * @author Alexander Sova (bird@codeminders.com)
  * @author Mathieu Carbou (mathieu.carbou@gmail.com)
  */
-public class SocketIOSession
+public class Session
 {
-    private static final Logger LOGGER = Logger.getLogger(SocketIOSession.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Session.class.getName());
 
     private final SocketIOSessionManager sessionManager;
     private final String                 sessionId;
@@ -59,7 +59,7 @@ public class SocketIOSession
 
     //TODO: rename to something more telling
     //This is callback/listener interface set by library user
-    private SocketIOInbound inbound;
+    private Inbound inbound;
 
     private TransportConnection connection;
     private ConnectionState  state = ConnectionState.CONNECTING;
@@ -70,11 +70,11 @@ public class SocketIOSession
     private Future<?>   timeoutTask;
     private boolean     timedOut;
 
-    private SocketIOBinaryPacket socketIOBinaryPacket;
-    private int packet_id = 0; // packet id. used for requesting ACK
-    private Map<Integer, SocketIOACKListener> ack_listeners = new LinkedHashMap<>();
+    private BinaryPacket binaryPacket;
+    private int                       packet_id     = 0; // packet id. used for requesting ACK
+    private Map<Integer, ACKListener> ack_listeners = new LinkedHashMap<>();
 
-    SocketIOSession(SocketIOSessionManager sessionManager, SocketIOInbound inbound, String sessionId)
+    Session(SocketIOSessionManager sessionManager, Inbound inbound, String sessionId)
     {
         assert (sessionManager != null);
 
@@ -119,7 +119,7 @@ public class SocketIOSession
             @Override
             public void run()
             {
-                SocketIOSession.this.onTimeout();
+                Session.this.onTimeout();
             }
         }, timeout, TimeUnit.MILLISECONDS);
     }
@@ -157,20 +157,20 @@ public class SocketIOSession
         if(engineIOPacket.getType() != EngineIOPacket.Type.MESSAGE)
             throw new SocketIOProtocolException("Unexpected binary packet type. Type: " + engineIOPacket.getType());
 
-        if(socketIOBinaryPacket == null)
+        if(binaryPacket == null)
             throw new SocketIOProtocolException("Unexpected binary object");
 
-        SocketIOProtocol.insertBinaryObject(socketIOBinaryPacket, engineIOPacket.getBinaryData());
-        socketIOBinaryPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
-        if(socketIOBinaryPacket.isComplete())
+        SocketIOProtocol.insertBinaryObject(binaryPacket, engineIOPacket.getBinaryData());
+        binaryPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
+        if(binaryPacket.isComplete())
         {
-            if(socketIOBinaryPacket.getType() == SocketIOPacket.Type.EVENT)
-                onEvent((SocketIOEventPacket) socketIOBinaryPacket);
+            if(binaryPacket.getType() == SocketIOPacket.Type.EVENT)
+                onEvent((EventPacket) binaryPacket);
             else
-            if(socketIOBinaryPacket.getType() == SocketIOPacket.Type.BINARY_ACK)
-                onACK((SocketIOACKPacket) socketIOBinaryPacket);
+            if(binaryPacket.getType() == SocketIOPacket.Type.BINARY_ACK)
+                onACK((ACKPacket) binaryPacket);
 
-            socketIOBinaryPacket = null;
+            binaryPacket = null;
         }
     }
 
@@ -196,7 +196,7 @@ public class SocketIOSession
         catch (Throwable e)
         {
             if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onConnect()", e);
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onConnect()", e);
 
             closeConnection(DisconnectReason.CONNECT_FAILED);
         }
@@ -261,7 +261,7 @@ public class SocketIOSession
             catch (Throwable e)
             {
                 if (LOGGER.isLoggable(Level.WARNING))
-                    LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onDisconnect()", e);
+                    LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onDisconnect()", e);
             }
             inbound = null;
         }
@@ -331,16 +331,16 @@ public class SocketIOSession
                 return;
 
             case EVENT:
-                onEvent((SocketIOEventPacket)packet);
+                onEvent((EventPacket)packet);
                 return;
 
             case ACK:
-                onACK((SocketIOACKPacket)packet);
+                onACK((ACKPacket)packet);
                 return;
 
             case BINARY_ACK:
             case BINARY_EVENT:
-                socketIOBinaryPacket = (SocketIOBinaryPacket)packet;
+                binaryPacket = (BinaryPacket)packet;
                 return;
 
             default:
@@ -363,7 +363,7 @@ public class SocketIOSession
         }
     }
 
-    private void onEvent(SocketIOEventPacket packet)
+    private void onEvent(EventPacket packet)
     {
         //TODO: not thread-safe. synchronize
         if(inbound == null || state != ConnectionState.CONNECTED)
@@ -387,18 +387,18 @@ public class SocketIOSession
         catch (Throwable e)
         {
             if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onEvent()", e);
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onEvent()", e);
         }
     }
 
-    private void onACK(SocketIOACKPacket packet)
+    private void onACK(ACKPacket packet)
     {
         if(inbound == null || state != ConnectionState.CONNECTED)
             return;
 
         try
         {
-            SocketIOACKListener listener = ack_listeners.get(packet.getId());
+            ACKListener listener = ack_listeners.get(packet.getId());
             unsubscribeACK(packet.getId());
             if(listener != null)
                 listener.onACK(packet.getArgs());
@@ -406,7 +406,7 @@ public class SocketIOSession
         catch (Throwable e)
         {
             if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onEvent()", e);
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onEvent()", e);
         }
     }
 
@@ -425,7 +425,7 @@ public class SocketIOSession
     }
 
     //TODO: what if ACK never comes? We will have a memory leak. Need to cleanup the list or fail on timeout?
-    public void subscribeACK(int packet_id, SocketIOACKListener ack_listener)
+    public void subscribeACK(int packet_id, ACKListener ack_listener)
     {
         ack_listeners.put(packet_id, ack_listener);
     }

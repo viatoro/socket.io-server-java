@@ -32,7 +32,7 @@ import javax.servlet.ServletConfig;
  */
 public abstract class AbstractTransport implements Transport
 {
-    private SocketIOConfig config;
+    private Config config;
 
     @Override
     public void destroy()
@@ -42,11 +42,11 @@ public abstract class AbstractTransport implements Transport
     @Override
     public final void init(ServletConfig config)
     {
-        this.config = new ServletBasedSocketIOConfig(config, getType().toString());
+        this.config = new ServletBasedConfig(config, getType().toString());
         init();
     }
 
-    protected final SocketIOConfig getConfig()
+    protected final Config getConfig()
     {
         return config;
     }
@@ -55,7 +55,7 @@ public abstract class AbstractTransport implements Transport
     {
     }
 
-    protected final TransportConnection createConnection(SocketIOSession session)
+    protected final TransportConnection createConnection(Session session)
     {
         TransportConnection connection = createConnection();
         connection.setSession(session);

@@ -26,7 +26,7 @@
 package com.codeminders.socketio.server.transport;
 
 import com.codeminders.socketio.server.SocketIOProtocolException;
-import com.codeminders.socketio.server.SocketIOSession;
+import com.codeminders.socketio.server.Session;
 import com.codeminders.socketio.server.TransportType;
 
 import javax.servlet.ServletRequest;
@@ -47,13 +47,13 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
     }
 
     @Override
-    public void startSend(SocketIOSession session, ServletResponse response) throws IOException
+    public void startSend(Session session, ServletResponse response) throws IOException
     {
         response.setContentType("text/javascript; charset=UTF-8");
     }
 
     @Override
-    public void writeData(SocketIOSession session, ServletResponse response, String data) throws IOException
+    public void writeData(Session session, ServletResponse response, String data) throws IOException
     {
         response.getOutputStream().print(EIO_PREFIX);
         response.getOutputStream().print("[" + session.getAttribute(FRAME_ID) + "]('");
@@ -62,13 +62,13 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
     }
 
     @Override
-    public void finishSend(SocketIOSession session, ServletResponse response) throws IOException
+    public void finishSend(Session session, ServletResponse response) throws IOException
     {
         response.flushBuffer();
     }
 
     @Override
-    public void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response)
+    public void onConnect(Session session, ServletRequest request, ServletResponse response)
             throws IOException, SocketIOProtocolException
     {
         try {

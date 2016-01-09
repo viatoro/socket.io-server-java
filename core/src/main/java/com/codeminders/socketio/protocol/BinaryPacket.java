@@ -6,7 +6,7 @@ import java.util.Collection;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public interface SocketIOBinaryPacket
+public interface BinaryPacket
 {
     Collection<InputStream> getAttachments();
 

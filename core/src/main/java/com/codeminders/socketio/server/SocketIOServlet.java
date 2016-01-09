@@ -24,7 +24,6 @@
  */
 package com.codeminders.socketio.server;
 
-import com.codeminders.socketio.server.transport.AbstractTransportProvider;
 import com.codeminders.socketio.util.IO;
 
 import javax.servlet.ServletException;
@@ -91,10 +90,10 @@ public abstract class SocketIOServlet extends HttpServlet
     }
 
     /**
-     * Returns an instance of SocketIOInbound or null if the connection is to be denied.
+     * Returns an instance of Inbound or null if the connection is to be denied.
      * The value of cookies and protocols may be null.
      */
-    protected abstract SocketIOInbound doSocketIOConnect(HttpServletRequest request);
+    protected abstract Inbound doSocketIOConnect(HttpServletRequest request);
 
     private void serve(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
@@ -128,7 +127,7 @@ public abstract class SocketIOServlet extends HttpServlet
                 transport.handle(request, response, new Transport.InboundFactory()
                 {
                     @Override
-                    public SocketIOInbound getInbound(HttpServletRequest request)
+                    public Inbound getInbound(HttpServletRequest request)
                     {
                         return SocketIOServlet.this.doSocketIOConnect(request);
                     }

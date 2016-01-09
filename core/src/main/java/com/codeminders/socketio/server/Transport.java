@@ -33,7 +33,7 @@ public interface Transport
 {
     interface InboundFactory
     {
-        SocketIOInbound getInbound(HttpServletRequest request);
+        Inbound getInbound(HttpServletRequest request);
     }
 
     /**

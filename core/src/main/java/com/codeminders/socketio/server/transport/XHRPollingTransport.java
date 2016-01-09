@@ -25,7 +25,7 @@
 package com.codeminders.socketio.server.transport;
 
 import com.codeminders.socketio.server.SocketIOProtocolException;
-import com.codeminders.socketio.server.SocketIOSession;
+import com.codeminders.socketio.server.Session;
 import com.codeminders.socketio.server.TransportType;
 
 import javax.servlet.ServletRequest;
@@ -42,26 +42,26 @@ public abstract class XHRPollingTransport extends AbstractHttpTransport
     }
 
     @Override
-    public void startSend(SocketIOSession session, ServletResponse response) throws IOException
+    public void startSend(Session session, ServletResponse response) throws IOException
     {
         response.setContentType("text/plain; charset=UTF-8");
     }
 
     @Override
-    public void writeData(SocketIOSession session, ServletResponse response, String data) throws IOException
+    public void writeData(Session session, ServletResponse response, String data) throws IOException
     {
         response.getOutputStream().print(data);
         response.flushBuffer();
     }
 
     @Override
-    public void finishSend(SocketIOSession session, ServletResponse response) throws IOException
+    public void finishSend(Session session, ServletResponse response) throws IOException
     {
 
     }
 
     @Override
-    public void onConnect(SocketIOSession session, ServletRequest request, ServletResponse response) throws IOException, SocketIOProtocolException
+    public void onConnect(Session session, ServletRequest request, ServletResponse response) throws IOException, SocketIOProtocolException
     {
         //TODO: it may be called twice? one from here and another one by transport connection implementation
         startSend(session, response);
