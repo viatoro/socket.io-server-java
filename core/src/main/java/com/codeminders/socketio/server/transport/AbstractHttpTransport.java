@@ -39,11 +39,11 @@ public abstract class AbstractHttpTransport extends AbstractTransport
 {
     private static final Logger LOGGER  = Logger.getLogger(AbstractHttpTransport.class.getName());
 
+    //TODO: call onConnect()
     @Override
     public final void handle(HttpServletRequest request,
                              HttpServletResponse response,
-                             InboundFactory inboundFactory,
-                             SessionManager sessionFactory)
+                             SocketIOManager sessionFactory)
             throws IOException
     {
         if (LOGGER.isLoggable(Level.FINE))
@@ -75,18 +75,10 @@ public abstract class AbstractHttpTransport extends AbstractTransport
                 return;
             }
 
-
             try
             {
-                Inbound inbound = inboundFactory.getInbound(request);
-                if (inbound == null)
-                {
-                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                    return;
-                }
-
-                session = sessionFactory.createSession(inbound);
-                //TODO: wierd sequence. need to refactor
+                session = sessionFactory.createSession();
+                //TODO: weird sequence. need to refactor
                 createConnection(session).connect(request, response);
                 onConnect(session, request, response);
             }

@@ -66,8 +66,5 @@ public abstract class XHRPollingTransport extends AbstractHttpTransport
         //TODO: it may be called twice? one from here and another one by transport connection implementation
         startSend(session, response);
 
-        //TODO: check it!
-        //TODO: send CONNECT packet?
-
     }
 }

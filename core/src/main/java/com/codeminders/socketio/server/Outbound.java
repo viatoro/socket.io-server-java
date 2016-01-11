@@ -31,15 +31,10 @@ public interface Outbound
 {
     /**
      * Terminate the connection. This method may return before the connection disconnect
-     * completes. The onDisconnect() method of the associated SocketInbound will be called
-     * when the disconnect is completed.
+     * completes.
      * This method will try to notify the remote end.
      */
     void disconnect();
-
-    //TODO: do we need an abort() or kill() method for user to call in case of IO error?
-    //TODO: should we try to send anything (like DISCONNECT packet) in this case?
-    //TODO: no onDisconnect to be called if such method is used by the user.
 
     /**
      * Emits an event to the socket identified by the string name.
@@ -52,5 +47,4 @@ public interface Outbound
      */
 
     void emit(String name, Object... args) throws SocketIOException;
-
 }

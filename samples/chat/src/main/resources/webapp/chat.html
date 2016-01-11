@@ -96,10 +96,6 @@
         document.getElementById('chat').innerHTML = '';
 	  });
 
-	  socket.on('open', function () {
-  		document.getElementById('chat').innerHTML = 'Open!';
-	  });
-
 	  socket.on('disconnect', function (reason) {
   	 	addLine('<b>Disconnected['+reason+']</b>');
 	  });

@@ -48,7 +48,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
     @Override
     public void init()
     {
-        wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(SocketIOServlet.MAX_TEXT_MESSAGE_SIZE, 32000));
+        wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
         wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());
 
@@ -67,8 +67,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
     @Override
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
-                       Transport.InboundFactory inboundFactory,
-                       SessionManager sessionFactory) throws IOException
+                       SocketIOManager socketIOManager) throws IOException
     {
 
         if(!"GET".equals(request.getMethod()))
@@ -78,26 +77,16 @@ public final class JettyWebSocketTransport extends AbstractTransport
             return;
         }
 
-        Inbound inbound = inboundFactory.getInbound(request);
-        if (inbound == null)
-        {
-            //TODO: research this
-            if (request.getHeader("Sec-WebSocket-Key1") != null)
-                response.setHeader("Connection", "close");
-
-            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            return;
-        }
-
         final TransportConnection connection;
         String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
         Session session = null;
+
         if(sessionId != null)
-            session = sessionFactory.getSession(sessionId);
+            session = socketIOManager.getSession(sessionId);
 
         if(session == null)
         {
-            session = sessionFactory.createSession(inbound);
+            session = socketIOManager.createSession();
             connection = createConnection(session);
         }
         else

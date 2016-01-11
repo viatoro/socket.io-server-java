@@ -25,40 +25,37 @@
  */
 package com.codeminders.socketio.server;
 
-import com.codeminders.socketio.common.DisconnectReason;
-
-/**
- * Interface that represents a listener for inbound events
- * A library user is expected to implement this interface in order to receive such events
- */
 public interface Inbound
 {
 
     /**
-     * Called when the connection is established. This will only ever be called once.
-     *
-     * @param outbound The SocketOutbound associated with the connection
-     */
-    void onConnect(Outbound outbound);
+//     * Called when the connection is established. This will only ever be called once.
+//     *
+//     * @param outbound The Outbound associated with the connection
+//     */
+//    void onConnect(Outbound outbound);
+//
+//    /**
+//     * Called when the socket connection is closed. This will only ever be called once.
+//     * This method may be called instead of onConnect() if the connection handshake isn't
+//     * completed successfully.
+//     *
+//     * @param reason       The reason for the disconnect.
+//     * @param errorMessage Possibly non null error message associated with the reason for disconnect.
+//     */
+//    void onDisconnect(DisconnectReason reason, String errorMessage);
+//
+//    //TODO: add boolean param to indicate that ACK is requested by the client
+//    /**
+//     * Called one per arriving event.
+//     *
+//     * @param name event name
+//     * @param args event payload
+//     * @return JSON object to send as ACK if client requested ACK
+//     */
+//    Object onEvent(String name, Object[] args);
 
-    /**
-     * Called when the socket connection is closed. This will only ever be called once.
-     * This method may be called instead of onConnect() if the connection handshake isn't
-     * completed successfully.
-     *
-     * @param reason       The reason for the disconnect.
-     * @param errorMessage Possibly non null error message associated with the reason for disconnect.
-     */
-    void onDisconnect(DisconnectReason reason, String errorMessage);
 
-    //TODO: add boolean param to indicate that ACK is requested by the client
-    /**
-     * Called one per arriving event.
-     *
-     * @param name event name
-     * @param args event payload
-     * @return JSON object to send as ACK if client requested ACK
-     */
-    Object onEvent(String name, Object[] args);
+    void on(String eventName, EventListener listener);
 
 }

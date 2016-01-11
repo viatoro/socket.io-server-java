@@ -25,9 +25,13 @@
  */
 package com.codeminders.socketio.server;
 
+import java.util.Map;
 import java.util.concurrent.*;
 
-public final class SocketIOSessionManager implements SessionManager
+/**
+ * Class to manage Socket.IO sessions, namespaces and rooms.
+ */
+public final class SocketIOManager
 {
     private static final int SESSION_ID_LEN = 20;
     private static final char[] SYMBOLS;
@@ -42,8 +46,10 @@ public final class SocketIOSessionManager implements SessionManager
         SYMBOLS = sb.toString().toCharArray();
     }
 
-    final ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
-    final ScheduledExecutorService       executor = Executors.newScheduledThreadPool(1);
+    private final Map<String, Namespace>         namespaces = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Session> sessions   = new ConcurrentHashMap<>();
+
+    final ScheduledExecutorService       executor   = Executors.newScheduledThreadPool(1);
 
     private String generateSessionId()
     {
@@ -57,19 +63,16 @@ public final class SocketIOSessionManager implements SessionManager
             if(sessions.get(id) == null)
                 return id;
         }
-
     }
 
     /**
      * Creates new session
      *
-     * @param inbound inbound connection
      * @return new session
      */
-    @Override
-    public Session createSession(Inbound inbound)
+    public Session createSession()
     {
-        Session session = new Session(this, inbound, generateSessionId());
+        Session session = new Session(this, generateSessionId());
         sessions.put(session.getSessionId(), session);
         return session;
     }
@@ -80,14 +83,36 @@ public final class SocketIOSessionManager implements SessionManager
      * @param sessionId session id
      * @return session object or null if not found
      */
-    @Override
     public Session getSession(String sessionId)
     {
         return sessions.get(sessionId);
     }
 
+    /**
+     * Deletes the session
+     *
+     * @param sessionId session id
+     */
     public void deleteSession(String sessionId)
     {
         sessions.remove(sessionId);
+    }
+
+    /**
+     * Creates new namespace
+     *
+     * @param id namespace in. Should always start with '/'
+     * @return new namespace
+     */
+    public Namespace createNamespace(String id)
+    {
+        Namespace ns = new Namespace(id);
+        namespaces.put(ns.getId(), ns);
+        return ns;
+    }
+
+    public Namespace getNamespace(String id)
+    {
+        return namespaces.get(id);
     }
 }

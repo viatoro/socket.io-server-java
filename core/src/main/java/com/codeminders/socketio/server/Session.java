@@ -32,9 +32,7 @@ import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 
 import java.io.InputStream;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,19 +45,20 @@ import java.util.logging.Logger;
  * This implementation is not thread-safe.
  *
  * @author Alexander Sova (bird@codeminders.com)
- * @author Mathieu Carbou (mathieu.carbou@gmail.com)
  */
-public class Session
+public class Session implements DisconnectListener
 {
     private static final Logger LOGGER = Logger.getLogger(Session.class.getName());
 
-    private final SocketIOSessionManager sessionManager;
-    private final String                 sessionId;
+    private final SocketIOManager socketIOManager;
+    private final String          sessionId;
     private final Map<String, Object>    attributes = new ConcurrentHashMap<>();
 
-    //TODO: rename to something more telling
-    //This is callback/listener interface set by library user
-    private Inbound inbound;
+
+//    private Inbound inbound;
+
+    //TODO: should we allow multiple sockets for the same namespace in a session?
+    private Map<String, Socket> sockets = new LinkedHashMap<>(); // namespace, socket
 
     private TransportConnection connection;
     private ConnectionState  state = ConnectionState.CONNECTING;
@@ -70,17 +69,29 @@ public class Session
     private Future<?>   timeoutTask;
     private boolean     timedOut;
 
-    private BinaryPacket binaryPacket;
+    private BinaryPacket              binaryPacket;
+
     private int                       packet_id     = 0; // packet id. used for requesting ACK
-    private Map<Integer, ACKListener> ack_listeners = new LinkedHashMap<>();
+    private Map<Integer, ACKListener> ack_listeners = new LinkedHashMap<>(); // packetid, listener
 
-    Session(SocketIOSessionManager sessionManager, Inbound inbound, String sessionId)
+    Session(SocketIOManager socketIOManager, String sessionId)
     {
-        assert (sessionManager != null);
+        assert (socketIOManager != null);
 
-        this.sessionManager = sessionManager;
-        this.inbound        = inbound;
-        this.sessionId      = sessionId;
+        this.socketIOManager = socketIOManager;
+        this.sessionId        = sessionId;
+    }
+
+    public Socket createSocket(String ns)
+    {
+        Namespace namespace = socketIOManager.getNamespace(ns);
+        if(namespace == null)
+            throw new IllegalArgumentException("Namespace does not exist");
+
+        Socket socket = namespace.createSocket(this);
+        socket.on(this); // listen for disconnect event
+        sockets.put(ns, socket);
+        return socket;
     }
 
     public void setAttribute(String key, Object val)
@@ -114,7 +125,7 @@ public class Session
         if (timedOut || timeout == 0)
             return;
 
-        timeoutTask = sessionManager.executor.schedule(new Runnable()
+        timeoutTask = socketIOManager.executor.schedule(new Runnable()
         {
             @Override
             public void run()
@@ -164,7 +175,7 @@ public class Session
         binaryPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
         if(binaryPacket.isComplete())
         {
-            if(binaryPacket.getType() == SocketIOPacket.Type.EVENT)
+            if(binaryPacket.getType() == SocketIOPacket.Type.BINARY_EVENT)
                 onEvent((EventPacket) binaryPacket);
             else
             if(binaryPacket.getType() == SocketIOPacket.Type.BINARY_ACK)
@@ -174,30 +185,25 @@ public class Session
         }
     }
 
-    public void onConnect(TransportConnection connection)
+    public void onConnect(TransportConnection connection) throws SocketIOException
     {
         assert (connection != null);
         assert (this.connection == null); //TODO: may not be the case for upgrade.
 
         this.connection = connection;
 
-        if (inbound == null)
-        {
-            //this could happen only if onDisconnect was called already
-            closeConnection(DisconnectReason.CONNECT_FAILED);
-            return;
-        }
-
+        Socket socket = createSocket(SocketIOProtocol.DEFAULT_NAMESPACE);
         try
         {
             state = ConnectionState.CONNECTED;
-            inbound.onConnect(connection);
+            socketIOManager.getNamespace(SocketIOProtocol.DEFAULT_NAMESPACE).onConnect(socket);
         }
-        catch (Throwable e)
+        catch (ConnectionException e)
         {
-            if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onConnect()", e);
+            if(LOGGER.isLoggable(Level.FINE))
+                LOGGER.log(Level.FINE, "Connection failed", e);
 
+            connection.send(SocketIOProtocol.createErrorPacket(e.getArgs()));
             closeConnection(DisconnectReason.CONNECT_FAILED);
         }
     }
@@ -241,31 +247,17 @@ public class Session
             LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onDisconnect: " + reason +
                     " message: [" + disconnectMessage + "]");
 
-        //TODO: this is not enough. inbound is not protected
-        synchronized(this)
-        {
-            if (state == ConnectionState.CLOSED)
-                return; // to prevent calling it twice
+        if (state == ConnectionState.CLOSED)
+            return; // to prevent calling it twice
 
-            state = ConnectionState.CLOSED;
-        }
+        state = ConnectionState.CLOSED;
 
         clearTimeout();
 
-        if (inbound != null)
-        {
-            try
-            {
-                inbound.onDisconnect(reason, disconnectMessage);
-            }
-            catch (Throwable e)
-            {
-                if (LOGGER.isLoggable(Level.WARNING))
-                    LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onDisconnect()", e);
-            }
-            inbound = null;
-        }
-        sessionManager.deleteSession(sessionId);
+        for (Socket socket : sockets.values())
+            socket.onDisconnect(socket, reason, disconnectMessage);
+
+        socketIOManager.deleteSession(sessionId);
     }
 
     private void onTimeout()
@@ -323,7 +315,7 @@ public class Session
         switch (packet.getType())
         {
             case CONNECT:
-                // ignore. server -> client only
+                //TODO: implement. connect to namespace
                 return;
 
             case DISCONNECT:
@@ -365,13 +357,26 @@ public class Session
 
     private void onEvent(EventPacket packet)
     {
-        //TODO: not thread-safe. synchronize
-        if(inbound == null || state != ConnectionState.CONNECTED)
+        if(state != ConnectionState.CONNECTED)
             return;
 
         try
         {
-            Object ack = inbound.onEvent(packet.getName(), packet.getArgs());
+            Namespace ns = socketIOManager.getNamespace(packet.getNamespace());
+            if(ns == null)
+            {
+                connection.send(SocketIOProtocol.createErrorPacket("Namespace does not exist"));
+                return;
+            }
+
+            Socket socket = sockets.get(ns.getId());
+            if(socket == null)
+            {
+                connection.send(SocketIOProtocol.createErrorPacket("No socket is connected to the namespace"));
+                return;
+            }
+
+            Object ack = socket.onEvent(packet.getName(), packet.getArgs());
 
             if(packet.getId() != -1 && ack != null)
             {
@@ -393,7 +398,7 @@ public class Session
 
     private void onACK(ACKPacket packet)
     {
-        if(inbound == null || state != ConnectionState.CONNECTED)
+        if(state != ConnectionState.CONNECTED)
             return;
 
         try
@@ -411,7 +416,7 @@ public class Session
     }
 
     /**
-     * remembers the disconnect reason and closes underlying transport connection
+     * Remembers the disconnect reason and closes underlying transport connection
      */
     private void closeConnection(DisconnectReason reason)
     {
@@ -434,5 +439,11 @@ public class Session
     public void unsubscribeACK(int packet_id)
     {
         ack_listeners.remove(packet_id);
+    }
+
+    @Override
+    public void onDisconnect(Socket socket, DisconnectReason reason, String errorMessage)
+    {
+        sockets.remove(socket.getNamespace().getId());
     }
 }

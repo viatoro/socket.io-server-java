@@ -63,7 +63,7 @@ public abstract class SocketIOPacket
 
     protected SocketIOPacket(Type type)
     {
-        this(type, "/");
+        this(type, SocketIOProtocol.DEFAULT_NAMESPACE);
     }
 
     protected SocketIOPacket(Type type, String namespace)

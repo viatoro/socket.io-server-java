@@ -31,11 +31,6 @@ import java.io.IOException;
 
 public interface Transport
 {
-    interface InboundFactory
-    {
-        Inbound getInbound(HttpServletRequest request);
-    }
-
     /**
      * @return The names of the transport instance.
      */
@@ -47,8 +42,7 @@ public interface Transport
 
     void handle(HttpServletRequest request,
                 HttpServletResponse response,
-                Transport.InboundFactory inboundFactory,
-                SessionManager sessionFactory) throws IOException;
+                SocketIOManager sessionFactory) throws IOException;
 
     TransportConnection createConnection();
 }

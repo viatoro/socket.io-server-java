@@ -15,8 +15,23 @@ import java.util.*;
  */
 public final class SocketIOProtocol
 {
+    public static final String DEFAULT_NAMESPACE = "/";
+
     static final String ATTACHMENTS_DELIMITER = "-";
+    static final String NAMESPACE_PREFIX      = "/";
     static final String NAMESPACE_DELIMITER   = ",";
+
+    public static SocketIOPacket createErrorPacket(final Object args)
+    {
+        return new SocketIOPacket(SocketIOPacket.Type.ERROR)
+        {
+            @Override
+            protected String getData()
+            {
+                return JSON.toString(args);
+            }
+        };
+    }
 
     private static class EmptyPacket extends SocketIOPacket
     {
@@ -132,10 +147,10 @@ public final class SocketIOProtocol
             throw new SocketIOProtocolException("Invalid JSON in the EVENT or ACK packet: " + data);
 
         Object[] args = (Object[]) json;
-        if(type == SocketIOPacket.Type.ACK)
+        if (type == SocketIOPacket.Type.ACK)
             return new PlainACKPacket(id.intValue(), args);
 
-        if(type == SocketIOPacket.Type.BINARY_ACK)
+        if (type == SocketIOPacket.Type.BINARY_ACK)
             return new BinaryACKPacket(id.intValue(), args, attachments);
 
         // the first argument for EVENT is always event's name
@@ -205,8 +220,7 @@ public final class SocketIOProtocol
 
             return map;
         }
-        else
-        if (json instanceof InputStream)
+        else if (json instanceof InputStream)
         {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
             map.put("_placeholder", true);
@@ -224,16 +238,17 @@ public final class SocketIOProtocol
      * replaces it with {@code attachment}
      * This method to be used when all expected binary objects are received
      *
-     * @param packet      packet to add a binary object
-     * @param attachment  binary object to insert
+     * @param packet     packet to add a binary object
+     * @param attachment binary object to insert
      */
     public static void insertBinaryObject(BinaryPacket packet, InputStream attachment)
-        throws IllegalArgumentException
+            throws IllegalArgumentException
     {
-        packet.setArgs((Object[])insertBinaryObject(packet.getArgs(), attachment));
+        packet.setArgs((Object[]) insertBinaryObject(packet.getArgs(), attachment));
     }
 
     //TODO: report if no placeholder was found
+
     /**
      * This method makes copy of {@code json} replacing first found placeholder entry with {@code attachment}
      * Ignoring "num" parameter for now.
@@ -257,9 +272,9 @@ public final class SocketIOProtocol
         }
         else if (json instanceof Map)
         {
-            Map<Object, Object> map = (Map)json;
+            Map<Object, Object> map = (Map) json;
 
-            if(isPlaceholder(map))
+            if (isPlaceholder(map))
                 return attachment;
 
             Map<Object, Object> copy = new LinkedHashMap<>();

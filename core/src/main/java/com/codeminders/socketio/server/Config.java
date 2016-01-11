@@ -24,14 +24,12 @@
  */
 package com.codeminders.socketio.server;
 
-import java.util.Collection;
-
 /**
  * @author Mathieu Carbou
  */
 public interface Config
 {
-
+    String MAX_TEXT_MESSAGE_SIZE = "maxTextMessageSize";
     String PARAM_PING_INTERVAL = "pingInterval";
     String PARAM_TIMEOUT = "timeout";
 

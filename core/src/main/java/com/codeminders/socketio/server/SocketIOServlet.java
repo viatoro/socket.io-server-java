@@ -24,6 +24,7 @@
  */
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.protocol.SocketIOProtocol;
 import com.codeminders.socketio.util.IO;
 
 import javax.servlet.ServletException;
@@ -38,15 +39,20 @@ import java.util.logging.Logger;
 
 public abstract class SocketIOServlet extends HttpServlet
 {
-
-    private static final Logger LOGGER           = Logger.getLogger(SocketIOServlet.class.getName());
-    private static final long   serialVersionUID = 2L;
-
-    private final SocketIOSessionManager sessionManager = new SocketIOSessionManager();
+    private static final Logger LOGGER = Logger.getLogger(SocketIOServlet.class.getName());
 
     private TransportProvider transportProvider;
+    private final SocketIOManager socketIOManager = new SocketIOManager();
 
-    public final static String MAX_TEXT_MESSAGE_SIZE = "maxTextMessageSize";
+
+    public Namespace of(String id)
+    {
+        Namespace ns = socketIOManager.getNamespace(id);
+        if (ns == null)
+            ns = socketIOManager.createNamespace(id);
+
+        return ns;
+    }
 
     public void setTransportProvider(TransportProvider transportProvider)
     {
@@ -58,14 +64,18 @@ public abstract class SocketIOServlet extends HttpServlet
     public void init() throws ServletException
     {
         if (LOGGER.isLoggable(Level.INFO))
+        {
             if (transportProvider != null)
             {
                 LOGGER.log(Level.INFO, "Transports: " + transportProvider.getTransports());
-                if(transportProvider.getTransports().size() == 0)
+                if (transportProvider.getTransports().size() == 0)
                     LOGGER.log(Level.INFO, "No transport defined. TransportProvider.init() should be called.");
             }
             else
                 LOGGER.log(Level.INFO, "No Transport Provider is set");
+        }
+
+        of(SocketIOProtocol.DEFAULT_NAMESPACE);
     }
 
     @Override
@@ -89,16 +99,9 @@ public abstract class SocketIOServlet extends HttpServlet
         serve(req, resp);
     }
 
-    /**
-     * Returns an instance of Inbound or null if the connection is to be denied.
-     * The value of cookies and protocols may be null.
-     */
-    protected abstract Inbound doSocketIOConnect(HttpServletRequest request);
-
     private void serve(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
     {
-        //TODO: Need to remove this check. Transport is not defined in path anymore
         String path = request.getPathInfo();
 
         if (path.startsWith("/")) path = path.substring(1);
@@ -124,14 +127,7 @@ public abstract class SocketIOServlet extends HttpServlet
                             request.getRemoteHost() + ":" + request.getRemotePort() +
                             " with transport: " + transport.getType());
 
-                transport.handle(request, response, new Transport.InboundFactory()
-                {
-                    @Override
-                    public Inbound getInbound(HttpServletRequest request)
-                    {
-                        return SocketIOServlet.this.doSocketIOConnect(request);
-                    }
-                }, sessionManager);
+                transport.handle(request, response, socketIOManager);
             }
             catch (UnsupportedTransportException | SocketIOProtocolException e)
             {
@@ -142,5 +138,4 @@ public abstract class SocketIOServlet extends HttpServlet
             }
         }
     }
-
 }
