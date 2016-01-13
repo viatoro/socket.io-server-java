@@ -15,27 +15,27 @@ public class BinaryACKPacket extends ACKPacket implements BinaryPacket
     private List<InputStream> attachments;
     private int               number_attachments_expected;
 
-    public BinaryACKPacket(int id, Object[] args)
+    public BinaryACKPacket(int id, String ns, Object[] args)
     {
-        super(Type.BINARY_ACK, id, null);
+        super(Type.BINARY_ACK, id, ns, null);
 
         attachments = new LinkedList<>();
 
         setArgs((Object[])SocketIOProtocol.extractBinaryObjects(args, attachments));
     }
 
-    public BinaryACKPacket(int id, Object[] args, int number_attachments_expected)
+    public BinaryACKPacket(int id, String ns, Object[] args, int number_attachments_expected)
     {
-        super(Type.BINARY_ACK, id, args);
+        super(Type.BINARY_ACK, id, ns, args);
 
         this.number_attachments_expected = number_attachments_expected;
         this.attachments = new ArrayList<>(number_attachments_expected);
     }
 
     @Override
-    protected String getPrefix()
+    protected String encodeAttachments()
     {
-        return String.valueOf(attachments.size()) + SocketIOProtocol.ATTACHMENTS_DELIMITER;
+        return SocketIOProtocol.encodeAttachments(attachments.size());
     }
 
     public Collection<InputStream> getAttachments()

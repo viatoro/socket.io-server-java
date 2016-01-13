@@ -10,21 +10,14 @@ import java.util.Arrays;
  */
 public abstract class EventPacket extends SocketIOPacket
 {
-    private int      id;
     private String   name;
     private Object[] args;
 
-    protected EventPacket(Type type, int id, String name, Object[] args)
+    protected EventPacket(Type type, int id, String ns, String name, Object[] args)
     {
-        super(type);
-        this.id = id;
+        super(type, id, ns);
         this.name = name;
         this.args = args;
-    }
-
-    public int getId()
-    {
-        return id;
     }
 
     public String getName()
@@ -43,21 +36,14 @@ public abstract class EventPacket extends SocketIOPacket
     }
 
     @Override
-    protected String getData()
+    protected String encodeArgs()
     {
-        String str = getPrefix();
-
-        // packet id to request ACK
-        if(id >= 0)
-            str += String.valueOf(id);
-
         // adding name of the event as a first argument
         ArrayList<Object> data = new ArrayList<>();
         data.add(getName());
         data.addAll(Arrays.asList(getArgs()));
 
-        return str + JSON.toString(data.toArray());
+        return JSON.toString(data.toArray());
     }
-
-    protected abstract String getPrefix();
 }
+

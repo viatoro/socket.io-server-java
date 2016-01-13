@@ -23,10 +23,10 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
     }
 
     @Override
-    public void disconnect()
+    public void disconnect(boolean closeConnection)
     {
         for(Socket s : sockets)
-            s.disconnect();
+            s.disconnect(closeConnection);
     }
 
     public String getId()
@@ -67,7 +67,7 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
 
     public Socket createSocket(Session session)
     {
-        Socket socket = new Socket(session, this);
+        Socket socket = new Socket(session, this.getId());
         socket.on(this);
         sockets.add(socket);
 

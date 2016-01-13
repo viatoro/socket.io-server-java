@@ -46,6 +46,7 @@ public abstract class SocketIOPacket
         }
     }
 
+    private int    id;
     private Type   type;
     private String namespace;
 
@@ -54,11 +55,36 @@ public abstract class SocketIOPacket
         return type;
     }
 
-    protected abstract String getData();
-
     public String getNamespace()
     {
         return namespace;
+    }
+
+    public int getId()
+    {
+        return id;
+    }
+
+    protected abstract String encodeArgs();
+
+    protected String encodeAttachments()
+    {
+        return "";
+    }
+
+    private String encodePacketId()
+    {
+        if(id < 0)
+            return "";
+
+        return String.valueOf(id);
+    }
+
+    private String encodeNamespace(boolean addDelimiter)
+    {
+        if(namespace.equals(SocketIOProtocol.DEFAULT_NAMESPACE))
+            return "";
+        return namespace + (addDelimiter ? SocketIOProtocol.NAMESPACE_DELIMITER : "");
     }
 
     protected SocketIOPacket(Type type)
@@ -68,12 +94,27 @@ public abstract class SocketIOPacket
 
     protected SocketIOPacket(Type type, String namespace)
     {
+        this(type, -1, namespace);
+    }
+
+    protected SocketIOPacket(Type type, int id, String namespace)
+    {
         this.type = type;
         this.namespace = namespace;
+        this.id = id;
     }
 
     public String encode()
     {
-        return String.valueOf(getType().value()) + getData();
+        String str = String.valueOf(type.value());
+
+        String tail = encodePacketId() + encodeArgs();
+
+        str += encodeAttachments();
+        str += encodeNamespace(!tail.isEmpty());
+        str += tail;
+
+        return str;
     }
+
 }

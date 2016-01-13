@@ -1,12 +1,8 @@
-* namespaces
 * rooms
-* implement ERROR packet in SIO
 * upgrade transport
 * CORS support for XHR Polling
-* payload (multi-packets messages)
-* Subscription for individual events. The same as io.on(name, function () {})
+* multi-packets messages
 * use Guava instead of util.IO
 * use com.fasterxml.jackson instead of util.JSON
-* Implement broadcasting (namespace.emit())
 * handle b64 flag
 * make SocketIOSession thread-safe

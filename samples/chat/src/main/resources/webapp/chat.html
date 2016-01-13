@@ -87,7 +87,7 @@
       }
 
 
-      var socket = io({
+      var socket = io('http://localhost:8080/chat', {
        transports: ['websocket']
        });
       

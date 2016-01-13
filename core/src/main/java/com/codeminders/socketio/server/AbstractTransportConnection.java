@@ -97,11 +97,11 @@ public abstract class AbstractTransportConnection implements TransportConnection
     }
 
     @Override
-    public void disconnect()
+    public void disconnect(String namespace, boolean closeConnection)
     {
         try
         {
-            send(SocketIOProtocol.createDisconnectPacket());
+            send(SocketIOProtocol.createDisconnectPacket(namespace));
             getSession().setDisconnectReason(DisconnectReason.DISCONNECT);
         }
         catch (SocketIOException e)
@@ -109,7 +109,8 @@ public abstract class AbstractTransportConnection implements TransportConnection
             getSession().setDisconnectReason(DisconnectReason.CLOSE_FAILED);
         }
 
-        abort();
+        if(closeConnection)
+            abort();
     }
 
     @Override
@@ -119,7 +120,7 @@ public abstract class AbstractTransportConnection implements TransportConnection
     }
 
     @Override
-    public void emit(String name, Object... args)
+    public void emit(String namespace, String name, Object... args)
             throws SocketIOException
     {
         if (getSession().getConnectionState() != ConnectionState.CONNECTED)
@@ -136,7 +137,7 @@ public abstract class AbstractTransportConnection implements TransportConnection
         if(ack_listener != null)
             packet_id = getSession().getNewPacketId();
 
-        SocketIOPacket packet = SocketIOProtocol.createEventPacket(packet_id, name, args);
+        SocketIOPacket packet = SocketIOProtocol.createEventPacket(packet_id, namespace, name, args);
 
         if(packet_id >= 0)
             getSession().subscribeACK(packet_id, ack_listener);

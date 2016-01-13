@@ -23,9 +23,9 @@ public class BinaryEventPacket extends EventPacket implements BinaryPacket
      *             JSON with {@link com.codeminders.socketio.util.JSON }.
      * @param number_attachments_expected number of binary attachment expected to be attached to this packed
      */
-    BinaryEventPacket(int id, String name, Object[] args, int number_attachments_expected)
+    BinaryEventPacket(int id, String ns, String name, Object[] args, int number_attachments_expected)
     {
-        super(Type.BINARY_EVENT, id, name, args);
+        super(Type.BINARY_EVENT, id, ns, name, args);
 
         this.number_attachments_expected = number_attachments_expected;
         this.attachments = new ArrayList<>(number_attachments_expected);
@@ -39,9 +39,9 @@ public class BinaryEventPacket extends EventPacket implements BinaryPacket
      *             JSON with {@link com.codeminders.socketio.util.JSON }.
      *             {@link java.io.InputStream} to be used for binary objects
      */
-    public BinaryEventPacket(int id, String name, Object[] args)
+    public BinaryEventPacket(int id, String ns, String name, Object[] args)
     {
-        super(Type.BINARY_EVENT, id, name, null);
+        super(Type.BINARY_EVENT, id, ns, name, null);
 
         attachments = new LinkedList<>();
 
@@ -56,9 +56,9 @@ public class BinaryEventPacket extends EventPacket implements BinaryPacket
     }
 
     @Override
-    protected String getPrefix()
+    protected String encodeAttachments()
     {
-        return String.valueOf(attachments.size()) + SocketIOProtocol.ATTACHMENTS_DELIMITER;
+        return SocketIOProtocol.encodeAttachments(attachments.size());
     }
 
     /**

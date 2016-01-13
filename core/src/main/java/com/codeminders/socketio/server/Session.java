@@ -41,7 +41,7 @@ import java.util.logging.Logger;
 
 /**
  * SocketIO session.
- *
+ * <p/>
  * This implementation is not thread-safe.
  *
  * @author Alexander Sova (bird@codeminders.com)
@@ -52,25 +52,21 @@ public class Session implements DisconnectListener
 
     private final SocketIOManager socketIOManager;
     private final String          sessionId;
-    private final Map<String, Object>    attributes = new ConcurrentHashMap<>();
-
-
-//    private Inbound inbound;
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
     //TODO: should we allow multiple sockets for the same namespace in a session?
     private Map<String, Socket> sockets = new LinkedHashMap<>(); // namespace, socket
 
     private TransportConnection connection;
-    private ConnectionState  state = ConnectionState.CONNECTING;
+    private ConnectionState  state            = ConnectionState.CONNECTING;
     private DisconnectReason disconnectReason = DisconnectReason.UNKNOWN;
-    private String           disconnectMessage;
+    private String disconnectMessage;
 
-    private long        timeout;
-    private Future<?>   timeoutTask;
-    private boolean     timedOut;
+    private long      timeout;
+    private Future<?> timeoutTask;
+    private boolean   timedOut;
 
-    private BinaryPacket              binaryPacket;
-
+    private BinaryPacket binaryPacket;
     private int                       packet_id     = 0; // packet id. used for requesting ACK
     private Map<Integer, ACKListener> ack_listeners = new LinkedHashMap<>(); // packetid, listener
 
@@ -79,13 +75,13 @@ public class Session implements DisconnectListener
         assert (socketIOManager != null);
 
         this.socketIOManager = socketIOManager;
-        this.sessionId        = sessionId;
+        this.sessionId = sessionId;
     }
 
     public Socket createSocket(String ns)
     {
         Namespace namespace = socketIOManager.getNamespace(ns);
-        if(namespace == null)
+        if (namespace == null)
             throw new IllegalArgumentException("Namespace does not exist");
 
         Socket socket = namespace.createSocket(this);
@@ -161,24 +157,23 @@ public class Session implements DisconnectListener
     }
 
     public void onBinary(InputStream is)
-        throws SocketIOProtocolException
+            throws SocketIOProtocolException
     {
         EngineIOPacket engineIOPacket = EngineIOProtocol.decode(is);
 
-        if(engineIOPacket.getType() != EngineIOPacket.Type.MESSAGE)
+        if (engineIOPacket.getType() != EngineIOPacket.Type.MESSAGE)
             throw new SocketIOProtocolException("Unexpected binary packet type. Type: " + engineIOPacket.getType());
 
-        if(binaryPacket == null)
+        if (binaryPacket == null)
             throw new SocketIOProtocolException("Unexpected binary object");
 
         SocketIOProtocol.insertBinaryObject(binaryPacket, engineIOPacket.getBinaryData());
         binaryPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
-        if(binaryPacket.isComplete())
+        if (binaryPacket.isComplete())
         {
-            if(binaryPacket.getType() == SocketIOPacket.Type.BINARY_EVENT)
+            if (binaryPacket.getType() == SocketIOPacket.Type.BINARY_EVENT)
                 onEvent((EventPacket) binaryPacket);
-            else
-            if(binaryPacket.getType() == SocketIOPacket.Type.BINARY_ACK)
+            else if (binaryPacket.getType() == SocketIOPacket.Type.BINARY_ACK)
                 onACK((ACKPacket) binaryPacket);
 
             binaryPacket = null;
@@ -200,10 +195,10 @@ public class Session implements DisconnectListener
         }
         catch (ConnectionException e)
         {
-            if(LOGGER.isLoggable(Level.FINE))
+            if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "Connection failed", e);
 
-            connection.send(SocketIOProtocol.createErrorPacket(e.getArgs()));
+            connection.send(SocketIOProtocol.createErrorPacket(SocketIOProtocol.DEFAULT_NAMESPACE, e.getArgs()));
             closeConnection(DisconnectReason.CONNECT_FAILED);
         }
     }
@@ -227,11 +222,10 @@ public class Session implements DisconnectListener
 
     /**
      * callback to be called by transport connection socket is closed.
-     *
      */
     public void onShutdown()
     {
-        if(state == ConnectionState.CLOSING)
+        if (state == ConnectionState.CLOSING)
             onDisconnect(disconnectReason);
         else
             onDisconnect(DisconnectReason.ERROR);
@@ -315,7 +309,32 @@ public class Session implements DisconnectListener
         switch (packet.getType())
         {
             case CONNECT:
-                //TODO: implement. connect to namespace
+                try
+                {
+                    if (socketIOManager.getNamespace(packet.getNamespace()) == null)
+                    {
+                        getConnection().send(SocketIOProtocol.createErrorPacket(packet.getNamespace(), "Invalid namespace"));
+                        return;
+                    }
+                    Socket socket = createSocket(packet.getNamespace());
+                    getConnection().send(SocketIOProtocol.createConnectPacket(packet.getNamespace()));
+                    try
+                    {
+                        socketIOManager.getNamespace(socket.getNamespace()).onConnect(socket);
+                    }
+                    catch (ConnectionException e)
+                    {
+                        getConnection().send(SocketIOProtocol.createErrorPacket(socket.getNamespace(), e.getArgs()));
+                        socket.disconnect(false);
+                    }
+                }
+                catch (SocketIOException e)
+                {
+                    if (LOGGER.isLoggable(Level.FINE))
+                        LOGGER.log(Level.FINE, "Cannot send packet to the client", e);
+
+                    closeConnection(DisconnectReason.CONNECT_FAILED);
+                }
                 return;
 
             case DISCONNECT:
@@ -323,16 +342,16 @@ public class Session implements DisconnectListener
                 return;
 
             case EVENT:
-                onEvent((EventPacket)packet);
+                onEvent((EventPacket) packet);
                 return;
 
             case ACK:
-                onACK((ACKPacket)packet);
+                onACK((ACKPacket) packet);
                 return;
 
             case BINARY_ACK:
             case BINARY_EVENT:
-                binaryPacket = (BinaryPacket)packet;
+                binaryPacket = (BinaryPacket) packet;
                 return;
 
             default:
@@ -357,55 +376,56 @@ public class Session implements DisconnectListener
 
     private void onEvent(EventPacket packet)
     {
-        if(state != ConnectionState.CONNECTED)
+        if (state != ConnectionState.CONNECTED)
             return;
 
         try
         {
             Namespace ns = socketIOManager.getNamespace(packet.getNamespace());
-            if(ns == null)
+            if (ns == null)
             {
-                connection.send(SocketIOProtocol.createErrorPacket("Namespace does not exist"));
+                getConnection().send(SocketIOProtocol.createErrorPacket(packet.getNamespace(), "Invalid namespace"));
                 return;
             }
 
             Socket socket = sockets.get(ns.getId());
-            if(socket == null)
+            if (socket == null)
             {
-                connection.send(SocketIOProtocol.createErrorPacket("No socket is connected to the namespace"));
+                connection.send(SocketIOProtocol.createErrorPacket(packet.getNamespace(),
+                        "No socket is connected to the namespace"));
                 return;
             }
 
             Object ack = socket.onEvent(packet.getName(), packet.getArgs());
 
-            if(packet.getId() != -1 && ack != null)
+            if (packet.getId() != -1 && ack != null)
             {
                 Object[] args;
-                if(ack instanceof Objects[])
-                    args = (Object[])ack;
+                if (ack instanceof Objects[])
+                    args = (Object[]) ack;
                 else
-                    args = new Object[] { ack };
+                    args = new Object[]{ack};
 
-                connection.send(SocketIOProtocol.createACKPacket(packet.getId(), args));
+                connection.send(SocketIOProtocol.createACKPacket(packet.getId(), packet.getNamespace(), args));
             }
         }
         catch (Throwable e)
         {
             if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onEvent()", e);
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by one of the event listeners", e);
         }
     }
 
     private void onACK(ACKPacket packet)
     {
-        if(state != ConnectionState.CONNECTED)
+        if (state != ConnectionState.CONNECTED)
             return;
 
         try
         {
             ACKListener listener = ack_listeners.get(packet.getId());
             unsubscribeACK(packet.getId());
-            if(listener != null)
+            if (listener != null)
                 listener.onACK(packet.getArgs());
         }
         catch (Throwable e)
@@ -444,6 +464,6 @@ public class Session implements DisconnectListener
     @Override
     public void onDisconnect(Socket socket, DisconnectReason reason, String errorMessage)
     {
-        sockets.remove(socket.getNamespace().getId());
+        sockets.remove(socket.getNamespace());
     }
 }

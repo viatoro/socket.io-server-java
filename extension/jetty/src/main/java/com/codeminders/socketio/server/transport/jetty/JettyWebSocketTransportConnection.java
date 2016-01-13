@@ -82,7 +82,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
                     getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
                     getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
 
-            send(SocketIOProtocol.createConnectPacket());
+            send(SocketIOProtocol.createConnectPacket(SocketIOProtocol.DEFAULT_NAMESPACE));
 
             getSession().onConnect(this);
         }

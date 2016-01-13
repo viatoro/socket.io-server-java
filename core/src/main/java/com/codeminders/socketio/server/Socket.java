@@ -14,15 +14,15 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
     private Map<String, EventListener> eventListeners      = new LinkedHashMap<>();
 
     private Session   session; // Socket is Session + Namespace
-    private Namespace namespace; //TODO: do we need Namespace object here or id is enough? or do we need it at all?
+    private String namespace;
 
-    public Socket(Session session, Namespace namespace)
+    public Socket(Session session, String namespace)
     {
         this.session   = session;
         this.namespace = namespace;
     }
 
-    public Namespace getNamespace()
+    public String getNamespace()
     {
         return namespace;
     }
@@ -39,19 +39,19 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
         eventListeners.put(eventName, listener);
     }
 
+    /**
+     * Drops whole session by disconnecting underlying transport
+     */
     @Override
-    public void disconnect()
+    public void disconnect(boolean closeConnection)
     {
-        //TODO: implement
-        //TODO: drop whole session or only disconnect from the namespace?
-        //TODO: for now will be dropping the whole session and underlying connection
+        getSession().getConnection().disconnect(getNamespace(), closeConnection);
     }
 
     @Override
     public void emit(String name, Object... args) throws SocketIOException
     {
-        //TODO: pass namespace
-        getSession().getConnection().emit(name, args);
+        getSession().getConnection().emit(getNamespace(), name, args);
     }
 
     /**

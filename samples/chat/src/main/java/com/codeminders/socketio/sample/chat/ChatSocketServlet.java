@@ -59,8 +59,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
         JdkOverLog4j.install();
         super.init(config);
 
-        //of("/chat").
-        of("/").on(new ConnectionListener()
+        of("/chat").on(new ConnectionListener()
         {
             @Override
             public void onConnect(final Socket socket)
@@ -72,7 +71,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 catch (SocketIOException e)
                 {
                     e.printStackTrace();
-                    socket.disconnect();
+                    socket.disconnect(true);
                 }
 
                 socket.on(new DisconnectListener() {
@@ -100,7 +99,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                     @Override
                     public Object onEvent(String name, Object[] args)
                     {
-                        socket.disconnect();
+                        socket.disconnect(false);
                         return null;
                     }
                 });
@@ -152,7 +151,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                         }
                         catch (SocketIOException e)
                         {
-                            socket.disconnect();
+                            socket.disconnect(true);
                         }
 
                         return null;

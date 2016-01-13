@@ -11,20 +11,18 @@ import java.util.Arrays;
  */
 public abstract class ACKPacket extends SocketIOPacket
 {
-    private int id;
     private Object[] args;
 
-    public ACKPacket(Type type, int id, Object[] args)
+    public ACKPacket(Type type, int id, String ns, Object[] args)
     {
-        super(type);
-        this.id = id;
+        super(type, id, ns);
         this.args = args;
     }
 
     @Override
-    protected String getData()
+    protected String encodeArgs()
     {
-        return getPrefix() + String.valueOf(id) + JSON.toString(args);
+        return JSON.toString(args);
     }
 
     public Object[] getArgs()
@@ -32,15 +30,9 @@ public abstract class ACKPacket extends SocketIOPacket
         return args;
     }
 
-    public int getId()
-    {
-        return id;
-    }
-
     public void setArgs(Object[] args)
     {
         this.args = args;
     }
 
-    protected abstract String getPrefix();
 }

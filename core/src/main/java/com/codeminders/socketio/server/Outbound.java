@@ -29,12 +29,9 @@ import com.codeminders.socketio.common.SocketIOException;
 
 public interface Outbound
 {
-    /**
-     * Terminate the connection. This method may return before the connection disconnect
-     * completes.
-     * This method will try to notify the remote end.
-     */
-    void disconnect();
+
+    void disconnect(boolean closeConnection);
+
 
     /**
      * Emits an event to the socket identified by the string name.
