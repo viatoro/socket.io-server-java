@@ -29,10 +29,6 @@ import com.codeminders.socketio.common.SocketIOException;
 
 public interface Outbound
 {
-
-    void disconnect(boolean closeConnection);
-
-
     /**
      * Emits an event to the socket identified by the string name.
      *

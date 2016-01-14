@@ -35,7 +35,12 @@ import com.codeminders.socketio.common.SocketIOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import java.io.*;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,6 +72,8 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 try
                 {
                     socket.emit(WELCOME, "Welcome to Socket.IO Chat!");
+
+                    socket.join("room");
                 }
                 catch (SocketIOException e)
                 {
@@ -159,6 +166,23 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 });
             }
         });
+
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    of("/chat").in("room").emit("time", new Date().toString());
+                }
+                catch (SocketIOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }, 0, 20, TimeUnit.SECONDS);
+
 
 //        of("/news").on(new ConnectionListener()
 //        {

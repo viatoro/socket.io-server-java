@@ -3,9 +3,7 @@ package com.codeminders.socketio.server;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
@@ -16,17 +14,11 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
 
     private List<Socket>             sockets             = Collections.synchronizedList(new LinkedList<Socket>());
     private List<ConnectionListener> connectionListeners = Collections.synchronizedList(new LinkedList<ConnectionListener>());
+    private Map<String, Room>        rooms               = Collections.synchronizedMap(new LinkedHashMap<String, Room>());
 
     Namespace(String id)
     {
         this.id = id;
-    }
-
-    @Override
-    public void disconnect(boolean closeConnection)
-    {
-        for(Socket s : sockets)
-            s.disconnect(closeConnection);
     }
 
     public String getId()
@@ -67,7 +59,7 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
 
     public Socket createSocket(Session session)
     {
-        Socket socket = new Socket(session, this.getId());
+        Socket socket = new Socket(session, this);
         socket.on(this);
         sockets.add(socket);
 
@@ -77,6 +69,27 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
     @Override
     public void onDisconnect(Socket socket, DisconnectReason reason, String errorMessage)
     {
+        leaveAll(socket);
         sockets.remove(socket);
+    }
+
+    public Room in(String roomId)
+    {
+        Room room = rooms.get(roomId);
+        if(room == null)
+        {
+            room = new Room(roomId);
+            rooms.put(roomId, room);
+        }
+        return room;
+    }
+
+    void leaveAll(Socket socket)
+    {
+        for (Room room : rooms.values())
+        {
+            if(room.contains(socket))
+                room.leave(socket);
+        }
     }
 }

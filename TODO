@@ -1,8 +1,9 @@
-* rooms
+* broadcast (sending a message to everyone else except for the socket that starts it.)
+* XHR Polling transport
 * upgrade transport
 * CORS support for XHR Polling
-* multi-packets messages
+* multi-packets messages (?)
 * use Guava instead of util.IO
 * use com.fasterxml.jackson instead of util.JSON
 * handle b64 flag
-* make SocketIOSession thread-safe
+* make Session thread-safe (There are other classes that is not thread-safe)

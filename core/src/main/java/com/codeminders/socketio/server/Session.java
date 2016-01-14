@@ -248,8 +248,13 @@ public class Session implements DisconnectListener
 
         clearTimeout();
 
-        for (Socket socket : sockets.values())
+        // taking copy of sockets because
+        // session will be modifying the collection while iterating
+        for(Object o : sockets.values().toArray())
+        {
+            Socket socket = (Socket)o;
             socket.onDisconnect(socket, reason, disconnectMessage);
+        }
 
         socketIOManager.deleteSession(sessionId);
     }

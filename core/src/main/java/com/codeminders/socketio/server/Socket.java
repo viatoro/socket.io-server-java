@@ -13,10 +13,10 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
     private List<DisconnectListener>   disconnectListeners = new LinkedList<>();
     private Map<String, EventListener> eventListeners      = new LinkedHashMap<>();
 
-    private Session   session; // Socket is Session + Namespace
-    private String namespace;
+    private Session session; // Socket is Session + Namespace
+    private Namespace namespace;
 
-    public Socket(Session session, String namespace)
+    public Socket(Session session, Namespace namespace)
     {
         this.session   = session;
         this.namespace = namespace;
@@ -24,11 +24,11 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
 
     public String getNamespace()
     {
-        return namespace;
+        return namespace.getId();
     }
 
     /**
-     * Set listener for an event. Only one listener per event is allowed.
+     * Set listener for a named event. Only one listener per event is allowed.
      *
      * @param eventName event name
      * @param listener event listener
@@ -40,9 +40,10 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
     }
 
     /**
-     * Drops whole session by disconnecting underlying transport
+     * Closes socket.
+     *
+     * @param closeConnection closes underlying transport connection if true
      */
-    @Override
     public void disconnect(boolean closeConnection)
     {
         getSession().getConnection().disconnect(getNamespace(), closeConnection);
@@ -55,7 +56,7 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
     }
 
     /**
-     * Add disconnect listener
+     * Adds disconnect listener
      *
      * @param listener disconnect listener
      */
@@ -85,4 +86,20 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
 
         return listener.onEvent(name, args);
     }
+
+    public void join(String room)
+    {
+        namespace.in(room).join(this);
+    }
+
+    public void leave(String room)
+    {
+        namespace.in(room).leave(this);
+    }
+
+    public void leaveAll()
+    {
+        namespace.leaveAll(this);
+    }
+
 }
