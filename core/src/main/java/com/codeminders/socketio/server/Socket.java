@@ -102,4 +102,14 @@ public class Socket implements Outbound, Inbound, DisconnectListener, EventListe
         namespace.leaveAll(this);
     }
 
+    public void broadcast(String room, String name, Object... args)  throws SocketIOException
+    {
+        namespace.in(room).broadcast(this, name, args);
+    }
+
+    //TODO: generate its own unique id?
+    public String getId()
+    {
+        return getSession().getSessionId() + getNamespace();
+    }
 }

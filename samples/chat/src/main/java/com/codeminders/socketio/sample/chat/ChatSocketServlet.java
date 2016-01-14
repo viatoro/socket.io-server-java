@@ -97,6 +97,15 @@ public class ChatSocketServlet extends JettySocketIOServlet
                     {
                         LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
 
+                        try
+                        {
+                            socket.broadcast("room", CHAT_MESSAGE, socket.getId(), args[0]);
+                        }
+                        catch (SocketIOException e)
+                        {
+                            e.printStackTrace();
+                        }
+
                         return "OK"; //this object will be sent back to the client in ACK packet
                     }
                 });

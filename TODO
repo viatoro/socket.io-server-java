@@ -1,4 +1,3 @@
-* broadcast (sending a message to everyone else except for the socket that starts it.)
 * XHR Polling transport
 * upgrade transport
 * CORS support for XHR Polling

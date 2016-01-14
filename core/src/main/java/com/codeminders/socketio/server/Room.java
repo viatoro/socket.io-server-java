@@ -1,6 +1,5 @@
 package com.codeminders.socketio.server;
 
-import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
 import java.util.Collections;
@@ -55,5 +54,15 @@ public class Room implements Outbound
     public boolean contains(Socket socket)
     {
         return sockets.contains(socket);
+    }
+
+    public void broadcast(Socket sender, String name, Object... args)
+            throws SocketIOException
+    {
+        for (Socket socket: sockets)
+        {
+            if (socket != sender)
+                socket.emit(name, args);
+        }
     }
 }
