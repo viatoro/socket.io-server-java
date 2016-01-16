@@ -31,8 +31,9 @@ public interface Outbound
      *
      * @param name event name
      * @param args list of arguments. Arguments can contain any type of field that can result of JSON decoding,
-     *             including objects and arrays of arbitrary size.
-     * @throws IllegalStateException if the socket is not CONNECTED.
+     *             including objects and arrays of arbitrary size. If last argument is {@code ACKListener}
+     *             then this listener to be called upon ACK arriving
+     * @throws IllegalStateException if the socket is not CONNECTED
      * @throws SocketIOException
      */
 
