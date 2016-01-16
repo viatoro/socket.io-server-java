@@ -5,8 +5,10 @@ import com.codeminders.socketio.util.JSON;
 
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -320,31 +322,35 @@ public final class SocketIOProtocol
     }
 
     /**
-     * Looks for the first placeholder objects in {@code json.getArgs() } {@code {"_placeholder":true,"num":1}} and
+     * Looks for the placeholder objects in {@code json.getArgs() } {@code {"_placeholder":true,"num":1}} and
      * replaces it with {@code attachment}
-     * This method to be used when all expected binary objects are received
+     * This method to be used when binary object are received from the client
      *
      * @param packet     packet to add a binary object
      * @param attachment binary object to insert
      */
     public static void insertBinaryObject(BinaryPacket packet, InputStream attachment)
-            throws IllegalArgumentException
+            throws SocketIOProtocolException
     {
-        packet.setArgs((Object[]) insertBinaryObject(packet.getArgs(), attachment));
+        boolean[] found = new boolean[1];
+
+        Object copy = insertBinaryObject(packet.getArgs(), attachment, packet.getAttachments().size(), found);
+        if(!found[0])
+            throw new SocketIOProtocolException("No placeholder found for a binary object");
+
+        packet.setArgs((Object[])copy);
     }
 
-    //TODO: report if no placeholder was found
-
     /**
-     * This method makes copy of {@code json} replacing first found placeholder entry with {@code attachment}
-     * Ignoring "num" parameter for now.
+     * This method makes a copy of {@code json} replacing placeholder entry with {@code attachment}
      *
      * @param json       JSON object
      * @param attachment InputStream object to insert
      * @return copy of JSON object
      */
     @SuppressWarnings("unchecked")
-    public static Object insertBinaryObject(Object json, InputStream attachment)
+    private static Object insertBinaryObject(Object json, InputStream attachment, int index, boolean[] found)
+        throws SocketIOProtocolException
     {
         //TODO: what about Collection? for now only array is supported
         if (json.getClass().isArray())
@@ -352,7 +358,7 @@ public final class SocketIOProtocol
             ArrayList<Object> copy = new ArrayList<>(((Object[]) json).length);
 
             for (Object o : (Object[]) json)
-                copy.add(insertBinaryObject(o, attachment));
+                copy.add(insertBinaryObject(o, attachment, index, found));
 
             return copy.toArray();
         }
@@ -360,25 +366,49 @@ public final class SocketIOProtocol
         {
             Map<Object, Object> map = (Map) json;
 
-            if (isPlaceholder(map))
+            if (isPlaceholder(map, index))
+            {
+                found[0] = true;
                 return attachment;
+            }
 
             Map<Object, Object> copy = new LinkedHashMap<>();
             Set<Map.Entry<Object, Object>> entries = map.entrySet();
 
             for (Map.Entry e : entries)
-                copy.put(e.getKey(), insertBinaryObject(e.getValue(), attachment));
+                copy.put(e.getKey(), insertBinaryObject(e.getValue(), attachment, index, found));
 
             return copy;
         }
         else
             return json;
-
     }
 
-    private static boolean isPlaceholder(Map<Object, Object> map)
+    private static boolean isPlaceholder(Map<Object, Object> map, int index)
+            throws SocketIOProtocolException
     {
-        //TODO: check map.size() == 2 && map.get("num") instanceof Integer
-        return Boolean.TRUE.equals(map.get("_placeholder"));
+        if(Boolean.TRUE.equals(map.get("_placeholder")))
+        {
+            Object o = map.get("num");
+
+            if(o == null)
+                return false;
+
+            if(o instanceof Number)
+                return index == ((Number)o).intValue();
+
+            if(o instanceof String)
+            {
+                try
+                {
+                    return index == Integer.parseInt(o.toString());
+                }
+                catch (NumberFormatException e)
+                {
+                    throw new SocketIOProtocolException("Invalid placeholder object", e);
+                }
+            }
+        }
+        return false;
     }
 }
