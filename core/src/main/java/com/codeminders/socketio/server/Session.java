@@ -23,7 +23,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
@@ -204,7 +203,7 @@ public class Session implements DisconnectListener
     }
 
     /**
-     * Optional. if transport know detailed error message it could be set before calling onShutdown()
+     * Optional. if transport knows detailed error message it could be set before calling onShutdown()
      */
     public void setDisconnectMessage(String message)
     {
@@ -436,7 +435,7 @@ public class Session implements DisconnectListener
         catch (Throwable e)
         {
             if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by Inbound.onEvent()", e);
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by ACK listener", e);
         }
     }
 
@@ -460,7 +459,6 @@ public class Session implements DisconnectListener
         ack_listeners.put(packet_id, ack_listener);
     }
 
-    //TODO: to be called when ACK is received
     public void unsubscribeACK(int packet_id)
     {
         ack_listeners.remove(packet_id);

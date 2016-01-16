@@ -21,25 +21,12 @@ public final class SocketIOProtocol
 
     public static final String DEFAULT_NAMESPACE = "/";
 
-    static final String ATTACHMENTS_DELIMITER = "-";
-    static final String NAMESPACE_PREFIX      = "/";
+    private static final String ATTACHMENTS_DELIMITER = "-";
+    private static final String NAMESPACE_PREFIX      = "/";
     static final String NAMESPACE_DELIMITER   = ",";
 
-    public static SocketIOPacket createErrorPacket(String namespace, final Object args)
+    private SocketIOProtocol()
     {
-        return new SocketIOPacket(SocketIOPacket.Type.ERROR, namespace)
-        {
-            @Override
-            protected String encodeArgs()
-            {
-                return JSON.toString(args);
-            }
-        };
-    }
-
-    public static String encodeAttachments(int size)
-    {
-        return String.valueOf(size) + ATTACHMENTS_DELIMITER;
     }
 
     private static class EmptyPacket extends SocketIOPacket
@@ -56,8 +43,20 @@ public final class SocketIOProtocol
         }
     }
 
-    private SocketIOProtocol()
+    private static class PlainACKPacket extends ACKPacket
     {
+        public PlainACKPacket(int id, String ns, Object[] args)
+        {
+            super(Type.ACK, id, ns, args);
+        }
+    }
+
+    private static class PlainEventPacket extends EventPacket
+    {
+        public PlainEventPacket(int id, String ns, String name, Object[] args)
+        {
+            super(Type.EVENT, id, ns, name, args);
+        }
     }
 
     public static SocketIOPacket decode(String data)
@@ -138,6 +137,18 @@ public final class SocketIOProtocol
 
             throw new SocketIOProtocolException("Invalid SIO packet: " + data);
         }
+    }
+
+    public static SocketIOPacket createErrorPacket(String namespace, final Object args)
+    {
+        return new SocketIOPacket(SocketIOPacket.Type.ERROR, namespace)
+        {
+            @Override
+            protected String encodeArgs()
+            {
+                return JSON.toString(args);
+            }
+        };
     }
 
     /**
@@ -229,51 +240,16 @@ public final class SocketIOProtocol
         return json;
     }
 
-    static SocketIOPacket decodeEventOrACK(SocketIOPacket.Type type, String ns, String data)
-            throws SocketIOProtocolException
+    static String encodeNamespace(String namespace, boolean addDelimiter)
     {
-        int attachments = 0;
-        ParsePosition pos = new ParsePosition(0);
-        if (type == SocketIOPacket.Type.BINARY_EVENT || type == SocketIOPacket.Type.BINARY_ACK)
-        {
-            Number n = new DecimalFormat("#").parse(data, pos);
-            if (n == null || n.intValue() == 0)
-                throw new SocketIOProtocolException("No attachments defined in BINARY packet: " + data);
+        if(namespace.equals(SocketIOProtocol.DEFAULT_NAMESPACE))
+            return "";
+        return namespace + (addDelimiter ? SocketIOProtocol.NAMESPACE_DELIMITER : "");
+    }
 
-            attachments = n.intValue();
-
-            pos.setIndex(pos.getIndex() + 1); //skipping '-' delimiter
-        }
-
-        Number id = new DecimalFormat("#").parse(data, pos);
-        if (id == null)
-            id = -1;
-        data = data.substring(pos.getIndex());
-
-        Object json = JSON.parse(data);
-
-        // EVENT or ACK arguments are always passed as array
-        if (!(json instanceof Object[]) || ((Object[]) json).length == 0)
-            throw new SocketIOProtocolException("Invalid JSON in the EVENT or ACK packet: " + data);
-
-        Object[] args = (Object[]) json;
-        if (type == SocketIOPacket.Type.ACK)
-            return new PlainACKPacket(id.intValue(), ns, args);
-
-        if (type == SocketIOPacket.Type.BINARY_ACK)
-            return new BinaryACKPacket(id.intValue(), ns, args, attachments);
-
-        // the first argument for EVENT is always event's name
-        if (!(args[0] instanceof String))
-            throw new SocketIOProtocolException("Invalid JSON in the EVENT packet. First argument must be string: " + data);
-
-        String name = args[0].toString();
-        args = Arrays.copyOfRange(args, 1, args.length);
-
-        if (type == SocketIOPacket.Type.BINARY_EVENT)
-            return new BinaryEventPacket(id.intValue(), ns, name, args, attachments);
-        else
-            return new PlainEventPacket(id.intValue(), ns, name, args);
+    static String encodeAttachments(int size)
+    {
+        return String.valueOf(size) + ATTACHMENTS_DELIMITER;
     }
 
     private static boolean hasBinary(Object args)

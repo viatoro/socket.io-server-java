@@ -43,7 +43,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
     @Override
     public final void handle(HttpServletRequest request,
                              HttpServletResponse response,
-                             SocketIOManager sessionFactory)
+                             SocketIOManager socketIOManager)
             throws IOException
     {
         if (LOGGER.isLoggable(Level.FINE))
@@ -52,7 +52,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
         Session session = null;
         String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
         if (sessionId != null && sessionId.length() > 0)
-            session = sessionFactory.getSession(sessionId);
+            session = socketIOManager.getSession(sessionId);
 
         if (session != null)
         {
@@ -77,7 +77,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
 
             try
             {
-                session = sessionFactory.createSession();
+                session = socketIOManager.createSession();
                 //TODO: weird sequence. need to refactor
                 createConnection(session).connect(request, response);
                 onConnect(session, request, response);

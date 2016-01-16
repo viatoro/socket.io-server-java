@@ -1,20 +1,17 @@
 /**
  * The MIT License
- * Copyright (c) 2010 Tad Glines
  * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
- *
- * Contributors: Ovea.com, Mycila.com
- *
+ * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p/>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,23 +32,21 @@ import com.codeminders.socketio.common.SocketIOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import java.io.*;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ChatSocketServlet extends JettySocketIOServlet
 {
-    private static final String ANNOUNCEMENT          = "announcement";       // test message
-    private static final String CHAT_MESSAGE          = "chat message";       // test message
-    private static final String WELCOME               = "welcome";
-    private static final String FORCE_DISCONNECT      = "force disconnect";   // request server to disconnect
-    private static final String SERVER_BINARY         = "server binary";      // request server to send a binary
-    private static final String CLIENT_BINARY         = "client binary";      // client sends binary
+    private static final String ANNOUNCEMENT     = "announcement";       // server to all connected clients
+    private static final String CHAT_MESSAGE     = "chat message";       // broadcast to room
+    private static final String WELCOME          = "welcome";            // single event sent by server to specific client
+    private static final String FORCE_DISCONNECT = "force disconnect";   // client requests server to disconnect
+    private static final String SERVER_BINARY    = "server binary";      // client requests server to send a binary
+    private static final String CLIENT_BINARY    = "client binary";      // client sends binary
 
     private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
 

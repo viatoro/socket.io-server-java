@@ -2,10 +2,6 @@ package com.codeminders.socketio.protocol;
 
 import com.codeminders.socketio.util.JSON;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */

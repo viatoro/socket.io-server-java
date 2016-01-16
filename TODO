@@ -1,7 +1,7 @@
 * XHR Polling transport
 * upgrade transport
 * CORS support for XHR Polling
-* multi-packets messages (?)
+* multi-packets messages (Payload for EIO. It seem to be relevant only for polling transport)
 * use Guava instead of util.IO
 * use com.fasterxml.jackson instead of util.JSON
 * handle b64 flag

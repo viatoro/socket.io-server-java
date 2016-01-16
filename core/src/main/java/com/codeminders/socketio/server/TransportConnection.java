@@ -50,8 +50,7 @@ public interface TransportConnection
             throws IOException;
 
     /**
-     * Closes underlying transport connection.
-     * TODO: consider exposing it in the parent interface
+     * Tears down the connection.
      */
     void abort();
 

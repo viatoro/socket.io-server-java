@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -24,10 +25,8 @@
  */
 package com.codeminders.socketio.server;
 
-/**
- * @author Mathieu Carbou (mathieu.carbou@gmail.com)
- */
-public enum TransportType {
+public enum TransportType
+{
 
     WEB_SOCKET("websocket"),
     FLASH_SOCKET("flashsocket"),
@@ -37,17 +36,21 @@ public enum TransportType {
 
     private final String name;
 
-    TransportType(String name) {
+    TransportType(String name)
+    {
         this.name = name;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return name;
     }
 
-    public static TransportType from(String name) {
-        for (TransportType type : values()) {
+    public static TransportType from(String name)
+    {
+        for (TransportType type : values())
+        {
             if (type.name.equals(name))
                 return type;
         }

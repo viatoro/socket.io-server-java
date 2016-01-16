@@ -80,13 +80,6 @@ public abstract class SocketIOPacket
         return String.valueOf(id);
     }
 
-    private String encodeNamespace(boolean addDelimiter)
-    {
-        if(namespace.equals(SocketIOProtocol.DEFAULT_NAMESPACE))
-            return "";
-        return namespace + (addDelimiter ? SocketIOProtocol.NAMESPACE_DELIMITER : "");
-    }
-
     protected SocketIOPacket(Type type)
     {
         this(type, SocketIOProtocol.DEFAULT_NAMESPACE);
@@ -111,7 +104,7 @@ public abstract class SocketIOPacket
         String tail = encodePacketId() + encodeArgs();
 
         str += encodeAttachments();
-        str += encodeNamespace(!tail.isEmpty());
+        str += SocketIOProtocol.encodeNamespace(namespace, !tail.isEmpty());
         str += tail;
 
         return str;

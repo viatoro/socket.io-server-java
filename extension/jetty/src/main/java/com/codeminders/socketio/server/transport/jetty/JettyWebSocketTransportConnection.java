@@ -1,8 +1,6 @@
 /**
  * The MIT License
- * Copyright (c) 2010 Tad Glines
- * <p/>
- * Contributors: Ovea.com, Mycila.com
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

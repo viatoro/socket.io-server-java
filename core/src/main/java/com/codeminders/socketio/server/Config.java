@@ -30,26 +30,32 @@ package com.codeminders.socketio.server;
 public interface Config
 {
     String MAX_TEXT_MESSAGE_SIZE = "maxTextMessageSize";
-    String PARAM_PING_INTERVAL = "pingInterval";
-    String PARAM_TIMEOUT = "timeout";
+    String PARAM_PING_INTERVAL   = "pingInterval";
+    String PARAM_TIMEOUT         = "timeout";
 
     String PARAM_BUFFER_SIZE = "bufferSize";
-    String PARAM_MAX_IDLE = "maxIdleTime";
+    String PARAM_MAX_IDLE    = "maxIdleTime";
 
     int DEFAULT_BUFFER_SIZE = 8192;
-    int DEFAULT_MAX_IDLE = 300 * 1000;
+    int DEFAULT_MAX_IDLE    = 300 * 1000;
 
     int DEFAULT_PING_INTERVAL = 25 * 1000; // 25s
     int DEFAULT_PING_TIMEOUT  = 60 * 1000; // 60s
 
     long getPingInterval(long def);
+
     long getTimeout(long def);
+
     int getBufferSize();
+
     int getMaxIdle();
 
     String getString(String key);
+
     String getString(String key, String def);
+
     int getInt(String key, int def);
+
     long getLong(String key, long def);
 
     String getNamespace();

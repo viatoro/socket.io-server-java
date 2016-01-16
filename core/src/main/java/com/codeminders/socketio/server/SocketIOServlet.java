@@ -1,6 +1,7 @@
 /**
  * The MIT License
  * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
  * <p/>
  * Contributors: Ovea.com, Mycila.com
  * <p/>
@@ -43,7 +44,6 @@ public abstract class SocketIOServlet extends HttpServlet
 
     private TransportProvider transportProvider;
     private final SocketIOManager socketIOManager = new SocketIOManager();
-
 
     public Namespace of(String id)
     {
