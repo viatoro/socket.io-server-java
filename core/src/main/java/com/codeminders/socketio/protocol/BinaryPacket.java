@@ -25,7 +25,6 @@ public interface BinaryPacket
     SocketIOPacket.Type getType();
 
     Object[] getArgs();
+
     void setArgs(Object[] args);
-
-
 }

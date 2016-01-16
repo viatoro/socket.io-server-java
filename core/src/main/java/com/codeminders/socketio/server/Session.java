@@ -53,7 +53,6 @@ public class Session implements DisconnectListener
     private final String          sessionId;
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
-    //TODO: should we allow multiple sockets for the same namespace in a session?
     private Map<String, Socket> sockets = new LinkedHashMap<>(); // namespace, socket
 
     private TransportConnection connection;
@@ -298,7 +297,6 @@ public class Session implements DisconnectListener
                 return;
 
             case CLOSE:
-                //TODO: never tested. the client sends SIO DISCONNECT packet on socket.close()
                 closeConnection(DisconnectReason.CLOSED_REMOTELY);
                 return;
 

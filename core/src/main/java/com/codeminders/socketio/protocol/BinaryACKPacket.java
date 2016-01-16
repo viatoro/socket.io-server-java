@@ -11,7 +11,6 @@ import java.util.List;
  */
 public class BinaryACKPacket extends ACKPacket implements BinaryPacket
 {
-    //TODO: refactor to avoid code duplication. use delegate object
     private List<InputStream> attachments;
     private int               number_attachments_expected;
 
