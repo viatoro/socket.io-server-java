@@ -400,7 +400,7 @@ public class Session implements DisconnectListener
                 return;
             }
 
-            Object ack = socket.onEvent(packet.getName(), packet.getArgs());
+            Object ack = socket.onEvent(packet.getName(), packet.getArgs(), packet.getId() != -1);
 
             if (packet.getId() != -1 && ack != null)
             {

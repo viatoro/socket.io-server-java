@@ -88,7 +88,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 socket.on(CHAT_MESSAGE, new EventListener()
                 {
                     @Override
-                    public Object onEvent(String name, Object[] args)
+                    public Object onEvent(String name, Object[] args, boolean ackRequested)
                     {
                         LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
 
@@ -108,7 +108,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 socket.on(FORCE_DISCONNECT, new EventListener()
                 {
                     @Override
-                    public Object onEvent(String name, Object[] args)
+                    public Object onEvent(String name, Object[] args, boolean ackRequested)
                     {
                         socket.disconnect(false);
                         return null;
@@ -118,7 +118,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 socket.on(CLIENT_BINARY, new EventListener()
                 {
                     @Override
-                    public Object onEvent(String name, Object[] args)
+                    public Object onEvent(String name, Object[] args, boolean ackRequested)
                     {
                         Map map = (Map<Object, Object>)args[0];
                         InputStream is = (InputStream) map.get("buffer");
@@ -145,7 +145,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
                 socket.on(SERVER_BINARY, new EventListener()
                 {
                     @Override
-                    public Object onEvent(String name, Object[] args)
+                    public Object onEvent(String name, Object[] args, boolean ackRequested)
                     {
                         try
                         {

@@ -27,6 +27,12 @@ package com.codeminders.socketio.server;
  */
 public interface EventListener
 {
-    //TODO: add boolean parameter to indicate that ACK is requested by the client
-    Object onEvent(String name, Object[] args);
+    /**
+     * Called upon incoming event
+     *
+     * @param name event name
+     * @param args event arguments
+     * @return Object to send back to the caller as an acknowledgement, null if no ack to be sent
+     */
+    Object onEvent(String name, Object[] args, boolean ackRequested);
 }

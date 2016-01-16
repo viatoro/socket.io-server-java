@@ -99,13 +99,13 @@ public class Socket implements Outbound, DisconnectListener, EventListener
     }
 
     @Override
-    public Object onEvent(String name, Object[] args)
+    public Object onEvent(String name, Object[] args, boolean ackRequested)
     {
         EventListener listener = eventListeners.get(name);
         if(listener == null)
             return null;
 
-        return listener.onEvent(name, args);
+        return listener.onEvent(name, args, ackRequested);
     }
 
     public void join(String room)
