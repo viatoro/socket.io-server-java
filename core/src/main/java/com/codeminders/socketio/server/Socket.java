@@ -128,7 +128,6 @@ public class Socket implements Outbound, DisconnectListener, EventListener
         namespace.in(room).broadcast(this, name, args);
     }
 
-    //TODO: generate its own unique id?
     public String getId()
     {
         return getSession().getSessionId() + getNamespace();
