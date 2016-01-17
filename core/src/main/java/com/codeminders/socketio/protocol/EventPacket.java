@@ -22,7 +22,7 @@
  */
 package com.codeminders.socketio.protocol;
 
-import com.codeminders.socketio.util.JSON;
+import com.codeminders.socketio.server.SocketIOProtocolException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,14 +58,14 @@ public abstract class EventPacket extends SocketIOPacket
     }
 
     @Override
-    protected String encodeArgs()
+    protected String encodeArgs() throws SocketIOProtocolException
     {
         // adding name of the event as a first argument
         ArrayList<Object> data = new ArrayList<>();
         data.add(getName());
         data.addAll(Arrays.asList(getArgs()));
 
-        return JSON.toString(data.toArray());
+        return SocketIOProtocol.toJSON(data.toArray());
     }
 }
 

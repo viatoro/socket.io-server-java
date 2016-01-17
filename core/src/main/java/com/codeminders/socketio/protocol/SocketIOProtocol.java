@@ -23,16 +23,19 @@
 package com.codeminders.socketio.protocol;
 
 import com.codeminders.socketio.server.SocketIOProtocolException;
-import com.codeminders.socketio.util.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 /**
  * Implementation of Socket.IO Protocol version 4
@@ -42,6 +45,11 @@ import java.util.logging.Logger;
 public final class SocketIOProtocol
 {
     private static final Logger LOGGER = Logger.getLogger(SocketIOProtocol.class.getName());
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+    static {
+        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    }
 
     public static final String DEFAULT_NAMESPACE = "/";
 
@@ -104,27 +112,25 @@ public final class SocketIOProtocol
             int packet_id = decodePacketId(data, pos);
             Object json = decodeArgs(data, pos);
 
-            Object[] args = null;
+            List args = null;
             String eventName = "";
-            if (type == SocketIOPacket.Type.EVENT || type == SocketIOPacket.Type.BINARY_EVENT)
+            if (type == SocketIOPacket.Type.EVENT ||
+                type == SocketIOPacket.Type.BINARY_EVENT ||
+                type == SocketIOPacket.Type.ACK ||
+                type == SocketIOPacket.Type.BINARY_ACK)
             {
-                if (!(json instanceof Object[]))
+                if (!(json instanceof List))
                     throw new SocketIOProtocolException("Array payload is expected");
 
-                args = (Object[]) json;
-                if (args.length == 0)
-                    throw new SocketIOProtocolException("Missing event name");
+                args = (List)json;
 
-                eventName = args[0].toString();
-                args = Arrays.copyOfRange(args, 1, args.length);
-            }
-
-            if (type == SocketIOPacket.Type.ACK || type == SocketIOPacket.Type.BINARY_ACK)
-            {
-                if (!(json instanceof Object[]))
-                    throw new SocketIOProtocolException("Array payload is expected");
-
-                args = (Object[]) json;
+                if (type == SocketIOPacket.Type.EVENT || type == SocketIOPacket.Type.BINARY_EVENT)
+                {
+                    if (args.size() == 0)
+                        throw new SocketIOProtocolException("Missing event name");
+                    eventName = args.get(0).toString();
+                    args.remove(0);
+                }
             }
 
             switch (type)
@@ -136,19 +142,20 @@ public final class SocketIOProtocol
                     return createDisconnectPacket(ns);
 
                 case EVENT:
-                    return new PlainEventPacket(packet_id, ns, eventName, args);
+                    return new PlainEventPacket(packet_id, ns, eventName, args.toArray());
 
                 case ACK:
-                    return new PlainACKPacket(packet_id, ns, args);
+                    return new PlainACKPacket(packet_id, ns, args.toArray());
 
                 case ERROR:
                     return createErrorPacket(ns, json);
 
                 case BINARY_EVENT:
-                    return new BinaryEventPacket(packet_id, ns, eventName, args, attachments);
+                    return new BinaryEventPacket(packet_id, ns, eventName, args.toArray(), attachments);
 
                 case BINARY_ACK:
-                    return new BinaryACKPacket(packet_id, ns, args, attachments);
+                    assert (args != null); //just to make IDEA to shut up about possible NPE
+                    return new BinaryACKPacket(packet_id, ns, args.toArray(), attachments);
 
                 default:
                     throw new SocketIOProtocolException("Unsupported packet type " + type);
@@ -159,7 +166,7 @@ public final class SocketIOProtocol
             if (LOGGER.isLoggable(Level.WARNING))
                 LOGGER.log(Level.WARNING, "Invalid SIO packet: " + data, e);
 
-            throw new SocketIOProtocolException("Invalid SIO packet: " + data);
+            throw new SocketIOProtocolException("Invalid SIO packet: " + data, e);
         }
     }
 
@@ -169,8 +176,9 @@ public final class SocketIOProtocol
         {
             @Override
             protected String encodeArgs()
+                    throws SocketIOProtocolException
             {
-                return JSON.toString(args);
+                return toJSON(args);
             }
         };
     }
@@ -204,6 +212,35 @@ public final class SocketIOProtocol
     public static SocketIOPacket createConnectPacket(String ns)
     {
         return new EmptyPacket(SocketIOPacket.Type.CONNECT, ns);
+    }
+
+    static String toJSON(Object o)
+            throws SocketIOProtocolException
+    {
+        try
+        {
+            return mapper.writeValueAsString(o);
+        }
+        catch (JsonProcessingException e)
+        {
+            throw new SocketIOProtocolException("Cannot convert object to JSON", e);
+        }
+    }
+
+    static Object fromJSON(String s)
+            throws SocketIOProtocolException
+    {
+        try
+        {
+            if(s == null || s.isEmpty())
+                return null;
+
+            return mapper.readValue(s, Object.class);
+        }
+        catch (IOException e)
+        {
+            throw new SocketIOProtocolException("Cannot parse JSON", e);
+        }
     }
 
     static String decodeNamespace(String data, ParsePosition pos)
@@ -256,10 +293,11 @@ public final class SocketIOProtocol
         return type;
     }
 
+    //TODO: pass what type (Array, Map, Object) is expected?
     static Object decodeArgs(String data, ParsePosition pos)
             throws SocketIOProtocolException
     {
-        Object json = JSON.parse(data.substring(pos.getIndex()));
+        Object json = fromJSON(data.substring(pos.getIndex()));
         pos.setIndex(data.length());
         return json;
     }

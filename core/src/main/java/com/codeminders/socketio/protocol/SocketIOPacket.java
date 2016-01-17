@@ -87,7 +87,7 @@ public abstract class SocketIOPacket
         return id;
     }
 
-    protected abstract String encodeArgs();
+    protected abstract String encodeArgs() throws SocketIOProtocolException;
 
     protected String encodeAttachments()
     {
@@ -119,7 +119,7 @@ public abstract class SocketIOPacket
         this.id = id;
     }
 
-    public String encode()
+    public String encode() throws SocketIOProtocolException
     {
         String str = String.valueOf(type.value());
 

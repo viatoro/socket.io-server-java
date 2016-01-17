@@ -80,18 +80,18 @@ public abstract class AbstractTransportConnection implements TransportConnection
             Collection<InputStream> attachments = ((BinaryPacket) packet).getAttachments();
             for (InputStream is : attachments)
             {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
                 try
                 {
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
                     os.write(EngineIOPacket.Type.MESSAGE.value());
                     IO.copy(is, os);
-                    sendBinary(os.toByteArray());
                 }
                 catch (IOException e)
                 {
                     if(LOGGER.isLoggable(Level.WARNING))
                         LOGGER.log(Level.SEVERE, "Cannot load binary object to send it to the socket", e);
                 }
+                sendBinary(os.toByteArray());
             }
         }
     }

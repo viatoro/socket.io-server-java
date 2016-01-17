@@ -23,7 +23,6 @@
 package com.codeminders.socketio.protocol;
 
 import com.codeminders.socketio.server.SocketIOProtocolException;
-import com.codeminders.socketio.util.JSON;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,7 +101,15 @@ public final class EngineIOProtocol
         map.put("pingInterval", ping_interval);
         map.put("pingTimeout", ping_timeout);
 
-        return new EngineIOPacket(EngineIOPacket.Type.OPEN, JSON.toString(map));
+        try
+        {
+            return new EngineIOPacket(EngineIOPacket.Type.OPEN, SocketIOProtocol.toJSON(map));
+        }
+        catch (SocketIOProtocolException e)
+        {
+            // ignore. never happen
+            return null;
+        }
     }
 
     public static EngineIOPacket createOpenPacket()

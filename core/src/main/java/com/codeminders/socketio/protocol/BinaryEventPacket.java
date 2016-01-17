@@ -41,8 +41,7 @@ public class BinaryEventPacket extends EventPacket implements BinaryPacket
      *
      * @param id packet id. Used for ACK
      * @param name event name
-     * @param args event arguments as array of POJOs to be converted to
-     *             JSON with {@link com.codeminders.socketio.util.JSON }.
+     * @param args event arguments as array of POJOs to be converted to JSON.
      * @param number_attachments_expected number of binary attachment expected to be attached to this packed
      */
     BinaryEventPacket(int id, String ns, String name, Object[] args, int number_attachments_expected)
@@ -57,8 +56,7 @@ public class BinaryEventPacket extends EventPacket implements BinaryPacket
      * This constructor suppose to be called by user by emit() call
      *
      * @param name event name
-     * @param args event arguments as array of POJOs to be converted to
-     *             JSON with {@link com.codeminders.socketio.util.JSON }.
+     * @param args event arguments as array of POJOs to be converted to JSON.
      *             {@link java.io.InputStream} to be used for binary objects
      */
     public BinaryEventPacket(int id, String ns, String name, Object[] args)

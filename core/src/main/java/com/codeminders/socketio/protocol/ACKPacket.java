@@ -22,7 +22,7 @@
  */
 package com.codeminders.socketio.protocol;
 
-import com.codeminders.socketio.util.JSON;
+import com.codeminders.socketio.server.SocketIOProtocolException;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
@@ -38,9 +38,9 @@ public abstract class ACKPacket extends SocketIOPacket
     }
 
     @Override
-    protected String encodeArgs()
+    protected String encodeArgs() throws SocketIOProtocolException
     {
-        return JSON.toString(args);
+        return SocketIOProtocol.toJSON(args);
     }
 
     public Object[] getArgs()

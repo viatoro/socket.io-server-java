@@ -22,10 +22,12 @@
  */
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.common.SocketIOException;
+
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class SocketIOProtocolException extends Exception
+public class SocketIOProtocolException extends SocketIOException
 {
 
     public SocketIOProtocolException(String message)
