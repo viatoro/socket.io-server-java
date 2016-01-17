@@ -28,7 +28,7 @@ import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.protocol.*;
-import com.codeminders.socketio.util.IO;
+import com.google.common.io.ByteStreams;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -84,7 +84,7 @@ public abstract class AbstractTransportConnection implements TransportConnection
                 try
                 {
                     os.write(EngineIOPacket.Type.MESSAGE.value());
-                    IO.copy(is, os);
+                    ByteStreams.copy(is, os);
                 }
                 catch (IOException e)
                 {

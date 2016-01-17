@@ -26,7 +26,7 @@
 package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.protocol.SocketIOProtocol;
-import com.codeminders.socketio.util.IO;
+import com.google.common.io.ByteStreams;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -112,7 +112,7 @@ public abstract class SocketIOServlet extends HttpServlet
             response.setContentType("text/javascript");
             InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/codeminders/socketio/socket.io.js");
             OutputStream os = response.getOutputStream();
-            IO.copy(is, os);
+            ByteStreams.copy(is, os);
         }
         else
         {
