@@ -20,9 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server;
+package com.codeminders.socketio.server.transport;
+
+import com.codeminders.socketio.protocol.EngineIOProtocol;
+import com.codeminders.socketio.server.*;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alexander Sova <bird@codeminders.com>
@@ -59,6 +63,20 @@ public abstract class AbstractTransport implements Transport
         connection.setSession(session);
         connection.init(getConfig());
         return connection;
+    }
+
+    protected TransportConnection getConnection(HttpServletRequest request, SocketIOManager sessionManager)
+    {
+        String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
+        Session session = null;
+
+        if(sessionId != null && sessionId.length() > 0)
+            session = sessionManager.getSession(sessionId);
+
+        if(session == null)
+            return createConnection(sessionManager.createSession());
+        else
+            return session.getConnection();
     }
 
     @Override

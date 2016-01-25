@@ -24,7 +24,6 @@ package com.codeminders.socketio.sample.chat;
 
 import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
-import com.codeminders.socketio.util.JdkOverLog4j;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 import com.google.common.io.ByteStreams;

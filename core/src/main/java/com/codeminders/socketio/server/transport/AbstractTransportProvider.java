@@ -23,7 +23,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     @Override
     public void init(ServletConfig config)
     {
-        addIfNotNull(TransportType.XHR_POLLING,   createXHTPollingTransport());
+        addIfNotNull(TransportType.XHR_POLLING,   createXHRPollingTransport());
         addIfNotNull(TransportType.JSONP_POLLING, createJSONPPollingTransport());
         addIfNotNull(TransportType.WEB_SOCKET,    createWebSocketTransport());
 
@@ -78,9 +78,9 @@ public abstract class AbstractTransportProvider implements TransportProvider {
         return transports.values();
     }
 
-    protected Transport createXHTPollingTransport()
+    protected Transport createXHRPollingTransport()
     {
-        return null;
+        return new XHRPollingTransport();
     }
 
     protected Transport createJSONPPollingTransport()

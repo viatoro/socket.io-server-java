@@ -22,12 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server;
+package com.codeminders.socketio.server.transport;
 
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.protocol.*;
+import com.codeminders.socketio.server.*;
 import com.google.common.io.ByteStreams;
 
 import java.io.ByteArrayOutputStream;
@@ -48,11 +49,23 @@ public abstract class AbstractTransportConnection implements TransportConnection
 
     private Config  config;
     private Session session;
+    private Transport transport;
+
+    public AbstractTransportConnection(Transport transport)
+    {
+        this.transport = transport;
+    }
 
     @Override
     public final void init(Config config) {
         this.config = config;
         init();
+    }
+
+    @Override
+    public Transport getTransport()
+    {
+        return transport;
     }
 
     @Override
@@ -64,36 +77,12 @@ public abstract class AbstractTransportConnection implements TransportConnection
         return config;
     }
 
-    protected final Session getSession() {
+    public Session getSession() {
         return session;
     }
 
     protected void init()
     {
-    }
-
-    public void send(SocketIOPacket packet) throws SocketIOException
-    {
-        send(EngineIOProtocol.createMessagePacket(packet.encode()));
-        if(packet instanceof BinaryPacket)
-        {
-            Collection<InputStream> attachments = ((BinaryPacket) packet).getAttachments();
-            for (InputStream is : attachments)
-            {
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                try
-                {
-                    os.write(EngineIOPacket.Type.MESSAGE.value());
-                    ByteStreams.copy(is, os);
-                }
-                catch (IOException e)
-                {
-                    if(LOGGER.isLoggable(Level.WARNING))
-                        LOGGER.log(Level.SEVERE, "Cannot load binary object to send it to the socket", e);
-                }
-                sendBinary(os.toByteArray());
-            }
-        }
     }
 
     @Override
@@ -111,12 +100,6 @@ public abstract class AbstractTransportConnection implements TransportConnection
 
         if(closeConnection)
             abort();
-    }
-
-    @Override
-    public void send(EngineIOPacket packet) throws SocketIOException
-    {
-        sendString(EngineIOProtocol.encode(packet));
     }
 
     @Override
@@ -144,7 +127,4 @@ public abstract class AbstractTransportConnection implements TransportConnection
 
         send(packet);
     }
-
-    protected abstract void sendString(String data) throws SocketIOException;
-    protected abstract void sendBinary(byte[] data) throws SocketIOException;
 }

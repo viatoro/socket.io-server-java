@@ -24,6 +24,7 @@
  */
 package com.codeminders.socketio.server.transport;
 
+import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
 
@@ -37,67 +38,35 @@ import java.util.logging.Logger;
 
 public abstract class AbstractHttpTransport extends AbstractTransport
 {
-    private static final Logger LOGGER  = Logger.getLogger(AbstractHttpTransport.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AbstractHttpTransport.class.getName());
 
-    //TODO: call onConnect()
     @Override
     public final void handle(HttpServletRequest request,
                              HttpServletResponse response,
-                             SocketIOManager socketIOManager)
+                             SocketIOManager sessionIOManager)
             throws IOException
     {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
 
-        Session session = null;
-        String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
-        if (sessionId != null && sessionId.length() > 0)
-            session = socketIOManager.getSession(sessionId);
+        TransportConnection connection = getConnection(request, sessionIOManager);
+        Session session = connection.getSession();
 
-        if (session != null)
+        if (session.getConnectionState() == ConnectionState.CONNECTING)
         {
-            TransportConnection connection = session.getConnection();
-            if (connection != null)
-            {
-                connection.handle(request, response, session);
-            }
-            else
-            {
-//                session.onDisconnect(DisconnectReason.ERROR);
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
+            connection.send(EngineIOProtocol.createHandshakePacket(session.getSessionId(),
+                    new String[]{"websocket"}, //TODO: check if websocket is available via TransportProvider
+                    getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
+                    getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
+
+            connection.handle(request, response); // called to send the handshake packet
+            session.onConnect(connection);
+        }
+        else if (session.getConnectionState() == ConnectionState.CONNECTED)
+        {
+            connection.handle(request, response);
         }
         else
-        {
-            if (!"GET".equals(request.getMethod()))
-            {
-                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                return;
-            }
-
-            try
-            {
-                session = socketIOManager.createSession();
-                //TODO: weird sequence. need to refactor
-                createConnection(session).connect(request, response);
-                onConnect(session, request, response);
-            }
-            catch (SocketIOProtocolException e)
-            {
-                if (LOGGER.isLoggable(Level.WARNING))
-                    LOGGER.log(Level.WARNING, "Cannot initialize connection", e);
-            }
-            if (session == null)
-                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        }
+            response.sendError(HttpServletResponse.SC_GONE, "Socket.IO session is closed");
     }
-
-    public abstract void startSend(Session session, ServletResponse response) throws IOException;
-
-    public abstract void writeData(Session session, ServletResponse response, String data) throws IOException;
-
-    public abstract void finishSend(Session session, ServletResponse response) throws IOException;
-
-    public abstract void onConnect(Session session, ServletRequest request, ServletResponse response)
-            throws IOException, SocketIOProtocolException;
 }

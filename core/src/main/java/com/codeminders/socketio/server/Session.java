@@ -148,12 +148,6 @@ public class Session implements DisconnectListener
         return timeout;
     }
 
-    public void onText(String data)
-            throws SocketIOProtocolException
-    {
-        onPacket(EngineIOProtocol.decode(data));
-    }
-
     public void onBinary(InputStream is)
             throws SocketIOProtocolException
     {
@@ -188,8 +182,9 @@ public class Session implements DisconnectListener
         Socket socket = createSocket(SocketIOProtocol.DEFAULT_NAMESPACE);
         try
         {
+            connection.send(SocketIOProtocol.createConnectPacket(SocketIOProtocol.DEFAULT_NAMESPACE));
             state = ConnectionState.CONNECTED;
-            socketIOManager.getNamespace(SocketIOProtocol.DEFAULT_NAMESPACE).onConnect(socket);
+            socketIOManager.getNamespace(SocketIOProtocol.DEFAULT_NAMESPACE).onConnect(socket); // callback
         }
         catch (ConnectionException e)
         {
@@ -269,7 +264,7 @@ public class Session implements DisconnectListener
         }
     }
 
-    private void onPacket(EngineIOPacket packet)
+    public void onPacket(EngineIOPacket packet)
     {
         switch (packet.getType())
         {
@@ -298,6 +293,10 @@ public class Session implements DisconnectListener
 
             case CLOSE:
                 closeConnection(DisconnectReason.CLOSED_REMOTELY);
+                return;
+
+            case UPGRADE:
+                //TODO: upgrade transport
                 return;
 
             default:

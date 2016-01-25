@@ -37,15 +37,14 @@ public class JettyTransportProvider extends AbstractTransportProvider
         return new JettyWebSocketTransport();
     }
 
-//TODO: disabling all the transports except Websocket for now
-//    protected Transport createXHTPollingTransport()
+//    protected Transport createXHRPollingTransport()
 //    {
 //        return new XHRPollingTransport()
 //        {
 //            @Override
 //            public TransportConnection createConnection()
 //            {
-//                return new JettyContinuationTransportConnection(this);
+//                return new HttpServletTransportConnection(this);
 //            }
 //        };
 //    }
@@ -57,7 +56,7 @@ public class JettyTransportProvider extends AbstractTransportProvider
 //            @Override
 //            public TransportConnection createConnection()
 //            {
-//                return new JettyContinuationTransportConnection(this);
+//                return new HttpServletTransportConnection(this);
 //            }
 //        };
 //    }

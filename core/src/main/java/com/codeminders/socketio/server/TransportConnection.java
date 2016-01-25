@@ -41,12 +41,10 @@ public interface TransportConnection
 {
     void init(Config config);
     void setSession(Session session);
+    Session getSession();
     Transport getTransport();
 
-    void connect(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SocketIOProtocolException;
-
-    void handle(HttpServletRequest request, HttpServletResponse response, Session session)
+    void handle(HttpServletRequest request, HttpServletResponse response)
             throws IOException;
 
     /**

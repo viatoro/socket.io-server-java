@@ -32,9 +32,9 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
 
+import com.codeminders.socketio.server.transport.AbstractTransport;
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
@@ -68,7 +68,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
     @Override
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
-                       SocketIOManager socketIOManager) throws IOException
+                       SocketIOManager sessionManager) throws IOException
     {
 
         if(!"GET".equals(request.getMethod()))
@@ -78,20 +78,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
             return;
         }
 
-        final TransportConnection connection;
-        String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
-        Session session = null;
-
-        if(sessionId != null)
-            session = socketIOManager.getSession(sessionId);
-
-        if(session == null)
-        {
-            session = socketIOManager.createSession();
-            connection = createConnection(session);
-        }
-        else
-            connection = session.getConnection();
+        final TransportConnection connection = getConnection(request, sessionManager);
 
         wsFactory.acceptWebSocket(new WebSocketCreator() {
                 @Override

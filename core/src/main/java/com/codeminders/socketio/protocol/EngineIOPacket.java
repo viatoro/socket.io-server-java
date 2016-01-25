@@ -70,7 +70,7 @@ public class EngineIOPacket
     }
 
     private Type        type;
-    private String      textData = "";
+    private String      textData;
     private InputStream binaryData;
 
     public Type getType()
@@ -94,10 +94,10 @@ public class EngineIOPacket
         this.textData = data;
     }
 
+    //TODO: support byte[] in addtion to InputStream
     public EngineIOPacket(Type type, InputStream binaryData)
     {
         this.type = type;
-        this.textData = "";
         this.binaryData = binaryData;
     }
 

@@ -28,6 +28,8 @@ import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
+import com.codeminders.socketio.server.transport.AbstractTransportConnection;
+import com.google.common.io.ByteStreams;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -36,9 +38,11 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,11 +56,10 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportConnection.class.getName());
 
     private org.eclipse.jetty.websocket.api.Session remote_endpoint;
-    private Transport                               transport;
 
     public JettyWebSocketTransportConnection(Transport transport)
     {
-        this.transport = transport;
+        super(transport);
     }
 
     @Override
@@ -79,8 +82,6 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
                     new String[]{},
                     getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
                     getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
-
-            send(SocketIOProtocol.createConnectPacket(SocketIOProtocol.DEFAULT_NAMESPACE));
 
             getSession().onConnect(this);
         }
@@ -115,7 +116,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
         try
         {
-            getSession().onText(text);
+            getSession().onPacket(EngineIOProtocol.decode(text));
         }
         catch (SocketIOProtocolException e)
         {
@@ -141,19 +142,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
-    public Transport getTransport()
-    {
-        return transport;
-    }
-
-    @Override
-    public void connect(HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
-        // do nothing
-    }
-
-    @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Session session) throws IOException
+    public void handle(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unexpected request on upgraded WebSocket connection");
     }
@@ -170,6 +159,36 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     }
 
     @Override
+    public void send(EngineIOPacket packet) throws SocketIOException
+    {
+        sendString(EngineIOProtocol.encode(packet));
+    }
+
+    @Override
+    public void send(SocketIOPacket packet) throws SocketIOException
+    {
+        send(EngineIOProtocol.createMessagePacket(packet.encode()));
+        if(packet instanceof BinaryPacket)
+        {
+            Collection<InputStream> attachments = ((BinaryPacket) packet).getAttachments();
+            for (InputStream is : attachments)
+            {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                try
+                {
+                    os.write(EngineIOPacket.Type.MESSAGE.value());
+                    ByteStreams.copy(is, os);
+                }
+                catch (IOException e)
+                {
+                    if(LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.SEVERE, "Cannot load binary object to send it to the socket", e);
+                }
+                sendBinary(os.toByteArray());
+            }
+        }
+    }
+
     protected void sendString(String data) throws SocketIOException
     {
         if (!remote_endpoint.isOpen())
@@ -191,7 +210,6 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
     //TODO: implement streaming. right now it is all in memory.
     //TODO: read and send in chunks using sendPartialBytes()
-    @Override
     protected void sendBinary(byte[] data) throws SocketIOException
     {
         if (!remote_endpoint.isOpen())

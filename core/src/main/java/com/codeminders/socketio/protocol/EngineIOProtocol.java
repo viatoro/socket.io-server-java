@@ -23,10 +23,14 @@
 package com.codeminders.socketio.protocol;
 
 import com.codeminders.socketio.server.SocketIOProtocolException;
+import com.google.common.io.ByteStreams;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
+import java.io.*;
+import java.text.DecimalFormat;
+import java.text.ParsePosition;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,12 +54,59 @@ public final class EngineIOProtocol
         return String.valueOf(packet.getType().value()) + packet.getTextData();
     }
 
+    public static void binaryEncode(EngineIOPacket packet, OutputStream os)
+            throws IOException
+    {
+        if (packet.getBinaryData() != null)
+        {
+            ByteArrayInputStream bytes;
+            InputStream is = packet.getBinaryData();
+            if(is instanceof ByteArrayInputStream)
+            {
+                bytes = (ByteArrayInputStream)is;
+            }
+            else
+            {
+                // Cannot avoid double copy. The protocol requires to send the length before the data
+                //TODO: ask user to provide length? Could be useful to send files
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                ByteStreams.copy(is, buffer);
+                bytes = new ByteArrayInputStream(buffer.toByteArray());
+            }
+            os.write(1); // binary packet
+            os.write(encodeLength(bytes.available() + 1)); // +1 for packet type
+            os.write(255);
+            os.write(packet.getType().value());
+            ByteStreams.copy(bytes, os);
+        }
+        else
+        {
+            assert(packet.getTextData() != null);
+
+            os.write(0); // text packet
+            os.write(encodeLength(packet.getTextData().length() + 1)); // +1 for packet type
+            os.write(255);
+            os.write(packet.getType().value() + '0');
+            os.write(packet.getTextData().getBytes("UTF-8"));
+        }
+
+    }
+
+    //this is most ridiculous encoding I ever seen
+    private static byte[] encodeLength(int len)
+    {
+        byte[] bytes = String.valueOf(len).getBytes();
+        for(int i = 0; i < bytes.length; i++)
+            bytes[i] -= '0';
+        return bytes;
+    }
+
     public static EngineIOPacket decode(String raw)
             throws SocketIOProtocolException
     {
         assert (raw != null);
 
-        if(raw.length() < 1)
+        if (raw.length() < 1)
             throw new SocketIOProtocolException("Empty EIO packet");
 
         try
@@ -72,14 +123,14 @@ public final class EngineIOProtocol
 
 
     public static EngineIOPacket decode(InputStream raw)
-        throws SocketIOProtocolException
+            throws SocketIOProtocolException
     {
         assert (raw != null);
 
         try
         {
             int type = raw.read();
-            if(type == -1)
+            if (type == -1)
                 throw new SocketIOProtocolException("Empty binary object received");
 
             return new EngineIOPacket(EngineIOPacket.Type.fromInt(type), raw);
@@ -95,7 +146,7 @@ public final class EngineIOProtocol
                                                        long ping_interval,
                                                        long ping_timeout)
     {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("sid", session_id);
         map.put("upgrades", upgrades);
         map.put("pingInterval", ping_interval);
@@ -117,6 +168,11 @@ public final class EngineIOProtocol
         return new EngineIOPacket(EngineIOPacket.Type.OPEN);
     }
 
+    public static EngineIOPacket createClosePacket()
+    {
+        return new EngineIOPacket(EngineIOPacket.Type.CLOSE);
+    }
+
     public static EngineIOPacket createPingPacket(String data)
     {
         return new EngineIOPacket(EngineIOPacket.Type.PING, data);
@@ -131,4 +187,75 @@ public final class EngineIOProtocol
     {
         return new EngineIOPacket(EngineIOPacket.Type.MESSAGE, data);
     }
+
+    public static EngineIOPacket createUpgradePacket(String data)
+    {
+        return new EngineIOPacket(EngineIOPacket.Type.UPGRADE, data);
+    }
+
+    public static EngineIOPacket createNoopPacket(String data)
+    {
+        return new EngineIOPacket(EngineIOPacket.Type.NOOP, data);
+    }
+
+    public static List<EngineIOPacket> decodePayload(String payload)
+            throws SocketIOProtocolException
+    {
+        ArrayList<EngineIOPacket> packets = new ArrayList<>();
+
+        ParsePosition pos = new ParsePosition(0);
+
+        while(pos.getIndex() < payload.length())
+        {
+            int len = decodePacketLength(payload, pos);
+            EngineIOPacket.Type type = decodePacketType(payload, pos);
+            String data = payload.substring(pos.getIndex(), pos.getIndex() + len-1 );
+            pos.setIndex(pos.getIndex() + 1 + len);
+
+            switch (type)
+            {
+                case CLOSE:
+                    packets.add(createClosePacket());
+                    break;
+                case PING:
+                    packets.add(createPingPacket(data));
+                    break;
+                case MESSAGE:
+                    packets.add(createMessagePacket(data));
+                    break;
+                case UPGRADE:
+                    packets.add(createUpgradePacket(data));
+                    break;
+                case NOOP:
+                    packets.add(createNoopPacket(data));
+                    break;
+                default:
+                    throw new SocketIOProtocolException("Unexpected EIO packet type: " + type);
+            }
+        }
+
+        return packets;
+    }
+
+    static int decodePacketLength(String data, ParsePosition pos)
+            throws SocketIOProtocolException
+    {
+        Number len = new DecimalFormat("#").parse(data, pos);
+        if (len == null)
+            throw new SocketIOProtocolException("No packet length defined");
+
+        pos.setIndex(pos.getIndex() + 1);
+
+        return len.intValue();
+    }
+
+    static EngineIOPacket.Type decodePacketType(String data, ParsePosition pos)
+            throws SocketIOProtocolException
+    {
+        int idx = pos.getIndex();
+        EngineIOPacket.Type type = EngineIOPacket.Type.fromInt(Integer.parseInt(data.substring(idx, idx + 1)));
+        pos.setIndex(idx + 1);
+        return type;
+    }
+
 }

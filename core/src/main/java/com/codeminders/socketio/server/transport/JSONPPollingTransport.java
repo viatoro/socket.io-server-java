@@ -25,6 +25,7 @@
  */
 package com.codeminders.socketio.server.transport;
 
+import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.SocketIOProtocolException;
 import com.codeminders.socketio.server.Session;
 import com.codeminders.socketio.server.TransportType;
@@ -46,13 +47,11 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
         return TransportType.JSONP_POLLING;
     }
 
-    @Override
     public void startSend(Session session, ServletResponse response) throws IOException
     {
         response.setContentType("text/javascript; charset=UTF-8");
     }
 
-    @Override
     public void writeData(Session session, ServletResponse response, String data) throws IOException
     {
         response.getOutputStream().print(EIO_PREFIX);
@@ -61,28 +60,22 @@ public abstract class JSONPPollingTransport extends AbstractHttpTransport
         response.getOutputStream().print("');");
     }
 
-    @Override
     public void finishSend(Session session, ServletResponse response) throws IOException
     {
         response.flushBuffer();
     }
 
-    @Override
     public void onConnect(Session session, ServletRequest request, ServletResponse response)
-            throws IOException, SocketIOProtocolException
+            throws IOException
     {
         try {
             //TODO: Use string constant for request parameter name "j"
             //TODO: Do we really need to enforce "j" to be an integer?
-            session.setAttribute(FRAME_ID, Integer.parseInt(request.getParameter("j")));
+            session.setAttribute(FRAME_ID, Integer.parseInt(request.getParameter(EngineIOProtocol.JSONP_INDEX)));
         } catch (NullPointerException | NumberFormatException e) {
             throw new SocketIOProtocolException("Missing or invalid 'j' parameter. It suppose to be integer");
         }
 
         startSend(session, response);
-
-        //TODO: check it!
-        //TODO: send CONNECT packet?
-
     }
 }
