@@ -55,7 +55,7 @@ public class Session implements DisconnectListener
 
     private Map<String, Socket> sockets = new LinkedHashMap<>(); // namespace, socket
 
-    private TransportConnection connection;
+    private TransportConnection activeConnection;
     private ConnectionState  state            = ConnectionState.CONNECTING;
     private DisconnectReason disconnectReason = DisconnectReason.UNKNOWN;
     private String disconnectMessage;
@@ -110,7 +110,7 @@ public class Session implements DisconnectListener
 
     public TransportConnection getConnection()
     {
-        return connection;
+        return activeConnection;
     }
 
     public void resetTimeout()
@@ -175,9 +175,9 @@ public class Session implements DisconnectListener
     public void onConnect(TransportConnection connection) throws SocketIOException
     {
         assert (connection != null);
-        assert (this.connection == null); //TODO: may not be the case for upgrade.
+        assert (this.activeConnection == null);
 
-        this.connection = connection;
+        this.activeConnection = connection;
 
         Socket socket = createSocket(SocketIOProtocol.DEFAULT_NAMESPACE);
         try
@@ -192,7 +192,7 @@ public class Session implements DisconnectListener
                 LOGGER.log(Level.FINE, "Connection failed", e);
 
             connection.send(SocketIOProtocol.createErrorPacket(SocketIOProtocol.DEFAULT_NAMESPACE, e.getArgs()));
-            closeConnection(DisconnectReason.CONNECT_FAILED);
+            closeConnection(DisconnectReason.CONNECT_FAILED, connection);
         }
     }
 
@@ -205,7 +205,7 @@ public class Session implements DisconnectListener
     }
 
     /**
-     * Calling this method will change connection status to CLOSING!
+     * Calling this method will change activeConnection status to CLOSING!
      */
     public void setDisconnectReason(DisconnectReason reason)
     {
@@ -214,7 +214,7 @@ public class Session implements DisconnectListener
     }
 
     /**
-     * callback to be called by transport connection socket is closed.
+     * callback to be called by transport activeConnection socket is closed.
      */
     public void onShutdown()
     {
@@ -224,9 +224,8 @@ public class Session implements DisconnectListener
             onDisconnect(DisconnectReason.ERROR);
     }
 
-    //TODO: race condition on disconnect from remote endpoint
     /**
-     * Disconnect callback. to be called by session itself. Transport connection should always call onShutdown()
+     * Disconnect callback. to be called by session itself. Transport activeConnection should always call onShutdown()
      */
     private void onDisconnect(DisconnectReason reason)
     {
@@ -260,11 +259,11 @@ public class Session implements DisconnectListener
         if (!timedOut)
         {
             timedOut = true;
-            closeConnection(DisconnectReason.TIMEOUT);
+            closeConnection(DisconnectReason.TIMEOUT, activeConnection);
         }
     }
 
-    public void onPacket(EngineIOPacket packet)
+    public void onPacket(EngineIOPacket packet, TransportConnection connection)
     {
         switch (packet.getType())
         {
@@ -288,15 +287,20 @@ public class Session implements DisconnectListener
 
             case PING:
                 resetTimeout();
-                onPing(packet.getTextData());
+                onPing(packet.getTextData(), connection);
+
+                // ugly hack to replicate current sio client behaviour
+                if(connection != getConnection())
+                    forcePollingCycle();
+
                 return;
 
             case CLOSE:
-                closeConnection(DisconnectReason.CLOSED_REMOTELY);
+                closeConnection(DisconnectReason.CLOSED_REMOTELY, connection);
                 return;
 
             case UPGRADE:
-                //TODO: upgrade transport
+                upgradeConnection(connection);
                 return;
 
             default:
@@ -334,12 +338,12 @@ public class Session implements DisconnectListener
                     if (LOGGER.isLoggable(Level.FINE))
                         LOGGER.log(Level.FINE, "Cannot send packet to the client", e);
 
-                    closeConnection(DisconnectReason.CONNECT_FAILED);
+                    closeConnection(DisconnectReason.CONNECT_FAILED, activeConnection);
                 }
                 return;
 
             case DISCONNECT:
-                closeConnection(DisconnectReason.CLOSED_REMOTELY);
+                closeConnection(DisconnectReason.CLOSED_REMOTELY, activeConnection);
                 return;
 
             case EVENT:
@@ -360,7 +364,7 @@ public class Session implements DisconnectListener
         }
     }
 
-    private void onPing(String data)
+    private void onPing(String data, TransportConnection connection)
     {
         try
         {
@@ -371,7 +375,7 @@ public class Session implements DisconnectListener
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "connection.send failed: ", e);
 
-            closeConnection(DisconnectReason.ERROR);
+            closeConnection(DisconnectReason.ERROR, connection);
         }
     }
 
@@ -392,7 +396,7 @@ public class Session implements DisconnectListener
             Socket socket = sockets.get(ns.getId());
             if (socket == null)
             {
-                connection.send(SocketIOProtocol.createErrorPacket(packet.getNamespace(),
+                activeConnection.send(SocketIOProtocol.createErrorPacket(packet.getNamespace(),
                         "No socket is connected to the namespace"));
                 return;
             }
@@ -407,7 +411,7 @@ public class Session implements DisconnectListener
                 else
                     args = new Object[]{ack};
 
-                connection.send(SocketIOProtocol.createACKPacket(packet.getId(), packet.getNamespace(), args));
+                activeConnection.send(SocketIOProtocol.createACKPacket(packet.getId(), packet.getNamespace(), args));
             }
         }
         catch (Throwable e)
@@ -436,12 +440,21 @@ public class Session implements DisconnectListener
         }
     }
 
-    /**
-     * Remembers the disconnect reason and closes underlying transport connection
-     */
-    private void closeConnection(DisconnectReason reason)
+    private void upgradeConnection(TransportConnection connection)
     {
-        setDisconnectReason(reason);
+        if(LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE, "Upgrading from " + this.activeConnection.getTransport() + " to " + connection.getTransport());
+
+        this.activeConnection = connection;
+    }
+
+    /**
+     * Remembers the disconnect reason and closes underlying transport activeConnection
+     */
+    private void closeConnection(DisconnectReason reason, TransportConnection connection)
+    {
+        if(this.activeConnection == connection)
+            setDisconnectReason(reason);
         connection.abort(); //this call should trigger onShutdown() eventually
     }
 
@@ -465,5 +478,19 @@ public class Session implements DisconnectListener
     public void onDisconnect(Socket socket, DisconnectReason reason, String errorMessage)
     {
         sockets.remove(socket.getNamespace());
+    }
+
+    // hack to replicate current Socket.IO client behaviour
+    private void forcePollingCycle()
+    {
+        try
+        {
+            getConnection().send(EngineIOProtocol.createNoopPacket());
+        }
+        catch (SocketIOException e)
+        {
+            if(LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Cannot send NOOP packet while upgrading the transport", e);
+        }
     }
 }

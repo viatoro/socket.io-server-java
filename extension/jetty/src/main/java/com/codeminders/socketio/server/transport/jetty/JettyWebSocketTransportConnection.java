@@ -76,20 +76,24 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session)
     {
         remote_endpoint = session;
-        try
-        {
-            send(EngineIOProtocol.createHandshakePacket(getSession().getSessionId(),
-                    new String[]{},
-                    getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
-                    getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
 
-            getSession().onConnect(this);
-        }
-        catch (SocketIOException e)
+        if(getSession().getConnectionState() == ConnectionState.CONNECTING)
         {
-            LOGGER.log(Level.SEVERE, "Cannot connect", e);
-            getSession().setDisconnectReason(DisconnectReason.CONNECT_FAILED);
-            abort();
+            try
+            {
+                send(EngineIOProtocol.createHandshakePacket(getSession().getSessionId(),
+                        new String[]{},
+                        getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
+                        getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
+
+                getSession().onConnect(this);
+            }
+            catch (SocketIOException e)
+            {
+                LOGGER.log(Level.SEVERE, "Cannot connect", e);
+                getSession().setDisconnectReason(DisconnectReason.CONNECT_FAILED);
+                abort();
+            }
         }
     }
 
@@ -116,7 +120,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
         try
         {
-            getSession().onPacket(EngineIOProtocol.decode(text));
+            getSession().onPacket(EngineIOProtocol.decode(text), this);
         }
         catch (SocketIOProtocolException e)
         {

@@ -76,7 +76,15 @@ public abstract class AbstractTransport implements Transport
         if(session == null)
             return createConnection(sessionManager.createSession());
         else
-            return session.getConnection();
+        {
+            TransportConnection activeConnection = session.getConnection();
+
+            if(activeConnection.getTransport() == this)
+                return activeConnection;
+
+            // this is new connection considered for an upgrade
+            return createConnection(session);
+        }
     }
 
     @Override

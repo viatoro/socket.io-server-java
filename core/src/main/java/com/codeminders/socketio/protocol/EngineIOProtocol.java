@@ -188,14 +188,14 @@ public final class EngineIOProtocol
         return new EngineIOPacket(EngineIOPacket.Type.MESSAGE, data);
     }
 
-    public static EngineIOPacket createUpgradePacket(String data)
+    public static EngineIOPacket createUpgradePacket()
     {
-        return new EngineIOPacket(EngineIOPacket.Type.UPGRADE, data);
+        return new EngineIOPacket(EngineIOPacket.Type.UPGRADE);
     }
 
-    public static EngineIOPacket createNoopPacket(String data)
+    public static EngineIOPacket createNoopPacket()
     {
-        return new EngineIOPacket(EngineIOPacket.Type.NOOP, data);
+        return new EngineIOPacket(EngineIOPacket.Type.NOOP);
     }
 
     public static List<EngineIOPacket> decodePayload(String payload)
@@ -224,10 +224,10 @@ public final class EngineIOProtocol
                     packets.add(createMessagePacket(data));
                     break;
                 case UPGRADE:
-                    packets.add(createUpgradePacket(data));
+                    packets.add(createUpgradePacket());
                     break;
                 case NOOP:
-                    packets.add(createNoopPacket(data));
+                    packets.add(createNoopPacket());
                     break;
                 default:
                     throw new SocketIOProtocolException("Unexpected EIO packet type: " + type);

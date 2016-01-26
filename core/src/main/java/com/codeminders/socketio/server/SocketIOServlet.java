@@ -42,7 +42,6 @@ public abstract class SocketIOServlet extends HttpServlet
 {
     private static final Logger LOGGER = Logger.getLogger(SocketIOServlet.class.getName());
 
-    private TransportProvider transportProvider;
     private final SocketIOManager socketIOManager = new SocketIOManager();
 
     public Namespace of(String id)
@@ -56,8 +55,7 @@ public abstract class SocketIOServlet extends HttpServlet
 
     public void setTransportProvider(TransportProvider transportProvider)
     {
-        assert (transportProvider != null);
-        this.transportProvider = transportProvider;
+        socketIOManager.setTransportProvider(transportProvider);
     }
 
     @Override
@@ -65,10 +63,10 @@ public abstract class SocketIOServlet extends HttpServlet
     {
         if (LOGGER.isLoggable(Level.INFO))
         {
-            if (transportProvider != null)
+            if (socketIOManager.getTransportProvider() != null)
             {
-                LOGGER.log(Level.INFO, "Transports: " + transportProvider.getTransports());
-                if (transportProvider.getTransports().size() == 0)
+                LOGGER.log(Level.INFO, "Transports: " + socketIOManager.getTransportProvider().getTransports());
+                if (socketIOManager.getTransportProvider().getTransports().size() == 0)
                     LOGGER.log(Level.INFO, "No transport defined. TransportProvider.init() should be called.");
             }
             else
@@ -81,7 +79,7 @@ public abstract class SocketIOServlet extends HttpServlet
     @Override
     public void destroy()
     {
-        transportProvider.destroy();
+        socketIOManager.getTransportProvider().destroy();
         super.destroy();
     }
 
@@ -116,11 +114,11 @@ public abstract class SocketIOServlet extends HttpServlet
         }
         else
         {
-            assert (transportProvider != null);
+            assert (socketIOManager.getTransportProvider() != null);
 
             try
             {
-                Transport transport = transportProvider.getTransport(request);
+                Transport transport = socketIOManager.getTransportProvider().getTransport(request);
 
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Handling request from " +

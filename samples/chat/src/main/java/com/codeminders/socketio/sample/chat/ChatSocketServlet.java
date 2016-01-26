@@ -170,21 +170,21 @@ public class ChatSocketServlet extends JettySocketIOServlet
             }
         });
 
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    of("/chat").in("room").emit("time", new Date().toString());
-                }
-                catch (SocketIOException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }, 0, 20, TimeUnit.SECONDS);
+//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable()
+//        {
+//            @Override
+//            public void run()
+//            {
+//                try
+//                {
+//                    of("/chat").in("room").emit("time", new Date().toString());
+//                }
+//                catch (SocketIOException e)
+//                {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }, 0, 20, TimeUnit.SECONDS);
 
 
 //        of("/news").on(new ConnectionListener()

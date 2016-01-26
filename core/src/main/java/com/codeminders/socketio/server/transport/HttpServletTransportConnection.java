@@ -1,25 +1,18 @@
 package com.codeminders.socketio.server.transport;
 
-import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.SocketIOException;
-import com.codeminders.socketio.protocol.BinaryPacket;
 import com.codeminders.socketio.protocol.EngineIOPacket;
 import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.protocol.SocketIOPacket;
-import com.codeminders.socketio.server.Session;
 import com.codeminders.socketio.server.SocketIOProtocolException;
 import com.codeminders.socketio.server.Transport;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
-import java.util.List;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Level;
@@ -31,9 +24,6 @@ import java.util.logging.Logger;
 public class HttpServletTransportConnection extends AbstractTransportConnection
 {
     private static final Logger LOGGER = Logger.getLogger(HttpServletTransportConnection.class.getName());
-
-//    private HttpServletRequest request;
-//    private HttpServletResponse response;
 
     private BlockingQueue<EngineIOPacket> packets = new LinkedBlockingDeque<>();
 
@@ -47,8 +37,8 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-//        this.request = request;
-//        this.response = response;
+        if(done)
+            return;
 
         if ("POST".equals(request.getMethod())) //incoming
         {
@@ -60,7 +50,7 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
                 String payload = CharStreams.toString(request.getReader());
 
                 for (EngineIOPacket packet : EngineIOProtocol.decodePayload(payload))
-                    getSession().onPacket(packet);
+                    getSession().onPacket(packet, this);
             }
             else
             {
@@ -77,7 +67,11 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
 
                 OutputStream os = response.getOutputStream();
                 for (EngineIOPacket packet = packets.take(); packet != null; packet = packets.poll())
+                {
+                    if(done)
+                        break;
                     EngineIOProtocol.binaryEncode(packet, os);
+                }
 
                 response.flushBuffer();
             }
@@ -96,12 +90,18 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
     @Override
     public void abort()
     {
-        //TODO: interrupt lock/wait on new packet to send. use 'poison pill shutdown' method
-        //TODO: release currently opened HTTP Connection
+        try
+        {
+            done = true;
+            send(EngineIOProtocol.createNoopPacket());
+        }
+        catch (SocketIOException e)
+        {
+            // ignore
+        }
 
         //TODO: do we need to call onShutdown()?
         //TODO: what if we are closing connection but not whole session? Do we need a special call for this?
-//        getSession().onShutdown();
     }
 
     @Override

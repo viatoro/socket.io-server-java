@@ -48,6 +48,7 @@ public final class SocketIOManager
 
     private final Map<String, Namespace>         namespaces = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Session> sessions   = new ConcurrentHashMap<>();
+    private TransportProvider transportProvider;
 
     final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
@@ -114,5 +115,15 @@ public final class SocketIOManager
     public Namespace getNamespace(String id)
     {
         return namespaces.get(id);
+    }
+
+    public TransportProvider getTransportProvider()
+    {
+        return transportProvider;
+    }
+
+    public void setTransportProvider(TransportProvider transportProvider)
+    {
+        this.transportProvider = transportProvider;
     }
 }

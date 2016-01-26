@@ -33,6 +33,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,19 +44,23 @@ public abstract class AbstractHttpTransport extends AbstractTransport
     @Override
     public final void handle(HttpServletRequest request,
                              HttpServletResponse response,
-                             SocketIOManager sessionIOManager)
+                             SocketIOManager socketIOManager)
             throws IOException
     {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
 
-        TransportConnection connection = getConnection(request, sessionIOManager);
+        TransportConnection connection = getConnection(request, socketIOManager);
         Session session = connection.getSession();
 
         if (session.getConnectionState() == ConnectionState.CONNECTING)
         {
+            ArrayList<String> upgrades = new ArrayList<>();
+            if(socketIOManager.getTransportProvider().getTransport(TransportType.WEB_SOCKET) != null)
+                upgrades.add("websocket");
+
             connection.send(EngineIOProtocol.createHandshakePacket(session.getSessionId(),
-                    new String[]{"websocket"}, //TODO: check if websocket is available via TransportProvider
+                    upgrades.toArray(new String[upgrades.size()]),
                     getConfig().getPingInterval(Config.DEFAULT_PING_INTERVAL),
                     getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT)));
 
