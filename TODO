@@ -1,4 +1,3 @@
-* upgrade transport
 * binary attachments for XHR Polling
 * CORS support for XHR Polling
 * handle b64 flag
