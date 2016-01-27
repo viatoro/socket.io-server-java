@@ -137,7 +137,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
         try
         {
-            getSession().onBinary(is);
+            getSession().onPacket(EngineIOProtocol.decode(is), this);
         }
         catch (SocketIOProtocolException e)
         {

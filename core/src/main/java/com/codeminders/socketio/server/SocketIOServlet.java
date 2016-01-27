@@ -129,10 +129,10 @@ public abstract class SocketIOServlet extends HttpServlet
             }
             catch (UnsupportedTransportException | SocketIOProtocolException e)
             {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Cannot find appropriate transport");
+//                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
 
                 if (LOGGER.isLoggable(Level.WARNING))
-                    LOGGER.log(Level.WARNING, "Cannot find appropriate transport", e);
+                    LOGGER.log(Level.WARNING, "Socket IO error", e);
             }
         }
     }

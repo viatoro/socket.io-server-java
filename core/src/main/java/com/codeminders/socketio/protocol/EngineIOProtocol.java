@@ -188,6 +188,11 @@ public final class EngineIOProtocol
         return new EngineIOPacket(EngineIOPacket.Type.MESSAGE, data);
     }
 
+    public static EngineIOPacket createMessagePacket(InputStream data)
+    {
+        return new EngineIOPacket(EngineIOPacket.Type.MESSAGE, data);
+    }
+
     public static EngineIOPacket createUpgradePacket()
     {
         return new EngineIOPacket(EngineIOPacket.Type.UPGRADE);
@@ -257,5 +262,66 @@ public final class EngineIOProtocol
         pos.setIndex(idx + 1);
         return type;
     }
+
+    static int decodePacketLength(InputStream is)
+            throws IOException
+    {
+        int len = 0;
+
+        while (true)
+        {
+            int b = is.read();
+            if(b < 0)
+                return -1; // end of stream. time to go
+            if(b > 9)
+                break; // end of encoded length
+            len = len * 10 + b;
+        }
+
+        return len;
+    }
+
+    static EngineIOPacket.Type decodePacketType(InputStream is)
+            throws IOException
+    {
+        int i = is.read();
+        if(i < 0)
+            throw new SocketIOProtocolException("Unexpected end of stream");
+        return EngineIOPacket.Type.fromInt(i);
+    }
+
+    public static List<EngineIOPacket> binaryDecodePayload(InputStream is)
+            throws IOException
+    {
+        ArrayList<EngineIOPacket> packets = new ArrayList<>();
+        if(is.read() != 1)
+            throw new SocketIOProtocolException("Expected binary marker in the payload");
+
+        while (true)
+        {
+            int len = decodePacketLength(is);
+            if(len < 0)
+                break;
+
+            if(len == 0)
+                throw new SocketIOProtocolException("Empty binary attahcment");
+
+            EngineIOPacket.Type type = decodePacketType(is);
+            len -= 1;
+            byte[] data = new byte[len];
+            ByteStreams.readFully(is, data);
+            switch (type)
+            {
+                case MESSAGE:
+                    packets.add(createMessagePacket(new ByteArrayInputStream(data)));
+                    break;
+                default:
+                    throw new SocketIOProtocolException("Unexpected EIO packet type: " + type);
+            }
+        }
+
+        return packets;
+    }
+
 
 }

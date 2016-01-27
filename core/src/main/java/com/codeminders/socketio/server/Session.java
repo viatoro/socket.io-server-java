@@ -2,19 +2,19 @@
  * The MIT License
  * Copyright (c) 2010 Tad Glines
  * Copyright (c) 2015 Alexander Sova (bird@codeminders.com)
- * <p/>
+ * <p>
  * Contributors: Ovea.com, Mycila.com
- * <p/>
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * <p/>
+ * <p>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * <p/>
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 
 /**
  * SocketIO session.
- * <p/>
+ * <p>
  * This implementation is not thread-safe.
  *
  * @author Alexander Sova (bird@codeminders.com)
@@ -148,19 +148,14 @@ public class Session implements DisconnectListener
         return timeout;
     }
 
-    public void onBinary(InputStream is)
+    private void onBinary(InputStream is)
             throws SocketIOProtocolException
     {
-        EngineIOPacket engineIOPacket = EngineIOProtocol.decode(is);
-
-        if (engineIOPacket.getType() != EngineIOPacket.Type.MESSAGE)
-            throw new SocketIOProtocolException("Unexpected binary packet type. Type: " + engineIOPacket.getType());
-
         if (binaryPacket == null)
             throw new SocketIOProtocolException("Unexpected binary object");
 
-        SocketIOProtocol.insertBinaryObject(binaryPacket, engineIOPacket.getBinaryData());
-        binaryPacket.addAttachment(engineIOPacket.getBinaryData()); //keeping copy of all attachments in attachments list
+        SocketIOProtocol.insertBinaryObject(binaryPacket, is);
+        binaryPacket.addAttachment(is); //keeping copy of all attachments in attachments list
         if (binaryPacket.isComplete())
         {
             if (binaryPacket.getType() == SocketIOPacket.Type.BINARY_EVENT)
@@ -242,9 +237,9 @@ public class Session implements DisconnectListener
 
         // taking copy of sockets because
         // session will be modifying the collection while iterating
-        for(Object o : sockets.values().toArray())
+        for (Object o : sockets.values().toArray())
         {
-            Socket socket = (Socket)o;
+            Socket socket = (Socket) o;
             socket.onDisconnect(socket, reason, disconnectMessage);
         }
 
@@ -276,7 +271,10 @@ public class Session implements DisconnectListener
                 resetTimeout();
                 try
                 {
-                    onPacket(SocketIOProtocol.decode(packet.getTextData()));
+                    if (packet.getTextData() != null)
+                        onPacket(SocketIOProtocol.decode(packet.getTextData()));
+                    else if (packet.getBinaryData() != null)
+                        onBinary(packet.getBinaryData());
                 }
                 catch (SocketIOProtocolException e)
                 {
@@ -290,7 +288,7 @@ public class Session implements DisconnectListener
                 onPing(packet.getTextData(), connection);
 
                 // ugly hack to replicate current sio client behaviour
-                if(connection != getConnection())
+                if (connection != getConnection())
                     forcePollingCycle();
 
                 return;
@@ -442,7 +440,7 @@ public class Session implements DisconnectListener
 
     private void upgradeConnection(TransportConnection connection)
     {
-        if(LOGGER.isLoggable(Level.FINE))
+        if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Upgrading from " + this.activeConnection.getTransport() + " to " + connection.getTransport());
 
         this.activeConnection = connection;
@@ -453,7 +451,7 @@ public class Session implements DisconnectListener
      */
     private void closeConnection(DisconnectReason reason, TransportConnection connection)
     {
-        if(this.activeConnection == connection)
+        if (this.activeConnection == connection)
             setDisconnectReason(reason);
         connection.abort(); //this call should trigger onShutdown() eventually
     }
@@ -489,7 +487,7 @@ public class Session implements DisconnectListener
         }
         catch (SocketIOException e)
         {
-            if(LOGGER.isLoggable(Level.WARNING))
+            if (LOGGER.isLoggable(Level.WARNING))
                 LOGGER.log(Level.WARNING, "Cannot send NOOP packet while upgrading the transport", e);
         }
     }

@@ -69,7 +69,9 @@
         if(val == '/lbinary')
         {
             addLine('<em>sending binary...</em>');
-            socket.emit('client binary', {"buffer": new Uint8Array([1,2,3,4]).buffer});
+            socket.emit('client binary', {"buffer": new Uint8Array([1,2,3,4,5,6,7,8,9,10,11]).buffer}, function() {
+                addLine('<em>binary received</em>');
+            });
         }
         else
         {

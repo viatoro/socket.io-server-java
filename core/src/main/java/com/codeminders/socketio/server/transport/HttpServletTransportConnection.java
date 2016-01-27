@@ -1,6 +1,7 @@
 package com.codeminders.socketio.server.transport;
 
 import com.codeminders.socketio.common.SocketIOException;
+import com.codeminders.socketio.protocol.BinaryPacket;
 import com.codeminders.socketio.protocol.EngineIOPacket;
 import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.protocol.SocketIOPacket;
@@ -11,6 +12,7 @@ import com.google.common.io.CharStreams;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.concurrent.BlockingQueue;
@@ -47,14 +49,21 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
             String contentType = request.getContentType();
             if (contentType.startsWith("text/"))
             {
+                // text encoding
                 String payload = CharStreams.toString(request.getReader());
 
                 for (EngineIOPacket packet : EngineIOProtocol.decodePayload(payload))
                     getSession().onPacket(packet, this);
             }
             else
+            if (contentType.startsWith("application/octet-stream"))
             {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                // binary encoding
+                for (EngineIOPacket packet : EngineIOProtocol.binaryDecodePayload(request.getInputStream()))
+                    getSession().onPacket(packet, this);
+            }
+            else
+            {
                 throw new SocketIOProtocolException("Unsupported request content type for incoming polling request: " + contentType);
             }
             response.getWriter().print("ok");
@@ -99,9 +108,6 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
         {
             // ignore
         }
-
-        //TODO: do we need to call onShutdown()?
-        //TODO: what if we are closing connection but not whole session? Do we need a special call for this?
     }
 
     @Override
@@ -113,7 +119,11 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
     @Override
     public void send(SocketIOPacket packet) throws SocketIOException
     {
-        //TODO: binary (payload) encoding here. that should include binary objects too
         send(EngineIOProtocol.createMessagePacket(packet.encode()));
+        if(packet instanceof BinaryPacket)
+        {
+            for (InputStream is : ((BinaryPacket)packet).getAttachments())
+                send(EngineIOProtocol.createMessagePacket(is));
+        }
     }
 }
