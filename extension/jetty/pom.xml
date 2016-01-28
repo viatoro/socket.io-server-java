@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>com.codeminders.socketio.extension</groupId>
-        <artifactId>socketio-extension</artifactId>
-        <version>0.3</version>
+        <artifactId>socketio-server-extension</artifactId>
+        <version>1.0</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>socketio-jetty</artifactId>
+    <artifactId>socketio-server-jetty</artifactId>
     <packaging>jar</packaging>
 
     <name>Socket.IO Extension Jetty</name>
@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.codeminders.socketio</groupId>
-            <artifactId>socketio-core</artifactId>
+            <artifactId>socketio-server-core</artifactId>
         </dependency>
 
         <dependency>

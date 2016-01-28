@@ -6,16 +6,16 @@
 
     <parent>
         <groupId>com.codeminders.socketio</groupId>
-        <artifactId>socketio</artifactId>
-        <version>0.3</version>
+        <artifactId>socketio-server</artifactId>
+        <version>1.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <groupId>com.codeminders.socketio.extension</groupId>
-    <artifactId>socketio-extension</artifactId>
+    <artifactId>socketio-server-extension</artifactId>
     <packaging>pom</packaging>
 
-    <name>Socket.IO Extensions</name>
+    <name>Socket.IO Server Extensions</name>
     <description>Socket.IO Java Extensions</description>
 
     <modules>

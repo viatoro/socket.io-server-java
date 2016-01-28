@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.codeminders.socketio</groupId>
-    <artifactId>socketio</artifactId>
-    <version>0.3</version>
+    <artifactId>socketio-server</artifactId>
+    <version>1.0</version>
     <packaging>pom</packaging>
 
-    <name>Socket.IO Java</name>
+    <name>Socket.IO Java Server</name>
     <description>Java backend for Socket.IO javascript library</description>
     <inceptionYear>2010</inceptionYear>
 
@@ -71,21 +71,10 @@
         </license>
     </licenses>
 
-    <!--<issueManagement>-->
-        <!--<system>github</system>-->
-        <!--<url>https://github.com/tadglines/Socket.IO-Java/issues</url>-->
-    <!--</issueManagement>-->
-
-    <!--<ciManagement>-->
-        <!--<system>hudson</system>-->
-        <!--<url>http://build.intradev.ovea.com/hudson/</url>-->
-    <!--</ciManagement>-->
-
-    <!--<scm>-->
-        <!--<connection>scm:git:git@github.com:tadglines/Socket.IO-Java.git</connection>-->
-        <!--<developerConnection>scm:git:git@github.com:tadglines/Socket.IO-Java.git</developerConnection>-->
-        <!--<url>https://github.com/tadglines/Socket.IO-Java</url>-->
-    <!--</scm>-->
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/codeminders/socket.io-server-java/issues</url>
+    </issueManagement>
 
     <modules>
         <module>core</module>
@@ -204,33 +193,6 @@
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.2</version>
                 </plugin>
-
-                <!--<plugin>-->
-                    <!--<groupId>com.mycila.maven-license-plugin</groupId>-->
-                    <!--<artifactId>maven-license-plugin</artifactId>-->
-                    <!--<version>1.9.0</version>-->
-                    <!--<configuration>-->
-                        <!--<strictCheck>true</strictCheck>-->
-                        <!--<properties>-->
-                            <!--<owner>Tad Glines</owner>-->
-                            <!--<year>${project.inceptionYear}</year>-->
-                            <!--<contributors>Ovea.com, Mycila.com</contributors>-->
-                        <!--</properties>-->
-                        <!--<excludes>-->
-                            <!--<exclude>.idea/**</exclude>-->
-                            <!--<exclude>README</exclude>-->
-                            <!--<exclude>licenses/**</exclude>-->
-                            <!--<exclude>src/test/resources/**</exclude>-->
-                            <!--<exclude>**/*.ods</exclude>-->
-                            <!--<exclude>**/.gitignore</exclude>-->
-                            <!--<exclude>**/jndi.properties</exclude>-->
-                            <!--<exclude>**/logging.properties</exclude>-->
-                            <!--<exclude>**/*.js</exclude>-->
-                            <!--<exclude>**/*.swf</exclude>-->
-                            <!--<exclude>**/com.glines.socketio.sample.gwtchat.GWTChat/**</exclude>-->
-                        <!--</excludes>-->
-                    <!--</configuration>-->
-                <!--</plugin>-->
                 <plugin>
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>1.6</version>
@@ -288,17 +250,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -332,12 +283,12 @@
         <dependencies>
             <dependency>
                 <groupId>com.codeminders.socketio</groupId>
-                <artifactId>socketio-core</artifactId>
+                <artifactId>socketio-server-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.codeminders.socketio.extension</groupId>
-                <artifactId>socketio-jetty</artifactId>
+                <artifactId>socketio-server-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- servlet api -->
@@ -444,13 +395,6 @@
             </activation>
             <build>
                 <plugins>
-                    <!--<plugin>-->
-                        <!--<groupId>com.mycila.maven-license-plugin</groupId>-->
-                        <!--<artifactId>maven-license-plugin</artifactId>-->
-                        <!--<configuration>-->
-                            <!--<header>https://github.com/tadglines/Socket.IO-Java/raw/master/licenses/MIT</header>-->
-                        <!--</configuration>-->
-                    <!--</plugin>-->
                 </plugins>
             </build>
         </profile>

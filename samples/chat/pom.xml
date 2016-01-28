@@ -6,13 +6,13 @@
 
     <parent>
         <groupId>com.codeminders.socketio.sample</groupId>
-        <artifactId>socketio-sample</artifactId>
-        <version>0.3</version>
+        <artifactId>socketio-server-sample</artifactId>
+        <version>1.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <artifactId>socketio-sample-chat</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>Socket.IO Sample Chat</name>
     <description>${project.name}</description>
@@ -20,11 +20,11 @@
     <dependencies>
         <dependency>
             <groupId>com.codeminders.socketio</groupId>
-            <artifactId>socketio-core</artifactId>
+            <artifactId>socketio-server-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.codeminders.socketio.extension</groupId>
-            <artifactId>socketio-jetty</artifactId>
+            <artifactId>socketio-server-jetty</artifactId>
         </dependency>
 
         <!-- logging -->

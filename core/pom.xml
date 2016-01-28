@@ -18,12 +18,12 @@
 
     <parent>
         <groupId>com.codeminders.socketio</groupId>
-        <artifactId>socketio</artifactId>
-        <version>0.3</version>
+        <artifactId>socketio-server</artifactId>
+        <version>1.0</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>socketio-core</artifactId>
+    <artifactId>socketio-server-core</artifactId>
     <packaging>jar</packaging>
 
     <name>Socket.IO Java Core</name>
