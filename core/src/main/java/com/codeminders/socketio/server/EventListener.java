@@ -30,6 +30,7 @@ public interface EventListener
     /**
      * Called upon incoming event
      *
+     * @param ackRequested true if client requested an acknowledgement
      * @param name event name
      * @param args event arguments
      * @return Object to send back to the caller as an acknowledgement, null if no ack to be sent

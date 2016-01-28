@@ -193,6 +193,8 @@ public class Session implements DisconnectListener
 
     /**
      * Optional. if transport knows detailed error message it could be set before calling onShutdown()
+     *
+     * @param message detailed explanation of the disconnect reason
      */
     public void setDisconnectMessage(String message)
     {
@@ -200,7 +202,9 @@ public class Session implements DisconnectListener
     }
 
     /**
-     * Calling this method will change activeConnection status to CLOSING!
+     * Calling this method will change activeConnection status to CLOSING
+     *
+     * @param reason session disconnect reason
      */
     public void setDisconnectReason(DisconnectReason reason)
     {

@@ -47,7 +47,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
  */
 
 @WebSocket

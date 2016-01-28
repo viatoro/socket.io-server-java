@@ -183,7 +183,7 @@ public final class SocketIOProtocol
         };
     }
 
-    /**
+    /*
      * This method could create either EventPacket or BinaryEventPacket based
      * on the content of args parameter.
      * If args has any InputStream inside then SockeIOBinaryEventPacket will be created
@@ -388,6 +388,7 @@ public final class SocketIOProtocol
      *
      * @param packet     packet to add a binary object
      * @param attachment binary object to insert
+     * @throws SocketIOProtocolException if no placeholder object is found
      */
     public static void insertBinaryObject(BinaryPacket packet, InputStream attachment)
             throws SocketIOProtocolException
@@ -401,7 +402,7 @@ public final class SocketIOProtocol
         packet.setArgs((Object[])copy);
     }
 
-    /**
+    /*
      * This method makes a copy of {@code json} replacing placeholder entry with {@code attachment}
      *
      * @param json       JSON object

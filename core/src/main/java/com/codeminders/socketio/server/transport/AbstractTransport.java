@@ -29,7 +29,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
  * @author Mathieu Carbou
  */
 public abstract class AbstractTransport implements Transport

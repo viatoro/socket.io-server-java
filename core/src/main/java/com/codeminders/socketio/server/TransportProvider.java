@@ -27,19 +27,28 @@ import javax.servlet.ServletRequest;
 import java.util.Collection;
 
 /**
- * @author Alexander Sova <bird@codeminders.com>
+ * Transport factory
+ *
+ * @author Alexander Sova (bird@codeminders.com)
  */
 public interface TransportProvider {
 
-    /*
-        Creates all the transports
+    /**
+     * Creates all the transports
+     *
+     * @param config servlet configuration
      */
     void init(ServletConfig config);
     void destroy();
 
-    /*
-        Finds appropriate Transport class based on the rules defined at
-        https://github.com/socketio/engine.io-protocol#transports
+    /**
+     *   Finds appropriate Transport class based on the rules defined at
+     *   https://github.com/socketio/engine.io-protocol#transports
+     *
+     *   @param request incoming servlet request
+     *   @return appropriate Transport object
+     *   @throws UnsupportedTransportException no transport was found
+     *   @throws SocketIOProtocolException invalid request was sent
      */
     Transport getTransport(ServletRequest request)
             throws UnsupportedTransportException, SocketIOProtocolException;

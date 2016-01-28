@@ -35,7 +35,7 @@ import java.io.IOException;
 
 /**
  * @author Mathieu Carbou
- * @author Alexander Sova <bird@codeminders.com>
+ * @author Alexander Sova (bird@codeminders.com)
 */
 public interface TransportConnection
 {
@@ -64,8 +64,7 @@ public interface TransportConnection
      * @param name event name
      * @param args list of arguments. Arguments can contain any type of field that can result of JSON decoding,
      *             including objects and arrays of arbitrary size.
-     * @throws IllegalStateException if the socket is not CONNECTED.
-     * @throws SocketIOException
+     * @throws SocketIOException if IO or protocol error happens
      */
 
     void emit(String namespace, String name, Object... args) throws SocketIOException;
