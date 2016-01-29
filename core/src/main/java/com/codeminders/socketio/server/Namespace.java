@@ -95,7 +95,13 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
         sockets.remove(socket);
     }
 
-    public Room in(String roomId)
+    /**
+     * Finds or creates a room.
+     *
+     * @param roomId room id
+     * @return Room object
+     */
+    public Room room(String roomId)
     {
         Room room = rooms.get(roomId);
         if(room == null)
@@ -104,6 +110,17 @@ public class Namespace implements Outbound, ConnectionListener, DisconnectListen
             rooms.put(roomId, room);
         }
         return room;
+    }
+
+    /**
+     * Finds or creates a room.
+     *
+     * @param roomId room id
+     * @return Room object
+     */
+    public Room in(String roomId)
+    {
+        return room(roomId);
     }
 
     void leaveAll(Socket socket)
