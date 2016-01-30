@@ -44,7 +44,26 @@ public abstract class SocketIOServlet extends HttpServlet
 
     private final SocketIOManager socketIOManager = new SocketIOManager();
 
+    /**
+     * Initializes and retrieves the given Namespace by its pathname identifier {@code id}.
+     *
+     * If the namespace was already initialized it returns it right away.
+     * @param id namespace id
+     * @return namespace object
+     */
     public Namespace of(String id)
+    {
+        return namespace(id);
+    }
+
+    /**
+     * Initializes and retrieves the given Namespace by its pathname identifier {@code id}.
+     *
+     * If the namespace was already initialized it returns it right away.
+     * @param id namespace id
+     * @return namespace object
+     */
+    public Namespace namespace(String id)
     {
         Namespace ns = socketIOManager.getNamespace(id);
         if (ns == null)
@@ -129,7 +148,7 @@ public abstract class SocketIOServlet extends HttpServlet
             }
             catch (UnsupportedTransportException | SocketIOProtocolException e)
             {
-//                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
 
                 if (LOGGER.isLoggable(Level.WARNING))
                     LOGGER.log(Level.WARNING, "Socket IO error", e);
