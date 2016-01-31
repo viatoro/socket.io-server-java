@@ -26,6 +26,8 @@ import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -42,19 +44,15 @@ public abstract class AbstractTransport implements Transport
     }
 
     @Override
-    public final void init(ServletConfig config)
+    public void init(ServletConfig config, ServletContext context)
+            throws ServletException
     {
         this.config = new ServletBasedConfig(config, getType().toString());
-        init();
     }
 
     protected final Config getConfig()
     {
         return config;
-    }
-
-    protected void init()
-    {
     }
 
     protected final TransportConnection createConnection(Session session)

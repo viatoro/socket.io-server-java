@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,8 +50,13 @@ public final class JettyWebSocketTransport extends AbstractTransport
     private final WebSocketServerFactory wsFactory = new WebSocketServerFactory();
 
     @Override
-    public void init()
+    public void init(ServletConfig config, ServletContext context)
+            throws ServletException
     {
+        super.init(config, context);
+
+        wsFactory.init(context);
+
         wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
         wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());

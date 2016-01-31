@@ -16,6 +16,7 @@
     <properties>
         <jdk.version>1.7</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--<jetty-version>9.3.7.v20160115</jetty-version>-->
         <jetty-version>9.2.14.v20151106</jetty-version>
     </properties>
 

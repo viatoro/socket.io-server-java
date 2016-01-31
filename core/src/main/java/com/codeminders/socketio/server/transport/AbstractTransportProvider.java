@@ -4,6 +4,8 @@ import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import java.util.*;
 import java.util.logging.Logger;
@@ -21,14 +23,15 @@ public abstract class AbstractTransportProvider implements TransportProvider {
      *   Creates and initializes all available transports
      */
     @Override
-    public void init(ServletConfig config)
+    public void init(ServletConfig config, ServletContext context)
+            throws ServletException
     {
         addIfNotNull(TransportType.XHR_POLLING,   createXHRPollingTransport());
         addIfNotNull(TransportType.JSONP_POLLING, createJSONPPollingTransport());
         addIfNotNull(TransportType.WEB_SOCKET,    createWebSocketTransport());
 
         for(Transport t : transports.values())
-            t.init(config);
+            t.init(config, context);
     }
 
     @Override

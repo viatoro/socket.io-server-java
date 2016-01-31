@@ -26,6 +26,8 @@
 package com.codeminders.socketio.server;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -41,8 +43,11 @@ public interface Transport
      * Initializes the transport
      *
      * @param config Servlet config
+     * @param context Servlet context
+     * @throws ServletException if init fails
      */
-    void init(ServletConfig config);
+    void init(ServletConfig config, ServletContext context)
+        throws ServletException;
 
     void destroy();
 

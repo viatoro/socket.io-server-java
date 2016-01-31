@@ -23,6 +23,8 @@
 package com.codeminders.socketio.server;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import java.util.Collection;
 
@@ -38,7 +40,8 @@ public interface TransportProvider {
      *
      * @param config servlet configuration
      */
-    void init(ServletConfig config);
+    void init(ServletConfig config, ServletContext context)
+            throws ServletException;
     void destroy();
 
     /**
