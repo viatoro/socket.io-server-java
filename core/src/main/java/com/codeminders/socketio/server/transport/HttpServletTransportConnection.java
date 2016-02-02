@@ -25,8 +25,8 @@ import java.util.logging.Logger;
  */
 public class HttpServletTransportConnection extends AbstractTransportConnection
 {
-    private String ALLOWED_ORIGINS   = "allowedOrigins";
-    private String ALLOW_ALL_ORIGINS = "allowAllOrigins";
+    private static final String ALLOWED_ORIGINS   = "allowedOrigins";
+    private static final String ALLOW_ALL_ORIGINS = "allowAllOrigins";
 
     private static final Logger LOGGER = Logger.getLogger(HttpServletTransportConnection.class.getName());
 
