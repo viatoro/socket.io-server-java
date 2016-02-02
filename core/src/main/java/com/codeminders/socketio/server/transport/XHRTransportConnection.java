@@ -23,18 +23,18 @@ import java.util.logging.Logger;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class HttpServletTransportConnection extends AbstractTransportConnection
+public class XHRTransportConnection extends AbstractTransportConnection
 {
     private static final String ALLOWED_ORIGINS   = "allowedOrigins";
     private static final String ALLOW_ALL_ORIGINS = "allowAllOrigins";
 
-    private static final Logger LOGGER = Logger.getLogger(HttpServletTransportConnection.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(XHRTransportConnection.class.getName());
 
     private BlockingQueue<EngineIOPacket> packets = new LinkedBlockingDeque<>();
 
     private boolean done = false;
 
-    public HttpServletTransportConnection(Transport transport)
+    public XHRTransportConnection(Transport transport)
     {
         super(transport);
     }

@@ -37,27 +37,4 @@ public class JettyTransportProvider extends AbstractTransportProvider
         return new JettyWebSocketTransport();
     }
 
-//    protected Transport createXHRPollingTransport()
-//    {
-//        return new XHRPollingTransport()
-//        {
-//            @Override
-//            public TransportConnection createConnection()
-//            {
-//                return new HttpServletTransportConnection(this);
-//            }
-//        };
-//    }
-//
-//    protected Transport createJSONPPollingTransport()
-//    {
-//        return new JSONPPollingTransport()
-//        {
-//            @Override
-//            public TransportConnection createConnection()
-//            {
-//                return new HttpServletTransportConnection(this);
-//            }
-//        };
-//    }
 }

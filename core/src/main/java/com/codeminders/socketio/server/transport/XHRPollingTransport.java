@@ -38,7 +38,7 @@ public class XHRPollingTransport extends AbstractHttpTransport
     @Override
     public TransportConnection createConnection()
     {
-        return new HttpServletTransportConnection(this);
+        return new XHRTransportConnection(this);
     }
 
 }
