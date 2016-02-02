@@ -45,7 +45,6 @@ public abstract class AbstractTransportProvider implements TransportProvider {
     public Transport getTransport(ServletRequest request)
             throws UnsupportedTransportException, SocketIOProtocolException
     {
-        //TODO: check EIO version? I do not see it in the spec but it is in actual requests. Ignoring it for now.
         String transportName = request.getParameter(EngineIOProtocol.TRANSPORT);
         if(transportName == null)
             throw new SocketIOProtocolException("Missing transport parameter");

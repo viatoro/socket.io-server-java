@@ -1,4 +1,2 @@
-
-* CORS support for XHR Polling
 * handle b64 flag
 * JSONP polling transport (not sure how to test it)

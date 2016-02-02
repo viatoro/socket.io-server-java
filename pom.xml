@@ -77,6 +77,12 @@
         <url>https://github.com/codeminders/socket.io-server-java/issues</url>
     </issueManagement>
 
+    <scm>
+        <connection>scm:git:git@github.com:codeminders/socket.io-server-java.git</connection>
+        <developerConnection>scm:git:git@github.com:codeminders/socket.io-server-java.git</developerConnection>
+        <url>git@github.com:codeminders/socket.io-server-java.git</url>
+    </scm>
+
     <modules>
         <module>core</module>
         <module>extension</module>

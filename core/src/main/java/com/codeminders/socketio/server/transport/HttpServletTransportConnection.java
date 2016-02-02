@@ -25,6 +25,9 @@ import java.util.logging.Logger;
  */
 public class HttpServletTransportConnection extends AbstractTransportConnection
 {
+    private String ALLOWED_ORIGINS   = "allowedOrigins";
+    private String ALLOW_ALL_ORIGINS = "allowAllOrigins";
+
     private static final Logger LOGGER = Logger.getLogger(HttpServletTransportConnection.class.getName());
 
     private BlockingQueue<EngineIOPacket> packets = new LinkedBlockingDeque<>();
@@ -42,6 +45,20 @@ public class HttpServletTransportConnection extends AbstractTransportConnection
         if(done)
             return;
 
+        if(getConfig().getBoolean(ALLOW_ALL_ORIGINS, false))
+        {
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+        }
+        else
+        {
+            String origins = getConfig().getString(ALLOWED_ORIGINS);
+            if (origins != null)
+            {
+                response.setHeader("Access-Control-Allow-Origin", origins);
+                response.setHeader("Access-Control-Allow-Credentials", "true");
+            }
+        }
         if ("POST".equals(request.getMethod())) //incoming
         {
             response.setContentType("text/plain");

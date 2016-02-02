@@ -27,7 +27,6 @@ package com.codeminders.socketio.server.transport;
 import com.codeminders.socketio.server.TransportConnection;
 import com.codeminders.socketio.server.TransportType;
 
-//TODO: implement CORS
 public class XHRPollingTransport extends AbstractHttpTransport
 {
     @Override

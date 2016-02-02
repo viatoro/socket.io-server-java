@@ -44,6 +44,7 @@ public final class EngineIOProtocol
     public static final String TRANSPORT   = "transport";
     public static final String JSONP_INDEX = "j";
     public static final String BASE64_FLAG = "b64";
+    public static final String VERSION     = "EIO";
 
     private EngineIOProtocol()
     {

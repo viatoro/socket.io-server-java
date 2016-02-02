@@ -30,11 +30,11 @@ package com.codeminders.socketio.server;
 public interface Config
 {
     String MAX_TEXT_MESSAGE_SIZE = "maxTextMessageSize";
-    String PARAM_PING_INTERVAL   = "pingInterval";
-    String PARAM_TIMEOUT         = "timeout";
+    String PING_INTERVAL         = "pingInterval";
+    String TIMEOUT               = "timeout";
 
-    String PARAM_BUFFER_SIZE = "bufferSize";
-    String PARAM_MAX_IDLE    = "maxIdleTime";
+    String BUFFER_SIZE = "bufferSize";
+    String MAX_IDLE    = "maxIdleTime";
 
     int DEFAULT_BUFFER_SIZE = 8192;
     int DEFAULT_MAX_IDLE    = 300 * 1000;
@@ -57,6 +57,8 @@ public interface Config
     int getInt(String key, int def);
 
     long getLong(String key, long def);
+
+    boolean getBoolean(String key, boolean def);
 
     String getNamespace();
 }

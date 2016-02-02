@@ -48,7 +48,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
             throws IOException
     {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine("Handling request " + request.getRequestURI() + " by " + getClass().getName());
+            LOGGER.fine("Handling " + request.getMethod() + " request by " + getClass().getName());
 
         TransportConnection connection = getConnection(request, socketIOManager);
         Session session = connection.getSession();

@@ -25,6 +25,7 @@
  */
 package com.codeminders.socketio.server;
 
+import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.protocol.SocketIOProtocol;
 import com.google.common.io.ByteStreams;
 
@@ -80,19 +81,10 @@ public abstract class SocketIOServlet extends HttpServlet
     @Override
     public void init() throws ServletException
     {
-        if (LOGGER.isLoggable(Level.INFO))
-        {
-            if (socketIOManager.getTransportProvider() != null)
-            {
-                LOGGER.log(Level.INFO, "Transports: " + socketIOManager.getTransportProvider().getTransports());
-                if (socketIOManager.getTransportProvider().getTransports().size() == 0)
-                    LOGGER.log(Level.INFO, "No transport defined. TransportProvider.init() should be called.");
-            }
-            else
-                LOGGER.log(Level.INFO, "No Transport Provider is set");
-        }
-
         of(SocketIOProtocol.DEFAULT_NAMESPACE);
+
+        if (LOGGER.isLoggable(Level.INFO))
+            LOGGER.info("Socket.IO server stated.");
     }
 
     @Override
@@ -111,6 +103,13 @@ public abstract class SocketIOServlet extends HttpServlet
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException
+    {
+        serve(req, resp);
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException
     {
         serve(req, resp);
@@ -137,14 +136,16 @@ public abstract class SocketIOServlet extends HttpServlet
 
             try
             {
-                Transport transport = socketIOManager.getTransportProvider().getTransport(request);
-
                 if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Handling request from " +
+                    LOGGER.log(Level.FINE, "Request from " +
                             request.getRemoteHost() + ":" + request.getRemotePort() +
-                            " with transport: " + transport.getType());
+                            ", transport: " + request.getParameter(EngineIOProtocol.TRANSPORT) +
+                            ", EIO protocol version:" + request.getParameter(EngineIOProtocol.VERSION));
 
-                transport.handle(request, response, socketIOManager);
+                socketIOManager.
+                        getTransportProvider().
+                        getTransport(request).
+                        handle(request, response, socketIOManager);
             }
             catch (UnsupportedTransportException | SocketIOProtocolException e)
             {

@@ -25,7 +25,6 @@
 package com.codeminders.socketio.server;
 
 import javax.servlet.ServletConfig;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -33,8 +32,6 @@ import java.util.logging.Logger;
  */
 public final class ServletBasedConfig implements Config
 {
-    private static final Logger LOGGER = Logger.getLogger(ServletBasedConfig.class.getName());
-
     private final ServletConfig config;
     private final String        namespace;
 
@@ -47,25 +44,25 @@ public final class ServletBasedConfig implements Config
     @Override
     public long getPingInterval(long def)
     {
-        return getLong(PARAM_PING_INTERVAL, def);
+        return getLong(PING_INTERVAL, def);
     }
 
     @Override
     public long getTimeout(long def)
     {
-        return getLong(PARAM_TIMEOUT, def);
+        return getLong(TIMEOUT, def);
     }
 
     @Override
     public int getBufferSize()
     {
-        return getInt(PARAM_BUFFER_SIZE, DEFAULT_BUFFER_SIZE);
+        return getInt(BUFFER_SIZE, DEFAULT_BUFFER_SIZE);
     }
 
     @Override
     public int getMaxIdle()
     {
-        return getInt(PARAM_MAX_IDLE, DEFAULT_MAX_IDLE);
+        return getInt(MAX_IDLE, DEFAULT_MAX_IDLE);
     }
 
     @Override
@@ -83,6 +80,13 @@ public final class ServletBasedConfig implements Config
     }
 
     @Override
+    public boolean getBoolean(String key, boolean def)
+    {
+        String v = getString(key);
+        return v == null ? def : Boolean.parseBoolean(v);
+    }
+
+    @Override
     public String getNamespace()
     {
         return namespace;
@@ -91,15 +95,10 @@ public final class ServletBasedConfig implements Config
     @Override
     public String getString(String param)
     {
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine("Getting InitParameter: " + namespace + "." + param);
         String v = config.getInitParameter(namespace + "." + param);
         if (v == null)
-        {
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.fine("Fallback to InitParameter: " + param);
             v = config.getInitParameter(param);
-        }
+
         return v;
     }
 
