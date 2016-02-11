@@ -31,6 +31,7 @@ import com.codeminders.socketio.protocol.*;
 import com.codeminders.socketio.server.*;
 import com.google.common.io.ByteStreams;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +51,7 @@ public abstract class AbstractTransportConnection implements TransportConnection
     private Config  config;
     private Session session;
     private Transport transport;
+    private HttpServletRequest request;
 
     public AbstractTransportConnection(Transport transport)
     {
@@ -128,5 +130,14 @@ public abstract class AbstractTransportConnection implements TransportConnection
         send(packet);
     }
 
+    @Override
+    public HttpServletRequest getRequest()
+    {
+        return request;
+    }
 
+    public void setRequest(HttpServletRequest request)
+    {
+        this.request = request;
+    }
 }

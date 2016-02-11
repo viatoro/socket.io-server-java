@@ -65,7 +65,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
             {
                 try
                 {
-                    socket.emit(WELCOME, "Welcome to Socket.IO Chat!");
+                    socket.emit(WELCOME, "Welcome to Socket.IO Chat, " + socket.getRequest().getRemoteAddr() + "!");
 
                     socket.join("room");
                 }

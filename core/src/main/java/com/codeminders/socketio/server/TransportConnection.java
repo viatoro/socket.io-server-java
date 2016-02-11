@@ -68,4 +68,9 @@ public interface TransportConnection
      */
 
     void emit(String namespace, String name, Object... args) throws SocketIOException;
+
+    /**
+     * @return current HTTP request, null if connection is disconnected
+     */
+    HttpServletRequest getRequest();
 }

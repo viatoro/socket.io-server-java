@@ -68,8 +68,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         getSession().setTimeout(getConfig().getTimeout(Config.DEFAULT_PING_TIMEOUT));
 
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine(getConfig().getNamespace() + " WebSocket Connection configuration:\n" +
-                    " - timeout=" + getSession().getTimeout());
+            LOGGER.fine(getConfig().getNamespace() + " WebSocket configuration:" +
+                    " timeout=" + getSession().getTimeout());
     }
 
     @OnWebSocketConnect
@@ -101,7 +101,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     public void onWebSocketClose(int closeCode, String message)
     {
         if(LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Websocket closed. Close code: " + closeCode + " message: " + message);
+            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]:" +
+                    " websocket closed. Close code: " + closeCode + " message: " + message);
 
         //If close is unexpected then try to guess the reason based on closeCode, otherwise the reason is already set
         if(getSession().getConnectionState() != ConnectionState.CLOSING)
@@ -115,7 +116,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     public void onWebSocketText(String text)
     {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine("Text received: " + text);
+            LOGGER.fine("Session[" + getSession().getSessionId() + "]: text received: " + text);
+
         getSession().resetTimeout();
 
         try
@@ -124,7 +126,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
         catch (SocketIOProtocolException e)
         {
-            LOGGER.log(Level.WARNING, "Invalid packet received", e);
+            if(LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Invalid packet received", e);
         }
     }
 
@@ -132,7 +135,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     public void onWebSocketBinary(InputStream is)
     {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine("Binary received");
+            LOGGER.fine("Session[" + getSession().getSessionId() + "]: binary received");
+
         getSession().resetTimeout();
 
         try
@@ -141,7 +145,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
         catch (SocketIOProtocolException e)
         {
-            LOGGER.log(Level.WARNING, "Problem processing binary received", e);
+            if(LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Problem processing binary received", e);
         }
     }
 
@@ -199,8 +204,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
             throw new SocketIOClosedException();
 
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE,
-                    "Session[" + getSession().getSessionId() + "]: sendString: " + data);
+            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: send text: " + data);
+
         try
         {
             remote_endpoint.getRemote().sendString(data);
@@ -220,8 +225,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
             throw new SocketIOClosedException();
 
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE,
-                    "Session[" + getSession().getSessionId() + "]: sendBinary");
+            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: send binary");
+
         try
         {
             remote_endpoint.getRemote().sendBytes(ByteBuffer.wrap(data));

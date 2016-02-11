@@ -45,6 +45,9 @@ public class XHRTransportConnection extends AbstractTransportConnection
         if(done)
             return;
 
+        // store request for end-user to check for cookies, or user-agent or something else
+        setRequest(request);
+
         if(getConfig().getBoolean(ALLOW_ALL_ORIGINS, false))
         {
             response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
@@ -59,6 +62,7 @@ public class XHRTransportConnection extends AbstractTransportConnection
                 response.setHeader("Access-Control-Allow-Credentials", "true");
             }
         }
+
         if ("POST".equals(request.getMethod())) //incoming
         {
             response.setContentType("text/plain");
@@ -107,8 +111,9 @@ public class XHRTransportConnection extends AbstractTransportConnection
                     LOGGER.log(Level.FINE, "Polling connection interrupted", e);
             }
         }
-        else
+        else if(!"OPTIONS".equals(request.getMethod()))
         {
+            // OPTIONS is CORS pre-flight request
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }

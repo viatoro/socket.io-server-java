@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.codeminders.socketio.server.*;
 
 import com.codeminders.socketio.server.transport.AbstractTransport;
+import com.codeminders.socketio.server.transport.AbstractTransportConnection;
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
@@ -87,6 +88,9 @@ public final class JettyWebSocketTransport extends AbstractTransport
         }
 
         final TransportConnection connection = getConnection(request, sessionManager);
+
+        // a bit hacky but safe since we know the type of TransportConnection here
+        ((AbstractTransportConnection)connection).setRequest(request);
 
         wsFactory.acceptWebSocket(new WebSocketCreator() {
                 @Override

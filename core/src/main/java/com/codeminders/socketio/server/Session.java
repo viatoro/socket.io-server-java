@@ -57,6 +57,7 @@ public class Session implements DisconnectListener
 
     private TransportConnection activeConnection;
     private ConnectionState  state            = ConnectionState.CONNECTING;
+
     private DisconnectReason disconnectReason = DisconnectReason.UNKNOWN;
     private String disconnectMessage;
 
@@ -64,7 +65,7 @@ public class Session implements DisconnectListener
     private Future<?> timeoutTask;
     private boolean   timedOut;
 
-    private BinaryPacket binaryPacket;
+    private BinaryPacket              binaryPacket;
     private int                       packet_id     = 0; // packet id. used for requesting ACK
     private Map<Integer, ACKListener> ack_listeners = new LinkedHashMap<>(); // packetid, listener
 

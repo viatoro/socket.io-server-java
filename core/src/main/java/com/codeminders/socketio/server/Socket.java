@@ -25,6 +25,7 @@ package com.codeminders.socketio.server;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -131,5 +132,13 @@ public class Socket implements Outbound, DisconnectListener, EventListener
     public String getId()
     {
         return getSession().getSessionId() + getNamespace();
+    }
+
+    /**
+     * @return current HTTP request from underlying connection, null if socket is disconnected
+     */
+    public HttpServletRequest getRequest()
+    {
+        return getSession().getConnection().getRequest();
     }
 }

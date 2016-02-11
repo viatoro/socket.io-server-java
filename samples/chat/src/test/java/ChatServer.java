@@ -40,7 +40,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 public class ChatServer
 {
-
     //TODO: use Jetty DefaultServlet
     private static class StaticServlet extends HttpServlet
     {

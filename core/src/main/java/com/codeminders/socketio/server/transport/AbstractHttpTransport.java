@@ -42,7 +42,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
     private static final Logger LOGGER = Logger.getLogger(AbstractHttpTransport.class.getName());
 
     @Override
-    public final void handle(HttpServletRequest request,
+    public void handle(HttpServletRequest request,
                              HttpServletResponse response,
                              SocketIOManager socketIOManager)
             throws IOException
@@ -55,6 +55,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
 
         if (session.getConnectionState() == ConnectionState.CONNECTING)
         {
+
             ArrayList<String> upgrades = new ArrayList<>();
             if(socketIOManager.getTransportProvider().getTransport(TransportType.WEB_SOCKET) != null)
                 upgrades.add("websocket");
