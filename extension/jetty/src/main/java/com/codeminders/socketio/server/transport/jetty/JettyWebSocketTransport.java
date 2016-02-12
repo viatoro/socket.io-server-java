@@ -56,7 +56,15 @@ public final class JettyWebSocketTransport extends AbstractTransport
     {
         super.init(config, context);
 
-        wsFactory.init(context);
+        try
+        {
+            // wsFactory.init(context); //this need to be called for Jetty 9.3.x
+            wsFactory.init();
+        }
+        catch (Exception e)
+        {
+            throw new ServletException(e);
+        }
 
         wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
