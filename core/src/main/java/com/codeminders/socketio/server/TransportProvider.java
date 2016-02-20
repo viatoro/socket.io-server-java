@@ -39,6 +39,8 @@ public interface TransportProvider {
      * Creates all the transports
      *
      * @param config servlet configuration
+     * @param context servlet context
+     * @throws ServletException if init failed
      */
     void init(ServletConfig config, ServletContext context)
             throws ServletException;

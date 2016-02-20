@@ -19,7 +19,7 @@
     <parent>
         <groupId>com.codeminders.socketio</groupId>
         <artifactId>socketio-server</artifactId>
-        <version>1.0</version>
+        <version>1.0.1</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -34,11 +34,6 @@
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>servlet-api</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
