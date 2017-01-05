@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.codeminders.socketio</groupId>
         <artifactId>socketio-server</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -33,17 +33,6 @@
                 <dependency>
                     <groupId>org.testatoo.container</groupId>
                     <artifactId>testatoo-container-jetty</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <profile>
-            <id>tomcat</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.testatoo.container</groupId>
-                    <artifactId>testatoo-container-tomcat</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
