@@ -282,47 +282,66 @@ public final class EngineIOProtocol
         return len;
     }
 
-    static EngineIOPacket.Type decodePacketType(InputStream is)
+    static EngineIOPacket.Type decodePacketType(int packetFormat, InputStream is)
             throws IOException
     {
         int i = is.read();
         if(i < 0)
             throw new SocketIOProtocolException("Unexpected end of stream");
+        if(packetFormat == TEXT_FORMAT)
+            i = Integer.parseInt(String.valueOf((char)i));
+
         return EngineIOPacket.Type.fromInt(i);
     }
 
-    public static List<EngineIOPacket> binaryDecodePayload(InputStream is)
-            throws IOException
+    public final static int TEXT_FORMAT   = 0;
+    public final static int BINARY_FORMAT = 1;
+    public static List<EngineIOPacket> binaryDecodePayload(InputStream is) throws IOException
     {
-        ArrayList<EngineIOPacket> packets = new ArrayList<>();
-        if(is.read() != 1)
-            throw new SocketIOProtocolException("Expected binary marker in the payload");
-
+        final ArrayList<EngineIOPacket> packets = new ArrayList<>();
         while (true)
         {
-            int len = decodePacketLength(is);
-            if(len < 0)
+            final int packetFormat = is.read();
+            if(packetFormat == -1)
+                break; // end of payload stream, done
+            if(packetFormat != BINARY_FORMAT && packetFormat != TEXT_FORMAT)
+                throw new SocketIOProtocolException("Unknown packet format (should be 0 or 1) :" + packetFormat);
+            final int len = decodePacketLength(is);
+            if(len < 0) // end of payload stream, done
                 break;
+            if(packetFormat == BINARY_FORMAT && len == 0)
+                throw new SocketIOProtocolException("Empty binary attachment");
+            final EngineIOPacket.Type packetType = decodePacketType(packetFormat,is);
+            byte[] data = new byte[len-1];
+            ByteStreams.readFully(is, data, 0, data.length);
 
-            if(len == 0)
-                throw new SocketIOProtocolException("Empty binary attahcment");
-
-            EngineIOPacket.Type type = decodePacketType(is);
-            len -= 1;
-            byte[] data = new byte[len];
-            ByteStreams.readFully(is, data);
-            switch (type)
+            switch (packetType)
             {
+                case CLOSE:
+                    packets.add(createClosePacket());
+                    break;
+                case PING:
+                    if(packetFormat == TEXT_FORMAT)
+                        packets.add(createPingPacket(new String(data,"UTF-8")));
+                    else
+                        throw new SocketIOProtocolException("No implementation for binary PING");
+                    break;
                 case MESSAGE:
-                    packets.add(createMessagePacket(new ByteArrayInputStream(data)));
+                    if(packetFormat == TEXT_FORMAT)
+                        packets.add(createMessagePacket(new String(data,"UTF-8")));
+                    else
+                        packets.add(createMessagePacket(new ByteArrayInputStream(data)));
+                    break;
+                case UPGRADE:
+                    packets.add(createUpgradePacket());
+                    break;
+                case NOOP:
+                    packets.add(createNoopPacket());
                     break;
                 default:
-                    throw new SocketIOProtocolException("Unexpected EIO packet type: " + type);
+                    throw new SocketIOProtocolException("Unexpected EIO packet type: " + packetType);
             }
         }
-
         return packets;
     }
-
-
 }
