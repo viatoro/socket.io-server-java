@@ -24,9 +24,8 @@ package com.codeminders.socketio.server;
 
 import com.codeminders.socketio.common.SocketIOException;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
@@ -34,7 +33,7 @@ import java.util.List;
 public class Room implements Outbound
 {
     private String id;
-    private List<Socket> sockets = Collections.synchronizedList(new LinkedList<Socket>());
+    private Deque<Socket> sockets = new ConcurrentLinkedDeque<>();
 
     Room(String id)
     {
