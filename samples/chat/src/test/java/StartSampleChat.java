@@ -22,14 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import org.testatoo.container.ContainerRunner;
 
 /**
  * Just run this class and go to http://127.0.0.1:8080/
  *
  * @author Mathieu Carbou
  */
-public final class StartSampleChat {
+public final class StartSampleChat {/*
     public static void main(String... args) throws Exception {
         // ContainerRunner could be directly run from a launcher with argument.
         // See ContainerRunner --help foe help
@@ -38,5 +37,5 @@ public final class StartSampleChat {
         // comment the jetty extension in pom.xml to switch to tomcat
         // and activate tomcat profile in your ide
         //ContainerRunner.main("-container", "tomcat");
-    }
+    }*/
 }

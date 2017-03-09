@@ -22,11 +22,6 @@
             <groupId>com.codeminders.socketio</groupId>
             <artifactId>socketio-server-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.codeminders.socketio.extension</groupId>
-            <artifactId>socketio-server-jetty</artifactId>
-        </dependency>
-
         <!-- logging -->
         <dependency>
             <groupId>log4j</groupId>
@@ -39,12 +34,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

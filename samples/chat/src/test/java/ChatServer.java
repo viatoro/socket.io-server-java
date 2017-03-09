@@ -23,20 +23,23 @@
  * THE SOFTWARE.
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.codeminders.socketio.server.transport.websocket.WebSocketIOServlet;
+import com.codeminders.socketio.server.transport.websocket.WebSocketTransport;
+import com.codeminders.socketio.server.transport.websocket.WebSocketTransportConnection;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.codeminders.socketio.sample.chat.ChatSocketServlet;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class ChatServer
 {
@@ -84,7 +87,7 @@ public class ChatServer
 
     public static void main(String[] args) throws Exception
     {
-        String host = "localhost";
+       String host = "localhost";
         int port = 8080;
 
         if (args.length > 0)
@@ -101,11 +104,17 @@ public class ChatServer
         server.addConnector(connector);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        ServletHolder holder = new ServletHolder(new ChatSocketServlet());
-        holder.setInitParameter("xhr-polling.allowAllOrigins", "true");
-        context.addServlet(holder, "/socket.io/*");
+        context.setContextPath("/");
+        server.setHandler(context);
+        // Add javax.websocket support
+        ServerContainer container = WebSocketServerContainerInitializer.configureContext(context);
 
-        context.addServlet(new ServletHolder(new StaticServlet()), "/*");
+        // Add echo endpoint to server container
+        container.addEndpoint(WebSocketTransportConnection.class);
+       // holder.setInitParameter("xhr-polling.allowAllOrigins", "true");
+        //context.addServlet(holder, "/socket.io*//*");
+
+        context.addServlet(new ServletHolder(new StaticServlet()), "*//*");
 
         server.setHandler(context);
         server.start();

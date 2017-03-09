@@ -22,23 +22,23 @@
  */
 package com.codeminders.socketio.sample.chat;
 
-import com.codeminders.socketio.server.*;
-import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
+import com.codeminders.socketio.server.*;
+import com.codeminders.socketio.server.transport.websocket.WebSocketIOServlet;
 import com.google.common.io.ByteStreams;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import java.io.*;
-import java.util.Date;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ChatSocketServlet extends JettySocketIOServlet
+public class ChatSocketServlet extends WebSocketIOServlet
 {
     private static final String ANNOUNCEMENT     = "announcement";       // server to all connected clients
     private static final String CHAT_MESSAGE     = "chat message";       // broadcast to room

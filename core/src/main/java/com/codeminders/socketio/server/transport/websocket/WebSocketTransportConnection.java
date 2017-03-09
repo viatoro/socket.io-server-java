@@ -20,24 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server.transport.jetty;
+package com.codeminders.socketio.server.transport.websocket;
 
-import com.codeminders.socketio.protocol.*;
-import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
-
+import com.codeminders.socketio.protocol.BinaryPacket;
+import com.codeminders.socketio.protocol.EngineIOPacket;
+import com.codeminders.socketio.protocol.EngineIOProtocol;
+import com.codeminders.socketio.protocol.SocketIOPacket;
+import com.codeminders.socketio.server.Config;
+import com.codeminders.socketio.server.SocketIOClosedException;
+import com.codeminders.socketio.server.SocketIOProtocolException;
+import com.codeminders.socketio.server.Transport;
 import com.codeminders.socketio.server.transport.AbstractTransportConnection;
 import com.google.common.io.ByteStreams;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.websocket.OnClose;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.server.ServerEndpoint;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,14 +54,14 @@ import java.util.logging.Logger;
  * @author Alexander Sova (bird@codeminders.com)
  */
 
-@WebSocket
-public final class JettyWebSocketTransportConnection extends AbstractTransportConnection
+@ServerEndpoint("/chat")
+public final class WebSocketTransportConnection extends AbstractTransportConnection
 {
-    private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportConnection.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(WebSocketTransportConnection.class.getName());
 
     private org.eclipse.jetty.websocket.api.Session remote_endpoint;
 
-    public JettyWebSocketTransportConnection(Transport transport)
+    public WebSocketTransportConnection(Transport transport)
     {
         super(transport);
     }
@@ -72,7 +76,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
                     " timeout=" + getSession().getTimeout());
     }
 
-    @OnWebSocketConnect
+    @OnOpen
     public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session)
     {
         remote_endpoint = session;
@@ -97,7 +101,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
-    @OnWebSocketClose
+    @OnClose
     public void onWebSocketClose(int closeCode, String message)
     {
         if(LOGGER.isLoggable(Level.FINE))
@@ -112,7 +116,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         getSession().onShutdown();
     }
 
-    @OnWebSocketMessage
+    @OnMessage
     public void onWebSocketText(String text)
     {
         if (LOGGER.isLoggable(Level.FINE))
@@ -131,7 +135,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
-    @OnWebSocketMessage
+    @OnMessage
     public void onWebSocketBinary(InputStream is)
     {
         if (LOGGER.isLoggable(Level.FINE))
@@ -250,12 +254,13 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
+    //TODO: migrate
     private DisconnectReason fromCloseCode(int code)
     {
         switch (code)
         {
-            case StatusCode.SHUTDOWN:
-                return DisconnectReason.CLIENT_GONE;
+            /*case StatusCode.SHUTDOWN:
+                return DisconnectReason.CLIENT_GONE;*/
             default:
                 return DisconnectReason.ERROR;
         }
