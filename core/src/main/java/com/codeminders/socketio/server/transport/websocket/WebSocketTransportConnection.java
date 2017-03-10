@@ -38,9 +38,7 @@ import com.google.common.io.ByteStreams;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
+import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -59,7 +57,8 @@ public final class WebSocketTransportConnection extends AbstractTransportConnect
 {
     private static final Logger LOGGER = Logger.getLogger(WebSocketTransportConnection.class.getName());
 
-    private org.eclipse.jetty.websocket.api.Session remote_endpoint;
+    private RemoteEndpoint.Async remote_endpoint;
+    private Session webSocketSesion;
 
     public WebSocketTransportConnection(Transport transport)
     {
@@ -77,9 +76,9 @@ public final class WebSocketTransportConnection extends AbstractTransportConnect
     }
 
     @OnOpen
-    public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session)
+    public void onWebSocketConnect(Session session)
     {
-        remote_endpoint = session;
+        this.remote_endpoint = session.getAsyncRemote();
 
         if(getSession().getConnectionState() == ConnectionState.CONNECTING)
         {
@@ -102,17 +101,17 @@ public final class WebSocketTransportConnection extends AbstractTransportConnect
     }
 
     @OnClose
-    public void onWebSocketClose(int closeCode, String message)
+    public void onWebSocketClose(Session session, CloseReason closeReason)
     {
         if(LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]:" +
-                    " websocket closed. Close code: " + closeCode + " message: " + message);
+                    " websocket closed. Close code: " + closeReason.getCloseCode() + " message: " + closeReason.getReasonPhrase());
 
         //If close is unexpected then try to guess the reason based on closeCode, otherwise the reason is already set
         if(getSession().getConnectionState() != ConnectionState.CLOSING)
-            getSession().setDisconnectReason(fromCloseCode(closeCode));
+            getSession().setDisconnectReason(fromCloseCode(closeReason));
 
-        getSession().setDisconnectMessage(message);
+        getSession().setDisconnectMessage(closeReason.getReasonPhrase());
         getSession().onShutdown();
     }
 
@@ -204,49 +203,33 @@ public final class WebSocketTransportConnection extends AbstractTransportConnect
 
     protected void sendString(String data) throws SocketIOException
     {
-        if (!remote_endpoint.isOpen())
+        if (!this.webSocketSesion.isOpen())
             throw new SocketIOClosedException();
 
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: send text: " + data);
 
-        try
-        {
-            remote_endpoint.getRemote().sendString(data);
-        }
-        catch (IOException e)
-        {
-            disconnectEndpoint();
-            throw new SocketIOException(e);
-        }
+            this.remote_endpoint.sendText(data);
     }
 
     //TODO: implement streaming. right now it is all in memory.
     //TODO: read and send in chunks using sendPartialBytes()
     protected void sendBinary(byte[] data) throws SocketIOException
     {
-        if (!remote_endpoint.isOpen())
+        if (!this.webSocketSesion.isOpen())
             throw new SocketIOClosedException();
 
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: send binary");
 
-        try
-        {
-            remote_endpoint.getRemote().sendBytes(ByteBuffer.wrap(data));
-        }
-        catch (IOException e)
-        {
-            disconnectEndpoint();
-            throw new SocketIOException(e);
-        }
+            this.remote_endpoint.sendBinary(ByteBuffer.wrap(data));
     }
 
     private void disconnectEndpoint()
     {
         try
         {
-            remote_endpoint.disconnect();
+            this.webSocketSesion.close();
         }
         catch (IOException ex)
         {
@@ -255,14 +238,18 @@ public final class WebSocketTransportConnection extends AbstractTransportConnect
     }
 
     //TODO: migrate
-    private DisconnectReason fromCloseCode(int code)
+    private DisconnectReason fromCloseCode(CloseReason closeReason)
     {
-        switch (code)
+        CloseReason.CloseCode closeCode = CloseReason.CloseCodes.getCloseCode(closeReason.getCloseCode().getCode());
+
+       /* switch (closeCode)
         {
-            /*case StatusCode.SHUTDOWN:
-                return DisconnectReason.CLIENT_GONE;*/
+            *//*case StatusCode.SHUTDOWN:
+                return DisconnectReason.CLIENT_GONE;*//*
             default:
                 return DisconnectReason.ERROR;
-        }
+        }*/
+
+        return DisconnectReason.ERROR;
     }
 }

@@ -17,7 +17,6 @@
     <properties>
         <jdk.version>1.7</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--<jetty-version>9.3.7.v20160115</jetty-version>-->
         <jetty-version>9.2.14.v20151106</jetty-version>
     </properties>
 
@@ -278,28 +277,23 @@
                 <artifactId>socketio-server-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.codeminders.socketio.extension</groupId>
-                <artifactId>socketio-server-jetty</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <!-- servlet api -->
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>3.1.0</version>
             </dependency>
-            <dependency>
-                <!-- for testatoo-container -->
+            <!--<dependency>
+                &lt;!&ndash; for testatoo-container &ndash;&gt;
                 <groupId>org.eclipse.jetty.aggregate</groupId>
                 <artifactId>jetty-all</artifactId>
                 <version>${jetty-version}</version>
-            </dependency>
-            <dependency>
+            </dependency>-->
+<!--            <dependency>
                 <groupId>org.testatoo.container</groupId>
                 <artifactId>testatoo-container-jetty</artifactId>
                 <version>1.0-rc1</version>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>org.testatoo.container</groupId>
                 <artifactId>testatoo-container-tomcat</artifactId>

@@ -67,9 +67,11 @@
         <priority value="TRACE"/>
     </category>
 
+<!--
     <category name="org.eclipse.jetty.util.log">
         <priority value="TRACE"/>
     </category>
+-->
 
     <!-- ======================= -->
     <!-- Setup the Root category -->

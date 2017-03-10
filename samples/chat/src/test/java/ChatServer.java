@@ -23,15 +23,11 @@
  * THE SOFTWARE.
  */
 
-import com.codeminders.socketio.server.transport.websocket.WebSocketIOServlet;
-import com.codeminders.socketio.server.transport.websocket.WebSocketTransport;
-import com.codeminders.socketio.server.transport.websocket.WebSocketTransportConnection;
+import com.codeminders.socketio.sample.chat.ChatSocketServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
-import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -55,7 +51,7 @@ public class ChatServer
             if ("/json.js".equals(path))
             {
                 resp.setContentType("text/javascript");
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("webapp/json.js");
+                InputStream is = this.getClass().getClassLoader().getResourceAsStream("/json.js");
                 OutputStream os = resp.getOutputStream();
                 byte[] data = new byte[8192];
                 int nread;
@@ -69,7 +65,7 @@ public class ChatServer
             else if ("/chat.html".equals(path))
             {
                 resp.setContentType("text/html");
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("webapp/chat.html");
+                InputStream is = this.getClass().getClassLoader().getResourceAsStream("/chat.html");
                 OutputStream os = resp.getOutputStream();
                 byte[] data = new byte[8192];
                 int nread;
@@ -87,7 +83,7 @@ public class ChatServer
 
     public static void main(String[] args) throws Exception
     {
-       String host = "localhost";
+        String host = "localhost";
         int port = 8080;
 
         if (args.length > 0)
@@ -104,17 +100,11 @@ public class ChatServer
         server.addConnector(connector);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-        server.setHandler(context);
-        // Add javax.websocket support
-        ServerContainer container = WebSocketServerContainerInitializer.configureContext(context);
+        ServletHolder holder = new ServletHolder(new ChatSocketServlet());
+        holder.setInitParameter("xhr-polling.allowAllOrigins", "true");
+        context.addServlet(holder, "/socket.io/*");
 
-        // Add echo endpoint to server container
-        container.addEndpoint(WebSocketTransportConnection.class);
-       // holder.setInitParameter("xhr-polling.allowAllOrigins", "true");
-        //context.addServlet(holder, "/socket.io*//*");
-
-        context.addServlet(new ServletHolder(new StaticServlet()), "*//*");
+        context.addServlet(new ServletHolder(new StaticServlet()), "/*");
 
         server.setHandler(context);
         server.start();
