@@ -24,10 +24,6 @@
  */
 
 import com.codeminders.socketio.sample.chat.ChatSocketServlet;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -39,7 +35,7 @@ import java.io.OutputStream;
 
 public class ChatServer
 {
-    //TODO: use Jetty DefaultServlet
+    /*//TODO: use Jetty DefaultServlet
     private static class StaticServlet extends HttpServlet
     {
         @Override
@@ -102,12 +98,12 @@ public class ChatServer
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         ServletHolder holder = new ServletHolder(new ChatSocketServlet());
         holder.setInitParameter("xhr-polling.allowAllOrigins", "true");
-        context.addServlet(holder, "/socket.io/*");
+        context.addServlet(holder, "/socket.io*//*");
 
-        context.addServlet(new ServletHolder(new StaticServlet()), "/*");
+        context.addServlet(new ServletHolder(new StaticServlet()), "*//*");
 
         server.setHandler(context);
         server.start();
     }
-
+*/
 }

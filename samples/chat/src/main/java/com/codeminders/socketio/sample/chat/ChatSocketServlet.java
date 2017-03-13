@@ -55,7 +55,8 @@ public class ChatSocketServlet extends WebSocketIOServlet
     @SuppressWarnings("unchecked")
     public void init(ServletConfig config) throws ServletException
     {
-        JdkOverLog4j.install();
+        // TODO: uncomment and fix class path
+        //JdkOverLog4j.install();
         super.init(config);
 
         of("/chat").on(new ConnectionListener()
