@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server.transport.websocket;
+package com.codeminders.socketio.sample.chat.websocket;
 
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
@@ -64,6 +64,10 @@ public final class WebSocketTransportConnection extends AbstractTransportConnect
     {
         super(transport);
     }
+
+/*    public WebSocketTransportConnection()
+    {
+    }*/
 
     @Override
     protected void init()

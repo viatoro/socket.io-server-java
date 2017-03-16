@@ -52,6 +52,9 @@ public abstract class AbstractTransportConnection implements TransportConnection
         this.transport = transport;
     }
 
+    protected AbstractTransportConnection() {
+    }
+
     @Override
     public final void init(Config config) {
         this.config = config;

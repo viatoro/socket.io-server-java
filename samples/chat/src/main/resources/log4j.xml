@@ -78,7 +78,7 @@
     <!-- ======================= -->
 
     <root>
-        <priority value="WARN"/>
+        <priority value="TRACE"/>
         <appender-ref ref="ASYNC"/>
     </root>
 

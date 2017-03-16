@@ -1,4 +1,4 @@
-package com.codeminders.socketio.server.transport.websocket;
+package com.codeminders.socketio.sample.chat.websocket;
 
 import com.codeminders.socketio.server.Transport;
 import com.codeminders.socketio.server.transport.AbstractTransportProvider;
