@@ -1,4 +1,4 @@
-package com.codeminders.socketio.sample.chat.websocket;
+package com.codeminders.socketio.server.onemore;
 
 import com.codeminders.socketio.server.SocketIOManager;
 import com.codeminders.socketio.server.TransportConnection;
@@ -15,13 +15,14 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * Created by asolod on 09.03.17.
+ * Created by asolod on 17.03.17.
  */
-public class WebSocketTransport extends AbstractTransport {
+public class WebsocketTransport extends AbstractTransport {
 
-    private static final Logger LOGGER = Logger.getLogger(WebSocketTransport.class.getName());
+    public static final SocketIOManager socketIOManager = new SocketIOManager();
 
-    //private final WebSocketServerFactory wsFactory = new WebSocketServerFactory();
+    private static final Logger LOGGER = Logger.getLogger(WebsocketTransport.class.getName());
+
 
     @Override
     public void init(ServletConfig config, ServletContext context)
@@ -29,17 +30,8 @@ public class WebSocketTransport extends AbstractTransport {
     {
         super.init(config, context);
 
-       /* try
-        {
-            // wsFactory.init(context); //this need to be called for Jetty 9.3.x
-            wsFactory.init();
-        }
-        catch (Exception e)
-        {
-            throw new ServletException(e);
-        }
 
-        wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
+/*        Server.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
         wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());
 
@@ -50,17 +42,12 @@ public class WebSocketTransport extends AbstractTransport {
     }
 
     @Override
-    public TransportType getType()
-    {
+    public TransportType getType() {
         return TransportType.WEB_SOCKET;
     }
 
     @Override
-    public void handle(HttpServletRequest request,
-                       HttpServletResponse response,
-                       SocketIOManager sessionManager) throws IOException
-    {
-
+    public void handle(HttpServletRequest request, HttpServletResponse response, SocketIOManager sessionManager) throws IOException {
         if(!"GET".equals(request.getMethod()))
         {
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
@@ -73,19 +60,10 @@ public class WebSocketTransport extends AbstractTransport {
         // a bit hacky but safe since we know the type of TransportConnection here
         ((AbstractTransportConnection)connection).setRequest(request);
 
-        /*wsFactory.acceptWebSocket(new WebSocketCreator() {
-            @Override
-            public Object createWebSocket(ServletUpgradeRequest servletUpgradeRequest,
-                                          ServletUpgradeResponse servletUpgradeResponse)
-            {
-                return connection;
-            }
-        }, request, response);*/
     }
 
     @Override
-    public TransportConnection createConnection()
-    {
-        return new WebSocketTransportConnection(this);
+    public TransportConnection createConnection() {
+        return new WebsocketTransportConnection();
     }
 }

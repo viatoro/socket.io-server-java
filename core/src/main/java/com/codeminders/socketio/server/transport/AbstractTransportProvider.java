@@ -2,6 +2,7 @@ package com.codeminders.socketio.server.transport;
 
 import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.*;
+import com.codeminders.socketio.server.onemore.WebsocketTransport;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -92,7 +93,7 @@ public abstract class AbstractTransportProvider implements TransportProvider {
 
     protected Transport createWebSocketTransport()
     {
-        return null;
+        return new WebsocketTransport();
     }
 
     private void addIfNotNull(TransportType type, Transport transport)
