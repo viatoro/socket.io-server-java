@@ -50,7 +50,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Handling " + request.getMethod() + " request by " + getClass().getName());
 
-        TransportConnection connection = getConnection(request, socketIOManager);
+        TransportConnection connection = getConnection(request.getParameter(EngineIOProtocol.SESSION_ID), socketIOManager);
         Session session = connection.getSession();
 
         if (session.getConnectionState() == ConnectionState.CONNECTING)

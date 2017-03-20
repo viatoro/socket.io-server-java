@@ -43,7 +43,7 @@ public abstract class SocketIOServlet extends HttpServlet
 {
     private static final Logger LOGGER = Logger.getLogger(SocketIOServlet.class.getName());
 
-    private final SocketIOManager socketIOManager = new SocketIOManager();
+    public static final SocketIOManager socketIOManager = new SocketIOManager();
 
     /**
      * Initializes and retrieves the given Namespace by its pathname identifier {@code id}.

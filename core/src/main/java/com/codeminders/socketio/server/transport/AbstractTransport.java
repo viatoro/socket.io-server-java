@@ -63,9 +63,8 @@ public abstract class AbstractTransport implements Transport
         return connection;
     }
 
-    protected TransportConnection getConnection(HttpServletRequest request, SocketIOManager sessionManager)
+    protected TransportConnection getConnection(String sessionId, SocketIOManager sessionManager)
     {
-        String sessionId = request.getParameter(EngineIOProtocol.SESSION_ID);
         Session session = null;
 
         if(sessionId != null && sessionId.length() > 0)

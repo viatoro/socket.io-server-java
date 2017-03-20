@@ -78,6 +78,13 @@ public final class SocketIOManager
         return session;
     }
 
+    public Session createSession(String sessionId)
+    {
+        Session session = new Session(this, sessionId);
+        sessions.put(session.getSessionId(), session);
+        return session;
+    }
+
     /**
      * Finds existing session
      *

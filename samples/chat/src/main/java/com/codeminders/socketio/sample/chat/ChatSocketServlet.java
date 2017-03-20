@@ -25,7 +25,7 @@ package com.codeminders.socketio.sample.chat;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
 import com.codeminders.socketio.server.*;
-import com.codeminders.socketio.server.onemore.WebsocketServlet;
+import com.codeminders.socketio.server.onemore.AbstractWebsocketServlet;
 import com.google.common.io.ByteStreams;
 
 import javax.servlet.ServletConfig;
@@ -38,9 +38,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ChatSocketServlet extends WebsocketServlet
-{
-/*    private static final String ANNOUNCEMENT     = "announcement";       // server to all connected clients
+public class ChatSocketServlet extends AbstractWebsocketServlet {
+
+    @Override
+    protected String getWebsocketURL() {
+        return "/socket.io";
+    }
+
+    private static final String ANNOUNCEMENT     = "announcement";       // server to all connected clients
     private static final String CHAT_MESSAGE     = "chat message";       // broadcast to room
     private static final String WELCOME          = "welcome";            // single event sent by server to specific client
     private static final String FORCE_DISCONNECT = "force disconnect";   // client requests server to disconnect
@@ -196,5 +201,5 @@ public class ChatSocketServlet extends WebsocketServlet
 //                socket.on();
 //            }
 //        });
-    }*/
+    }
 }

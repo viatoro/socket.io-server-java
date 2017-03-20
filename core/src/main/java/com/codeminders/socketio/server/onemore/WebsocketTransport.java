@@ -1,5 +1,6 @@
 package com.codeminders.socketio.server.onemore;
 
+import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.server.SocketIOManager;
 import com.codeminders.socketio.server.TransportConnection;
 import com.codeminders.socketio.server.TransportType;
@@ -19,10 +20,7 @@ import java.util.logging.Logger;
  */
 public class WebsocketTransport extends AbstractTransport {
 
-    public static final SocketIOManager socketIOManager = new SocketIOManager();
-
     private static final Logger LOGGER = Logger.getLogger(WebsocketTransport.class.getName());
-
 
     @Override
     public void init(ServletConfig config, ServletContext context)
@@ -30,8 +28,7 @@ public class WebsocketTransport extends AbstractTransport {
     {
         super.init(config, context);
 
-
-/*        Server.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
+/*        wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
         wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());
 
@@ -42,12 +39,17 @@ public class WebsocketTransport extends AbstractTransport {
     }
 
     @Override
-    public TransportType getType() {
+    public TransportType getType()
+    {
         return TransportType.WEB_SOCKET;
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, SocketIOManager sessionManager) throws IOException {
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       SocketIOManager sessionManager) throws IOException
+    {
+
         if(!"GET".equals(request.getMethod()))
         {
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
@@ -55,15 +57,15 @@ public class WebsocketTransport extends AbstractTransport {
             return;
         }
 
-        final TransportConnection connection = getConnection(request, sessionManager);
+        final TransportConnection connection = getConnection(request.getParameter(EngineIOProtocol.SESSION_ID), sessionManager);
 
         // a bit hacky but safe since we know the type of TransportConnection here
         ((AbstractTransportConnection)connection).setRequest(request);
-
     }
 
     @Override
-    public TransportConnection createConnection() {
-        return new WebsocketTransportConnection();
+    public TransportConnection createConnection()
+    {
+        return new WebsocketTransportConnection(this);
     }
 }
