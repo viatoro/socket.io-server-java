@@ -39,7 +39,12 @@ public class WebsocketEndPoint extends Endpoint {
 
         Session session = AbstractWebsocketServlet.socketIOManager.createSession(websocketSession.getId());
         try {
-            this.connection = new WebsocketTransportConnection(new WebsocketTransport());
+
+            // TODO: propogate CodeMinders Connection to Transpor layer
+            // create Codeminders connection using shared instance of socketIOManager
+            // also check that Codeminders Servlet context config propogates to Communication layer
+            this.connection = new WebsocketTransport().getC;
+            this.connection.setSession(session);
             this.connection.onConnect(websocketSession);
             session.onConnect(this.connection);
         } catch (SocketIOException e) {
