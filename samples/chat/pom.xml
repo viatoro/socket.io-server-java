@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>com.codeminders.socketio.extension</groupId>
-            <artifactId>socketio-server-jetty</artifactId>
+            <artifactId>socketio-server-websocket</artifactId>
         </dependency>
 
         <!-- logging -->
@@ -40,28 +40,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
     </dependencies>
 
 </project>

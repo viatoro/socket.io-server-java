@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.codeminders.socketio.extension</groupId>
+        <artifactId>socketio-server-extension</artifactId>
+        <version>1.0.2</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <artifactId>socketio-server-websocket</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Socket.IO Extension WebSocket</name>
+    <description>Socket.IO Java WebSocket Extension</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.codeminders.socketio</groupId>
+            <artifactId>socketio-server-core</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

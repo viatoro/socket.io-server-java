@@ -22,22 +22,4 @@
         <module>chat</module>
     </modules>
 
-    <profiles>
-
-        <profile>
-            <id>jetty</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.testatoo.container</groupId>
-                    <artifactId>testatoo-container-jetty</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-
-    </profiles>
-
 </project>
