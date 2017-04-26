@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server.transport.jetty;
+package com.codeminders.socketio.server.transport.websocket;
 
 import com.codeminders.socketio.server.Transport;
 import com.codeminders.socketio.server.transport.AbstractTransportProvider;
@@ -28,13 +28,13 @@ import com.codeminders.socketio.server.transport.AbstractTransportProvider;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public class JettyTransportProvider extends AbstractTransportProvider
+public class WebsocketTransportProvider extends AbstractTransportProvider
 {
 
     @Override
     protected Transport createWebSocketTransport()
     {
-        return new JettyWebSocketTransport();
+        return new WebsocketTransport();
     }
 
 }

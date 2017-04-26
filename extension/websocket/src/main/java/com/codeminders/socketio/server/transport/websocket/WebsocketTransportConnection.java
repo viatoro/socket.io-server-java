@@ -20,24 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server.transport.jetty;
+package com.codeminders.socketio.server.transport.websocket;
 
-import com.codeminders.socketio.protocol.*;
-import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
-
+import com.codeminders.socketio.protocol.BinaryPacket;
+import com.codeminders.socketio.protocol.EngineIOPacket;
+import com.codeminders.socketio.protocol.EngineIOProtocol;
+import com.codeminders.socketio.protocol.SocketIOPacket;
+import com.codeminders.socketio.server.Config;
+import com.codeminders.socketio.server.SocketIOProtocolException;
+import com.codeminders.socketio.server.Transport;
 import com.codeminders.socketio.server.transport.AbstractTransportConnection;
 import com.google.common.io.ByteStreams;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.websocket.CloseReason;
+import javax.websocket.OnClose;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.server.ServerEndpoint;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,16 +52,16 @@ import java.util.logging.Logger;
 
 /**
  * @author Alexander Sova (bird@codeminders.com)
+ * @author Alex Saveliev (lyolik@codeminders.com)
  */
-
-@WebSocket
-public final class JettyWebSocketTransportConnection extends AbstractTransportConnection
+@ServerEndpoint(value="/socket.io")
+public final class WebsocketTransportConnection extends AbstractTransportConnection
 {
-    private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportConnection.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(WebsocketTransportConnection.class.getName());
 
-    private org.eclipse.jetty.websocket.api.Session remote_endpoint;
+    private javax.websocket.Session remote_endpoint;
 
-    public JettyWebSocketTransportConnection(Transport transport)
+    public WebsocketTransportConnection(Transport transport)
     {
         super(transport);
     }
@@ -72,8 +76,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
                     " timeout=" + getSession().getTimeout());
     }
 
-    @OnWebSocketConnect
-    public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session)
+    @OnOpen
+    public void onOpen(javax.websocket.Session session)
     {
         remote_endpoint = session;
 
@@ -97,23 +101,23 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
-    @OnWebSocketClose
-    public void onWebSocketClose(int closeCode, String message)
+    @OnClose
+    public void onClose(javax.websocket.Session session, CloseReason closeReason)
     {
         if(LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]:" +
-                    " websocket closed. Close code: " + closeCode + " message: " + message);
+                    " websocket closed. " + closeReason.toString());
 
         //If close is unexpected then try to guess the reason based on closeCode, otherwise the reason is already set
         if(getSession().getConnectionState() != ConnectionState.CLOSING)
-            getSession().setDisconnectReason(fromCloseCode(closeCode));
+            getSession().setDisconnectReason(fromCloseCode(closeReason.getCloseCode().getCode()));
 
-        getSession().setDisconnectMessage(message);
+        getSession().setDisconnectMessage(closeReason.getReasonPhrase());
         getSession().onShutdown();
     }
 
-    @OnWebSocketMessage
-    public void onWebSocketText(String text)
+    @OnMessage
+    public void onMessage(String text)
     {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Session[" + getSession().getSessionId() + "]: text received: " + text);
@@ -131,8 +135,8 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
         }
     }
 
-    @OnWebSocketMessage
-    public void onWebSocketBinary(InputStream is)
+    @OnMessage
+    public void onMessage(InputStream is)
     {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("Session[" + getSession().getSessionId() + "]: binary received");
@@ -200,15 +204,12 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
     protected void sendString(String data) throws SocketIOException
     {
-        if (!remote_endpoint.isOpen())
-            throw new SocketIOClosedException();
-
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: send text: " + data);
 
         try
         {
-            remote_endpoint.getRemote().sendString(data);
+            remote_endpoint.getBasicRemote().sendText(data);
         }
         catch (IOException e)
         {
@@ -221,15 +222,12 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     //TODO: read and send in chunks using sendPartialBytes()
     protected void sendBinary(byte[] data) throws SocketIOException
     {
-        if (!remote_endpoint.isOpen())
-            throw new SocketIOClosedException();
-
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: send binary");
 
         try
         {
-            remote_endpoint.getRemote().sendBytes(ByteBuffer.wrap(data));
+            remote_endpoint.getBasicRemote().sendBinary(ByteBuffer.wrap(data));
         }
         catch (IOException e)
         {
@@ -242,7 +240,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
     {
         try
         {
-            remote_endpoint.disconnect();
+            remote_endpoint.close();
         }
         catch (IOException ex)
         {
@@ -252,12 +250,7 @@ public final class JettyWebSocketTransportConnection extends AbstractTransportCo
 
     private DisconnectReason fromCloseCode(int code)
     {
-        switch (code)
-        {
-            case StatusCode.SHUTDOWN:
-                return DisconnectReason.CLIENT_GONE;
-            default:
-                return DisconnectReason.ERROR;
-        }
+        // TODO
+        return DisconnectReason.ERROR;
     }
 }

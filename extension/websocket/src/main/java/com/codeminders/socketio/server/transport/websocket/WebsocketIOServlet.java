@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server.transport.jetty;
+package com.codeminders.socketio.server.transport.websocket;
 
 import com.codeminders.socketio.server.SocketIOServlet;
 import com.codeminders.socketio.server.TransportProvider;
@@ -31,14 +31,14 @@ import javax.servlet.ServletException;
 /**
  * @author Alexander Sova (bird@codeminders.com)
  */
-public abstract class JettySocketIOServlet extends SocketIOServlet
+public abstract class WebsocketIOServlet extends SocketIOServlet
 {
     @Override
     public void init(ServletConfig config) throws ServletException
     {
         super.init(config);
 
-        TransportProvider transportProvider = new JettyTransportProvider();
+        TransportProvider transportProvider = new WebsocketTransportProvider();
         transportProvider.init(config, getServletContext());
         setTransportProvider(transportProvider);
     }

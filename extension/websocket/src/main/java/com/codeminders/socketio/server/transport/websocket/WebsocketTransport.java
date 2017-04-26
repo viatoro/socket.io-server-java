@@ -23,49 +23,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.codeminders.socketio.server.transport.jetty;
+package com.codeminders.socketio.server.transport.websocket;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.codeminders.socketio.server.SocketIOManager;
+import com.codeminders.socketio.server.TransportConnection;
+import com.codeminders.socketio.server.TransportType;
+import com.codeminders.socketio.server.transport.AbstractTransport;
+import com.codeminders.socketio.server.transport.AbstractTransportConnection;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.logging.Logger;
 
-import com.codeminders.socketio.server.*;
-
-import com.codeminders.socketio.server.transport.AbstractTransport;
-import com.codeminders.socketio.server.transport.AbstractTransportConnection;
-import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
-
-public final class JettyWebSocketTransport extends AbstractTransport
+public final class WebsocketTransport extends AbstractTransport
 {
-    private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransport.class.getName());
-
-    private final WebSocketServerFactory wsFactory = new WebSocketServerFactory();
+    private static final Logger LOGGER = Logger.getLogger(WebsocketTransport.class.getName());
 
     @Override
     public void init(ServletConfig config, ServletContext context)
             throws ServletException
     {
         super.init(config, context);
-
-        try
-        {
-            // wsFactory.init(context); //this need to be called for Jetty 9.3.x
-            wsFactory.init();
-        }
-        catch (Exception e)
-        {
-            throw new ServletException(e);
-        }
-
+        // TODO
+        /*
         wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
         wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
         wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());
@@ -74,6 +58,7 @@ public final class JettyWebSocketTransport extends AbstractTransport
             LOGGER.fine(getType() + " configuration:\n" +
                     " - bufferSize=" + wsFactory.getPolicy().getInputBufferSize() + "\n" +
                     " - maxIdle=" + wsFactory.getPolicy().getIdleTimeout());
+                    */
     }
 
     @Override
@@ -99,6 +84,8 @@ public final class JettyWebSocketTransport extends AbstractTransport
 
         // a bit hacky but safe since we know the type of TransportConnection here
         ((AbstractTransportConnection)connection).setRequest(request);
+        // TODO
+        /*
 
         wsFactory.acceptWebSocket(new WebSocketCreator() {
                 @Override
@@ -108,11 +95,12 @@ public final class JettyWebSocketTransport extends AbstractTransport
                     return connection;
                 }
             }, request, response);
+         */
     }
 
     @Override
     public TransportConnection createConnection()
     {
-        return new JettyWebSocketTransportConnection(this);
+        return new WebsocketTransportConnection(this);
     }
 }
