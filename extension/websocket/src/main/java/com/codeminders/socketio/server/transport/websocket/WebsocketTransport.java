@@ -63,18 +63,6 @@ public final class WebsocketTransport extends AbstractTransport
 
         // a bit hacky but safe since we know the type of TransportConnection here
         ((AbstractTransportConnection)connection).setRequest(request);
-        // TODO
-        /*
-
-        wsFactory.acceptWebSocket(new WebSocketCreator() {
-                @Override
-                public Object createWebSocket(ServletUpgradeRequest servletUpgradeRequest,
-                                              ServletUpgradeResponse servletUpgradeResponse)
-                {
-                    return connection;
-                }
-            }, request, response);
-         */
     }
 
     @Override
