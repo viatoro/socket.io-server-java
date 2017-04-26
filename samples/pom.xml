@@ -6,13 +6,13 @@
 
     <parent>
         <groupId>com.codeminders.socketio</groupId>
-        <artifactId>socketio-server</artifactId>
+        <artifactId>socketio-parent</artifactId>
         <version>1.0.2</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <groupId>com.codeminders.socketio.sample</groupId>
-    <artifactId>socketio-server-sample</artifactId>
+    <groupId>com.codeminders.socketio</groupId>
+    <artifactId>socketio-sample</artifactId>
     <packaging>pom</packaging>
 
     <name>Socket.IO Samples</name>

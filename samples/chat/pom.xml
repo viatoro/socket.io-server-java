@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.codeminders.socketio.sample</groupId>
-        <artifactId>socketio-server-sample</artifactId>
+        <groupId>com.codeminders.socketio</groupId>
+        <artifactId>socketio-sample</artifactId>
         <version>1.0.2</version>
         <relativePath>..</relativePath>
     </parent>
@@ -20,25 +20,13 @@
     <dependencies>
         <dependency>
             <groupId>com.codeminders.socketio</groupId>
-            <artifactId>socketio-server-core</artifactId>
+            <artifactId>socketio-core</artifactId>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
-            <groupId>com.codeminders.socketio.extension</groupId>
-            <artifactId>socketio-server-websocket</artifactId>
-        </dependency>
-
-        <!-- logging -->
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>com.codeminders.socketio</groupId>
+            <artifactId>socketio-websocket</artifactId>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
 

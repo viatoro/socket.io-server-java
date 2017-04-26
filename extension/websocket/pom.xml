@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.codeminders.socketio.extension</groupId>
-        <artifactId>socketio-server-extension</artifactId>
+        <groupId>com.codeminders.socketio</groupId>
+        <artifactId>socketio-extension</artifactId>
         <version>1.0.2</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>socketio-server-websocket</artifactId>
+    <artifactId>socketio-websocket</artifactId>
     <packaging>jar</packaging>
 
     <name>Socket.IO Extension WebSocket</name>
@@ -20,7 +20,8 @@
     <dependencies>
         <dependency>
             <groupId>com.codeminders.socketio</groupId>
-            <artifactId>socketio-server-core</artifactId>
+            <artifactId>socketio-core</artifactId>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
 
