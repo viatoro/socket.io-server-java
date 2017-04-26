@@ -83,7 +83,7 @@
     </scm>
 
     <modules>
-        <module>core</module>
+        <module>socket-io</module>
         <module>samples</module>
     </modules>
 

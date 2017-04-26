@@ -20,14 +20,13 @@
         <groupId>com.codeminders.socketio</groupId>
         <artifactId>socketio-parent</artifactId>
         <version>1.0.2-SNAPSHOT</version>
-        <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>socketio-core</artifactId>
+    <artifactId>socket-io</artifactId>
     <packaging>jar</packaging>
 
-    <name>Socket.IO Java Core</name>
-    <description>Core Socket.IO Server classes</description>
+    <name>Socket.IO Java</name>
+    <description>Socket.IO server classes</description>
 
     <dependencies>
         <dependency>
