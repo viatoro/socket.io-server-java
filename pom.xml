@@ -84,7 +84,6 @@
 
     <modules>
         <module>core</module>
-        <module>extension</module>
         <module>samples</module>
     </modules>
 

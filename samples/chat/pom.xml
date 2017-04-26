@@ -23,11 +23,6 @@
             <artifactId>socketio-core</artifactId>
             <version>1.0.2-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.codeminders.socketio</groupId>
-            <artifactId>socketio-websocket</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
 </project>
