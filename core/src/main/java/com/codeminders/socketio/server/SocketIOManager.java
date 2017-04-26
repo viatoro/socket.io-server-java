@@ -52,6 +52,15 @@ public final class SocketIOManager
 
     final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
+    private static SocketIOManager instance = new SocketIOManager();
+
+    private SocketIOManager() {
+    }
+
+    public static SocketIOManager getInstance() {
+        return instance;
+    }
+
     private String generateSessionId()
     {
         while(true)

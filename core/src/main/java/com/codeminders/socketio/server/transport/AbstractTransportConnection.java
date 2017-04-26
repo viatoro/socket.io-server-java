@@ -27,17 +27,12 @@ package com.codeminders.socketio.server.transport;
 import com.codeminders.socketio.common.ConnectionState;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
-import com.codeminders.socketio.protocol.*;
+import com.codeminders.socketio.protocol.SocketIOPacket;
+import com.codeminders.socketio.protocol.SocketIOProtocol;
 import com.codeminders.socketio.server.*;
-import com.google.common.io.ByteStreams;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**

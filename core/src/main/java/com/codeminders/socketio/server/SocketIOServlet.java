@@ -43,8 +43,6 @@ public abstract class SocketIOServlet extends HttpServlet
 {
     private static final Logger LOGGER = Logger.getLogger(SocketIOServlet.class.getName());
 
-    private final SocketIOManager socketIOManager = new SocketIOManager();
-
     /**
      * Initializes and retrieves the given Namespace by its pathname identifier {@code id}.
      *
@@ -66,16 +64,16 @@ public abstract class SocketIOServlet extends HttpServlet
      */
     public Namespace namespace(String id)
     {
-        Namespace ns = socketIOManager.getNamespace(id);
+        Namespace ns = SocketIOManager.getInstance().getNamespace(id);
         if (ns == null)
-            ns = socketIOManager.createNamespace(id);
+            ns = SocketIOManager.getInstance().createNamespace(id);
 
         return ns;
     }
 
     public void setTransportProvider(TransportProvider transportProvider)
     {
-        socketIOManager.setTransportProvider(transportProvider);
+        SocketIOManager.getInstance().setTransportProvider(transportProvider);
     }
 
     @Override
@@ -90,7 +88,7 @@ public abstract class SocketIOServlet extends HttpServlet
     @Override
     public void destroy()
     {
-        socketIOManager.getTransportProvider().destroy();
+        SocketIOManager.getInstance().getTransportProvider().destroy();
         super.destroy();
     }
 
@@ -132,7 +130,7 @@ public abstract class SocketIOServlet extends HttpServlet
         }
         else
         {
-            assert (socketIOManager.getTransportProvider() != null);
+            assert (SocketIOManager.getInstance().getTransportProvider() != null);
 
             try
             {
@@ -142,10 +140,10 @@ public abstract class SocketIOServlet extends HttpServlet
                             ", transport: " + request.getParameter(EngineIOProtocol.TRANSPORT) +
                             ", EIO protocol version:" + request.getParameter(EngineIOProtocol.VERSION));
 
-                socketIOManager.
+                SocketIOManager.getInstance().
                         getTransportProvider().
                         getTransport(request).
-                        handle(request, response, socketIOManager);
+                        handle(request, response, SocketIOManager.getInstance());
             }
             catch (UnsupportedTransportException | SocketIOProtocolException e)
             {

@@ -64,7 +64,7 @@ public class ChatSocketServlet extends WebsocketIOServlet
             {
                 try
                 {
-                    socket.emit(WELCOME, "Welcome to Socket.IO Chat, " + socket.getRequest().getRemoteAddr() + "!");
+                    socket.emit(WELCOME, "Welcome to Socket.IO Chat, " + socket.getId() + "!");
 
                     socket.join("room");
                 }

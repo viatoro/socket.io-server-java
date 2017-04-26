@@ -29,24 +29,21 @@ import com.codeminders.socketio.protocol.BinaryPacket;
 import com.codeminders.socketio.protocol.EngineIOPacket;
 import com.codeminders.socketio.protocol.EngineIOProtocol;
 import com.codeminders.socketio.protocol.SocketIOPacket;
-import com.codeminders.socketio.server.Config;
-import com.codeminders.socketio.server.SocketIOProtocolException;
-import com.codeminders.socketio.server.Transport;
+import com.codeminders.socketio.server.*;
 import com.codeminders.socketio.server.transport.AbstractTransportConnection;
 import com.google.common.io.ByteStreams;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.websocket.CloseReason;
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
+import javax.websocket.*;
+import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpoint;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,12 +51,16 @@ import java.util.logging.Logger;
  * @author Alexander Sova (bird@codeminders.com)
  * @author Alex Saveliev (lyolik@codeminders.com)
  */
-@ServerEndpoint(value="/socket.io")
+@ServerEndpoint(value="/socket.io/", configurator = WebsocketConfigurator.class)
 public final class WebsocketTransportConnection extends AbstractTransportConnection
 {
     private static final Logger LOGGER = Logger.getLogger(WebsocketTransportConnection.class.getName());
 
     private javax.websocket.Session remote_endpoint;
+
+    public WebsocketTransportConnection() {
+        super(WebsocketTransportProvider.websocket);
+    }
 
     public WebsocketTransportConnection(Transport transport)
     {
@@ -77,9 +78,16 @@ public final class WebsocketTransportConnection extends AbstractTransportConnect
     }
 
     @OnOpen
-    public void onOpen(javax.websocket.Session session)
+    public void onOpen(javax.websocket.Session session, EndpointConfig config) throws Exception
     {
         remote_endpoint = session;
+        setupSession(session);
+        init(new ServletBasedConfig(
+                ServletConfigHolder.getInstance().getConfig(),
+                getTransport().getType().toString()));
+        session.setMaxBinaryMessageBufferSize(getConfig().getBufferSize());
+        session.setMaxIdleTimeout(getConfig().getMaxIdle());
+        session.setMaxTextMessageBufferSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
 
         if(getSession().getConnectionState() == ConnectionState.CONNECTING)
         {
@@ -248,9 +256,54 @@ public final class WebsocketTransportConnection extends AbstractTransportConnect
         }
     }
 
+    /**
+     * @link https://tools.ietf.org/html/rfc6455#section-11.7
+     */
     private DisconnectReason fromCloseCode(int code)
     {
-        // TODO
-        return DisconnectReason.ERROR;
+        switch (code) {
+            case 1000:
+                return DisconnectReason.CLOSED; // Normal Closure
+            case 1001:
+                return DisconnectReason.CLIENT_GONE; // Going Away
+            default:
+                return DisconnectReason.ERROR;
+        }
+    }
+
+    /**
+     * @param session websocket session
+     * @return session id extracted from handshake request's parameter
+     */
+    private String getSessionId(javax.websocket.Session session)
+    {
+        HandshakeRequest handshake = (HandshakeRequest)
+                session.getUserProperties().get(HandshakeRequest.class.getName());
+        if (handshake == null) {
+            return null;
+        }
+        List<String> values = handshake.getParameterMap().get(EngineIOProtocol.SESSION_ID);
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+        return values.get(0);
+    }
+
+    /**
+     * Initializes socket.io session
+     * @param session
+     * @throws Exception
+     */
+    private void setupSession(javax.websocket.Session session) throws Exception
+    {
+        String sessionId = getSessionId(session);
+        com.codeminders.socketio.server.Session sess = null;
+        if (sessionId != null) {
+            sess = SocketIOManager.getInstance().getSession(sessionId);
+        }
+        if (sess == null) {
+            sess = SocketIOManager.getInstance().createSession();
+        }
+        setSession(sess);
     }
 }

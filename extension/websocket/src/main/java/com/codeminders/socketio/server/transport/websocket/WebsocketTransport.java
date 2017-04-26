@@ -31,9 +31,6 @@ import com.codeminders.socketio.server.TransportType;
 import com.codeminders.socketio.server.transport.AbstractTransport;
 import com.codeminders.socketio.server.transport.AbstractTransportConnection;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -42,24 +39,6 @@ import java.util.logging.Logger;
 public final class WebsocketTransport extends AbstractTransport
 {
     private static final Logger LOGGER = Logger.getLogger(WebsocketTransport.class.getName());
-
-    @Override
-    public void init(ServletConfig config, ServletContext context)
-            throws ServletException
-    {
-        super.init(config, context);
-        // TODO
-        /*
-        wsFactory.getPolicy().setMaxTextMessageSize(getConfig().getInt(Config.MAX_TEXT_MESSAGE_SIZE, 32000));
-        wsFactory.getPolicy().setInputBufferSize(getConfig().getBufferSize());
-        wsFactory.getPolicy().setIdleTimeout(getConfig().getMaxIdle());
-
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine(getType() + " configuration:\n" +
-                    " - bufferSize=" + wsFactory.getPolicy().getInputBufferSize() + "\n" +
-                    " - maxIdle=" + wsFactory.getPolicy().getIdleTimeout());
-                    */
-    }
 
     @Override
     public TransportType getType()

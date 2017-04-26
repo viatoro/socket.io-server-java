@@ -30,11 +30,12 @@ import com.codeminders.socketio.server.transport.AbstractTransportProvider;
  */
 public class WebsocketTransportProvider extends AbstractTransportProvider
 {
+    static final Transport websocket = new WebsocketTransport();
 
     @Override
     protected Transport createWebSocketTransport()
     {
-        return new WebsocketTransport();
+        return websocket;
     }
 
 }
