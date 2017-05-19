@@ -162,6 +162,12 @@ public final class WebsocketTransportConnection extends AbstractTransportConnect
         }
     }
 
+    @OnError
+    public void onError(javax.websocket.Session session, Throwable error) {
+        // TODO implement
+        // One reason might be when you are refreshing web page causing connection to be dropped
+    }
+
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response) throws IOException
     {

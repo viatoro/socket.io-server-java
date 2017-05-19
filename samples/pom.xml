@@ -19,6 +19,7 @@
     <modules>
         <module>chat</module>
         <module>jetty</module>
+        <module>tomcat</module>
     </modules>
 
 </project>

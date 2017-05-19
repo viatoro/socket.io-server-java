@@ -27,22 +27,43 @@ import com.codeminders.socketio.server.transport.websocket.WebsocketTransportCon
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.resource.JarResource;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 
+import java.io.File;
+import java.net.URI;
 import java.net.URL;
 
 public class ChatServer {
+
+    private static Resource getRoot() throws Exception {
+        URL root = ChatServer.class.getClassLoader().getResource("");
+        if (root != null) {
+            return Resource.newResource(root);
+        }
+        root = ChatServer.class.getClassLoader().getResource("chat.html");
+        if (root == null) {
+            throw new IllegalArgumentException("Cannot identify static resources root");
+        }
+        if ("jar".equals(root.getProtocol())) {
+            String path = root.getPath().substring(0, root.getPath().lastIndexOf("!/"));
+            return JarResource.newJarResource(Resource.newResource(new File(URI.create(path))));
+        } else {
+            throw new IllegalArgumentException("Cannot identify static resources root");
+        }
+    }
+
     public static void main(String args[]) throws Exception {
         Server server = new Server(8080);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 
         context.setContextPath("/");
-        URL root = ChatServer.class.getClassLoader().getResource("");
-        if (root == null) {
-            throw new RuntimeException("Cannot identify static resources root");
-        }
-        context.setResourceBase(root.toURI().toString());
+
+        context.setBaseResource(getRoot());
+        //context.setResourceBase();
+
         context.setWelcomeFiles(new String[]{"chat.html"});
         server.setHandler(context);
         context.addServlet(ChatSocketServlet.class, "/socket.io/*");
