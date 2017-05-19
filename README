@@ -1,7 +1,7 @@
 Java backend for Socket.IO library (http://socket.io/)
 
 Supports Socket.IO clients version 1.0+
-Requires Jetty 9+
+Requires JSR 356-compatible server (tested with Jetty 9 and Tomcat 8)
 
 Right now only websocket and XHR polling transports are implemented.
 

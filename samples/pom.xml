@@ -6,13 +6,11 @@
 
     <parent>
         <groupId>com.codeminders.socketio</groupId>
-        <artifactId>socketio-server</artifactId>
-        <version>1.0.2</version>
-        <relativePath>..</relativePath>
+        <artifactId>socketio-parent</artifactId>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.codeminders.socketio.sample</groupId>
-    <artifactId>socketio-server-sample</artifactId>
+    <artifactId>socketio-sample</artifactId>
     <packaging>pom</packaging>
 
     <name>Socket.IO Samples</name>
@@ -20,24 +18,8 @@
 
     <modules>
         <module>chat</module>
+        <module>jetty</module>
+        <module>tomcat</module>
     </modules>
-
-    <profiles>
-
-        <profile>
-            <id>jetty</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.testatoo.container</groupId>
-                    <artifactId>testatoo-container-jetty</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-
-    </profiles>
 
 </project>

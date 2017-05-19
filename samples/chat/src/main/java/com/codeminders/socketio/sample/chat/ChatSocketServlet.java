@@ -22,23 +22,23 @@
  */
 package com.codeminders.socketio.sample.chat;
 
-import com.codeminders.socketio.server.*;
-import com.codeminders.socketio.server.transport.jetty.JettySocketIOServlet;
 import com.codeminders.socketio.common.DisconnectReason;
 import com.codeminders.socketio.common.SocketIOException;
+import com.codeminders.socketio.server.*;
+import com.codeminders.socketio.server.transport.websocket.WebsocketIOServlet;
 import com.google.common.io.ByteStreams;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import java.io.*;
-import java.util.Date;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ChatSocketServlet extends JettySocketIOServlet
+public class ChatSocketServlet extends WebsocketIOServlet
 {
     private static final String ANNOUNCEMENT     = "announcement";       // server to all connected clients
     private static final String CHAT_MESSAGE     = "chat message";       // broadcast to room
@@ -55,7 +55,6 @@ public class ChatSocketServlet extends JettySocketIOServlet
     @SuppressWarnings("unchecked")
     public void init(ServletConfig config) throws ServletException
     {
-        JdkOverLog4j.install();
         super.init(config);
 
         of("/chat").on(new ConnectionListener()
@@ -65,7 +64,7 @@ public class ChatSocketServlet extends JettySocketIOServlet
             {
                 try
                 {
-                    socket.emit(WELCOME, "Welcome to Socket.IO Chat, " + socket.getRequest().getRemoteAddr() + "!");
+                    socket.emit(WELCOME, "Welcome to Socket.IO Chat, " + socket.getId() + "!");
 
                     socket.join("room");
                 }
