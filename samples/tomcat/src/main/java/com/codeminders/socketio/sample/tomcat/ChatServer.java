@@ -29,6 +29,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.catalina.webresources.JarResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -89,12 +90,15 @@ public class ChatServer {
         context.deleteOnExit();
         workdir.deleteOnExit();
 
-        StandardContext ctx = (StandardContext) tomcat.addWebapp("/", workdir.toString());
+        StandardContext ctx = (StandardContext) tomcat.addWebapp("", workdir.toString());
         WebResourceRoot resources = new StandardRoot(ctx);
         for (WebResourceSet set : getRoots(resources)) {
             resources.addPreResources(set);
         }
         ctx.setResources(resources);
+
+        StandardJarScanner jarScanner = (StandardJarScanner) ctx.getJarScanner();
+        jarScanner.setScanClassPath(true);
 
         tomcat.start();
         tomcat.getServer().await();
