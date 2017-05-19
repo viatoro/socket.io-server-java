@@ -10,7 +10,6 @@
         <version>1.0.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.codeminders.socketio</groupId>
     <artifactId>socketio-sample</artifactId>
     <packaging>pom</packaging>
 
@@ -19,6 +18,7 @@
 
     <modules>
         <module>chat</module>
+        <module>jetty</module>
     </modules>
 
 </project>
