@@ -34,165 +34,301 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ChatSocketServlet extends WebsocketIOServlet
-{
-    private static final String ANNOUNCEMENT     = "announcement";       // server to all connected clients
-    private static final String CHAT_MESSAGE     = "chat message";       // broadcast to room
-    private static final String WELCOME          = "welcome";            // single event sent by server to specific client
-    private static final String FORCE_DISCONNECT = "force disconnect";   // client requests server to disconnect
-    private static final String SERVER_BINARY    = "server binary";      // client requests server to send a binary
-    private static final String CLIENT_BINARY    = "client binary";      // client sends binary
+public class ChatSocketServlet extends WebsocketIOServlet {
+	private static final String ANNOUNCEMENT = "announcement"; // server to all
+																// connected
+																// clients
+	private static final String CHAT_MESSAGE = "chat message"; // broadcast to
+																// room
+	private static final String WELCOME = "welcome"; // single event sent by
+														// server to specific
+														// client
+	private static final String FORCE_DISCONNECT = "force disconnect"; // client
+																		// requests
+																		// server
+																		// to
+																		// disconnect
+	private static final String SERVER_BINARY = "server binary"; // client
+																	// requests
+																	// server to
+																	// send a
+																	// binary
+	private static final String CLIENT_BINARY = "client binary"; // client sends
+																	// binary
 
-    private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void init(ServletConfig config) throws ServletException
-    {
-        super.init(config);
+	 private Map<String, Map<String, Map<String, String>>> states = new HashMap<>();
+	
+	 private Map<String, LinkedList<Map<String, String>>> history = new HashMap<>();
 
-        of("/chat").on(new ConnectionListener()
-        {
-            @Override
-            public void onConnect(final Socket socket)
-            {
-                try
-                {
-                    socket.emit(WELCOME, "Welcome to Socket.IO Chat, " + socket.getId() + "!");
+	private Map<String, String> saveState(String channel,String  uuid,Map<String, String> state) {
+		// since this is per channel, create channel object if doesn't exist
+		if (!states.containsKey(channel)) {
+			states.put(channel, new HashMap<String, Map<String, String>>());
+		}
 
-                    socket.join("room");
-                }
-                catch (SocketIOException e)
-                {
-                    e.printStackTrace();
-                    socket.disconnect(true);
-                }
+		// save state to the channel based on user uuid
+		states.get(channel).put(uuid, state);
 
-                socket.on(new DisconnectListener() {
+		// return given state
+		return state;
+	}
 
-                    @Override
-                    public void onDisconnect(Socket socket, DisconnectReason reason, String errorMessage)
-                    {
-                        of("/chat").emit(ANNOUNCEMENT, socket.getSession().getSessionId() + " disconnected");
-                    }
-                });
+	private LinkedList<Map<String, String>> saveHistory(String channel,String uuid,Map<String, String> data){
+		
+		  // create an array for this channel if it doesn't exist
+		  if(!history.containsKey(channel)) {
+			  LinkedList<Map<String, String>> list = new LinkedList<>();
+			  history.put(channel,list);
+		  }
 
-                socket.on(CHAT_MESSAGE, new EventListener()
-                {
-                    @Override
-                    public Object onEvent(String name, Object[] args, boolean ackRequested)
-                    {
-                        LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+		  // push the newest uuid and data to the front of the array
+		  history.get(channel).addLast(data);
 
-                        try
-                        {
-                            socket.broadcast("room", CHAT_MESSAGE, socket.getId(), args[0]);
-                        }
-                        catch (SocketIOException e)
-                        {
-                            e.printStackTrace();
-                        }
+		  // if we have more than 100 messages for this channel, remove the first
+		  if(history.get(channel).size() > 100) {
+			  history.get(channel).pop();
+		  }
 
-                        return "OK"; //this object will be sent back to the client in ACK packet
-                    }
-                });
+		  // return the entire history
+		  return history.get(channel);
+	}
 
-                socket.on(FORCE_DISCONNECT, new EventListener()
-                {
-                    @Override
-                    public Object onEvent(String name, Object[] args, boolean ackRequested)
-                    {
-                        socket.disconnect(false);
-                        return null;
-                    }
-                });
+	@Override
+	@SuppressWarnings("unchecked")
+	public void init(ServletConfig config) throws ServletException {
+		super.init(config);
 
-                socket.on(CLIENT_BINARY, new EventListener()
-                {
-                    @Override
-                    public Object onEvent(String name, Object[] args, boolean ackRequested)
-                    {
-                        Map map = (Map<Object, Object>)args[0];
-                        InputStream is = (InputStream) map.get("buffer");
-                        ByteArrayOutputStream os = new ByteArrayOutputStream();
-                        try
-                        {
-                            ByteStreams.copy(is, os);
-                            byte []array = os.toByteArray();
-                            String s = "[";
-                            for (byte b : array)
-                                s += " " + b;
-                            s += " ]";
-                            LOGGER.log(Level.FINE, "Binary received: " + s);
-                        }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
+		of("/").on(new ConnectionListener() {
+			@Override
+			public void onConnect(final Socket socket) {
+				// try {
+				// socket.emit(WELCOME, "Welcome to Socket.IO Chat, " +
+				// socket.getId() + "!");
+				//
+				//// socket.join("room");
+				// } catch (SocketIOException e) {
+				// e.printStackTrace();
+				// socket.disconnect(true);
+				// }
 
-                        return "OK";
-                    }
-                });
+				socket.on(new DisconnectListener() {
 
-                socket.on(SERVER_BINARY, new EventListener()
-                {
-                    @Override
-                    public Object onEvent(String name, Object[] args, boolean ackRequested)
-                    {
-                        try
-                        {
-                            socket.emit(SERVER_BINARY,
-                                    new ByteArrayInputStream(new byte[] {1, 2, 3, 4}),
-                                    new ACKListener()
-                                    {
-                                        @Override
-                                        public void onACK(Object[] args)
-                                        {
-                                            System.out.println("ACK received: " + args[0]);
-                                        }
-                                    });
-                        }
-                        catch (SocketIOException e)
-                        {
-                            socket.disconnect(true);
-                        }
+					@Override
+					public void onDisconnect(Socket socket, DisconnectReason reason, String errorMessage) {
+						of("/").emit(ANNOUNCEMENT, socket.getSession().getSessionId() + " disconnected");
+					}
+				});
 
-                        return null;
-                    }
-                });
-            }
-        });
+				socket.on(CHAT_MESSAGE, new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
 
-//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable()
-//        {
-//            @Override
-//            public void run()
-//            {
-//                try
-//                {
-//                    of("/chat").in("room").emit("time", new Date().toString());
-//                }
-//                catch (SocketIOException e)
-//                {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }, 0, 20, TimeUnit.SECONDS);
+						try {
+							socket.broadcast("room", CHAT_MESSAGE, socket.getId(), args[0]);
+						} catch (SocketIOException e) {
+							e.printStackTrace();
+						}
 
+						return "OK"; // this object will be sent back to the
+										// client in ACK packet
+					}
+				});
 
-//        of("/news").on(new ConnectionListener()
-//        {
-//            @Override
-//            public void onConnect(Socket socket)
-//            {
-//                socket.on();
-//            }
-//        });
-    }
+				socket.on(FORCE_DISCONNECT, new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						socket.disconnect(false);
+						return null;
+					}
+				});
+
+				socket.on(CLIENT_BINARY, new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						Map map = (Map<Object, Object>) args[0];
+						InputStream is = (InputStream) map.get("buffer");
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						try {
+							ByteStreams.copy(is, os);
+							byte[] array = os.toByteArray();
+							String s = "[";
+							for (byte b : array)
+								s += " " + b;
+							s += " ]";
+							LOGGER.log(Level.FINE, "Binary received: " + s);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+
+						return "OK";
+					}
+				});
+
+				socket.on(SERVER_BINARY, new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						try {
+							socket.emit(SERVER_BINARY, new ByteArrayInputStream(new byte[] { 1, 2, 3, 4 }),
+									new ACKListener() {
+										@Override
+										public void onACK(Object[] args) {
+											System.out.println("ACK received: " + args[0]);
+										}
+									});
+						} catch (SocketIOException e) {
+							socket.disconnect(true);
+						}
+
+						return null;
+					}
+				});
+
+				socket.on("channel", new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+
+						try {
+							String channel = (String) args[0];
+							String uuid = (String) args[1];
+							Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+							socket.join(channel);
+							saveState(channel, uuid, data);
+							socket.broadcast(channel, "join",channel, uuid, data);
+						} catch (SocketIOException e) {
+							e.printStackTrace();
+						}
+
+						return null; // this object will be sent back to the
+										// client in ACK packet
+					}
+				});
+
+				socket.on("setState", new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+						try {
+							String channel = (String) args[0];
+							String uuid = (String) args[1];
+							Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+							saveState(channel, uuid, data);
+							
+							socket.broadcast(channel, "state",channel, uuid, data);
+						 } catch (SocketIOException e) {
+							 e.printStackTrace();
+						 }
+
+						return "OK"; // this object will be sent back to the
+										// client in ACK packet
+					}
+				});
+
+				socket.on("publish", new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+						String channel = (String) args[0];
+						String uuid = (String) args[1];
+						Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+						saveHistory(channel, uuid, data );
+						
+						try {
+							socket.broadcast(channel, "message",channel, uuid, data);
+						} catch (SocketIOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						return "OK"; // this object will be sent back to the
+										// client in ACK packet
+					}
+				});
+
+				socket.on("whosonline", new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+						String channel = (String) args[0];
+						String uuid = (String) args[1];
+						Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+						if(!states.containsKey(channel)) {
+							return null;
+					    } else {
+					    	return states.get(channel);
+					    }
+					}
+				});
+
+				socket.on("history", new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+						String channel = (String) args[0];
+						String uuid = (String) args[1];
+						Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+						if(!history.containsKey(channel)) {
+							return null;
+					    } else {
+					    	return history.get(channel);
+					    }
+										// client in ACK packet
+					}
+				});
+
+				socket.on("leave", new EventListener() {
+					@Override
+					public Object onEvent(String name, Object[] args, boolean ackRequested) {
+						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
+						String channel = (String) args[0];
+						String uuid = (String) args[1];
+						Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+						socket.leave(channel);
+
+						return "OK"; // this object will be sent back to the
+										// client in ACK packet
+					}
+				});
+
+			}
+		});
+
+		// Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new
+		// Runnable()
+		// {
+		// @Override
+		// public void run()
+		// {
+		// try
+		// {
+		// of("/chat").in("room").emit("time", new Date().toString());
+		// }
+		// catch (SocketIOException e)
+		// {
+		// e.printStackTrace();
+		// }
+		// }
+		// }, 0, 20, TimeUnit.SECONDS);
+
+		// of("/news").on(new ConnectionListener()
+		// {
+		// @Override
+		// public void onConnect(Socket socket)
+		// {
+		// socket.on();
+		// }
+		// });
+	}
 }
