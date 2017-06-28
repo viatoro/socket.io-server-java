@@ -208,11 +208,12 @@ public class ChatSocketServlet extends WebsocketIOServlet {
 							socket.join(channel);
 							saveState(channel, uuid, data);
 							socket.broadcast(channel, "join",channel, uuid, data);
+							socket.emit("join",channel, uuid, data);
 						} catch (SocketIOException e) {
 							e.printStackTrace();
 						}
 
-						return null; // this object will be sent back to the
+						return "OK"; // this object will be sent back to the
 										// client in ACK packet
 					}
 				});

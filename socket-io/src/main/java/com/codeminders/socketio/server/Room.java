@@ -77,13 +77,13 @@ public class Room implements Outbound {
 					// TODO: add getLastError method?
 				}
 			}else{
-				try {
-					socket.emit(name, args);
-				} catch (SocketIOException e) {
-					e.printStackTrace();
-					// ignore for now
-					// TODO: add getLastError method?
-				}
+//				try {
+//					socket.emit(name, args);
+//				} catch (SocketIOException e) {
+//					e.printStackTrace();
+//					// ignore for now
+//					// TODO: add getLastError method?
+//				}
 			}
 		}
 	}

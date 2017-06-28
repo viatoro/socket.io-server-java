@@ -63,6 +63,7 @@ public final class WebsocketTransport extends AbstractTransport
 
         // a bit hacky but safe since we know the type of TransportConnection here
         ((AbstractTransportConnection)connection).setRequest(request);
+        response.setStatus(HttpServletResponse.SC_SWITCHING_PROTOCOLS);
     }
 
     @Override
