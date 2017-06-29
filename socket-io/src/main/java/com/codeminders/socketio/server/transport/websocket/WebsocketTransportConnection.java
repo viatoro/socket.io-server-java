@@ -51,7 +51,7 @@ import java.util.logging.Logger;
  * @author Alexander Sova (bird@codeminders.com)
  * @author Alex Saveliev (lyolik@codeminders.com)
  */
-@ServerEndpoint(value="/socket.io/", configurator = WebsocketConfigurator.class)
+@ServerEndpoint(value="/", configurator = WebsocketConfigurator.class)
 public final class WebsocketTransportConnection extends AbstractTransportConnection
 {
     private static final Logger LOGGER = Logger.getLogger(WebsocketTransportConnection.class.getName());

@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -68,14 +69,14 @@ public class ChatSocketServlet extends WebsocketIOServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	 private Map<String, Map<String, Map<String, String>>> states = new HashMap<>();
+	 private Map<String, Map<String, Map<String, Object>>> states = new HashMap<>();
 	
-	 private Map<String, LinkedList<Map<String, String>>> history = new HashMap<>();
+	 private Map<String, LinkedList<Map<String, Object>>> history = new HashMap<>();
 
-	private Map<String, String> saveState(String channel,String  uuid,Map<String, String> state) {
+	private Map<String, Object> saveState(String channel,String  uuid,Map<String, Object> state) {
 		// since this is per channel, create channel object if doesn't exist
 		if (!states.containsKey(channel)) {
-			states.put(channel, new HashMap<String, Map<String, String>>());
+			states.put(channel, new HashMap<String, Map<String, Object>>());
 		}
 
 		// save state to the channel based on user uuid
@@ -85,11 +86,11 @@ public class ChatSocketServlet extends WebsocketIOServlet {
 		return state;
 	}
 
-	private LinkedList<Map<String, String>> saveHistory(String channel,String uuid,Map<String, String> data){
+	private LinkedList<Map<String, Object>> saveHistory(String channel,String uuid,Map<String, Object> data){
 		
 		  // create an array for this channel if it doesn't exist
 		  if(!history.containsKey(channel)) {
-			  LinkedList<Map<String, String>> list = new LinkedList<>();
+			  LinkedList<Map<String, Object>> list = new LinkedList<>();
 			  history.put(channel,list);
 		  }
 
@@ -204,7 +205,7 @@ public class ChatSocketServlet extends WebsocketIOServlet {
 						try {
 							String channel = (String) args[0];
 							String uuid = (String) args[1];
-							Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+							Map<String, Object> data = (LinkedHashMap<String, Object>) args[2];
 							socket.join(channel);
 							saveState(channel, uuid, data);
 							socket.broadcast(channel, "join",channel, uuid, data);
@@ -225,7 +226,7 @@ public class ChatSocketServlet extends WebsocketIOServlet {
 						try {
 							String channel = (String) args[0];
 							String uuid = (String) args[1];
-							Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+							Map<String, Object> data = (LinkedHashMap<String, Object>) args[2];
 							saveState(channel, uuid, data);
 							
 							socket.broadcast(channel, "state",channel, uuid, data);
@@ -244,7 +245,8 @@ public class ChatSocketServlet extends WebsocketIOServlet {
 						LOGGER.log(Level.FINE, "Received chat message: " + args[0]);
 						String channel = (String) args[0];
 						String uuid = (String) args[1];
-						Map<String, String> data = (LinkedHashMap<String, String>) args[2];
+						Map<String, Object> data = (LinkedHashMap<String, Object>) args[2];
+						data.put("time", new Date());
 						saveHistory(channel, uuid, data );
 						
 						try {
